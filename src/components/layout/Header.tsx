@@ -427,10 +427,10 @@ export const Header: React.FC = () => {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF204E]/30 to-transparent" />
 
       {/* LEFT / CENTER: Fully Functional Search & Command System */}
-      <div ref={searchContainerRef} className="flex flex-1 items-center max-w-md mr-3 relative">
+      <div ref={searchContainerRef} className="flex flex-1 items-center min-w-0 max-w-md mr-1.5 sm:mr-3 relative">
         <div className="relative w-full">
           <Search
-            className={`absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 transition-colors ${
+            className={`absolute left-2.5 sm:left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 pointer-events-none transition-colors ${
               isSearchOpen || searchQuery ? 'text-[#FF204E] animate-pulse' : 'text-[#94A3B8]'
             }`}
           />
@@ -446,8 +446,8 @@ export const Header: React.FC = () => {
             onKeyDown={handleInputKeyDown}
             placeholder={
               currentLanguage.id !== 'en' && currentLanguage.labels.searchPlaceholder
-                ? `${currentLanguage.labels.searchPlaceholder} (⌘K)...`
-                : "Search pages, tasks, files, tools, chat or ask AI (⌘K)..."
+                ? currentLanguage.labels.searchPlaceholder
+                : "Search or ask AI..."
             }
             className="
               w-full
@@ -457,30 +457,37 @@ export const Header: React.FC = () => {
               from-[#060103]
               via-[#0e0207]
               to-[#060103]
-              py-2.5
-              pl-10
-              pr-16
+              h-9
+              sm:h-10
+              py-1.5
+              sm:py-2.5
+              pl-8
+              sm:pl-10
+              pr-8
+              sm:pr-16
               text-xs
               text-[#F8FAFC]
               placeholder-[#94A3B8]/60
               border
               border-[#E50914]/25
               focus:border-[#FF204E]
-              focus:ring-2
+              focus:ring-1
+              sm:focus:ring-2
               focus:ring-[#FF204E]/30
               focus:shadow-[inset_4px_4px_10px_rgba(0,0,0,0.95),inset_-3px_-3px_8px_rgba(255,32,78,0.35),0_0_20px_rgba(255,32,78,0.4)]
               focus:outline-none
               transition-all
               caret-[#FF204E]
+              truncate
             "
           />
 
-          <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          <div className="absolute right-1.5 sm:right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
             {searchQuery && (
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="h-5 w-5 rounded-full neumorph-circle flex items-center justify-center text-[#94A3B8] hover:text-[#FF204E] transition-all cursor-pointer"
+                className="h-6 w-6 sm:h-5 sm:w-5 rounded-full neumorph-circle flex items-center justify-center text-[#94A3B8] hover:text-[#FF204E] transition-all cursor-pointer"
                 title="Clear query"
               >
                 <X className="h-3 w-3" />
@@ -503,7 +510,7 @@ export const Header: React.FC = () => {
 
         {/* Real-Time Search & Command Results Overlay */}
         {isSearchOpen && (
-          <div className="absolute left-0 top-[calc(100%+8px)] w-[95vw] sm:w-[580px] max-w-[580px] rounded-2xl neumorph-card p-3 shadow-[0_20px_60px_rgba(0,0,0,0.95),0_0_35px_rgba(229,9,20,0.35)] border border-[#FF204E]/35 z-[100] animate-fadeIn">
+          <div className="fixed inset-x-2 xs:inset-x-3 top-[68px] sm:absolute sm:inset-auto sm:left-0 sm:top-[calc(100%+8px)] w-auto sm:w-[580px] max-w-[calc(100vw-16px)] sm:max-w-[580px] rounded-2xl neumorph-card p-3 shadow-[0_20px_60px_rgba(0,0,0,0.95),0_0_35px_rgba(229,9,20,0.35)] border border-[#FF204E]/35 z-[100] animate-fadeIn">
             {/* Category Filter Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 border-b border-[#E50914]/20 scrollbar-none">
               {(
