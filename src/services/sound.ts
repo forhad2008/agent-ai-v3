@@ -265,6 +265,33 @@ class SoundService {
       console.warn('Synth error:', e);
     }
   }
+
+  // General UI sound dispatcher
+  public play(type: 'click' | 'success' | 'send' | 'receive' | 'error' = 'click') {
+    if (type === 'send') {
+      this.playSendSound();
+    } else if (type === 'receive' || type === 'success') {
+      this.playReceiveSound();
+    } else {
+      // Subtle tactile click
+      const ctx = this.getAudioContext();
+      if (!ctx) return;
+      try {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(type === 'error' ? 220 : 640, ctx.currentTime);
+        gain.gain.setValueAtTime(0.03, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.05);
+      } catch (e) {
+        // silent
+      }
+    }
+  }
 }
 
 export const sound = new SoundService();

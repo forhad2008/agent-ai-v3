@@ -41,6 +41,8 @@ export const DashboardView: React.FC = () => {
     addAlarm,
     toggleAlarm,
     deleteAlarm,
+    currentLanguage,
+    t,
   } = useAgent();
 
   const [promptInput, setPromptInput] = useState('');
@@ -58,6 +60,34 @@ export const DashboardView: React.FC = () => {
 
   const getGreeting = () => {
     const hour = new Date().getHours();
+    if (currentLanguage?.id === 'bn') {
+      if (hour >= 5 && hour < 12) return 'শুভ সকাল,';
+      if (hour >= 12 && hour < 17) return 'শুভ অপরাহ্ন,';
+      return 'শুভ সন্ধ্যা,';
+    }
+    if (currentLanguage?.id === 'jp') {
+      if (hour >= 5 && hour < 12) return 'おはようございます、';
+      if (hour >= 12 && hour < 17) return 'こんにちは、';
+      return 'こんばんは、';
+    }
+    if (currentLanguage?.id === 'de') {
+      if (hour >= 5 && hour < 12) return 'Guten Morgen,';
+      if (hour >= 12 && hour < 17) return 'Guten Tag,';
+      return 'Guten Abend,';
+    }
+    if (currentLanguage?.id === 'fr') {
+      if (hour >= 5 && hour < 12) return 'Bonjour,';
+      if (hour >= 12 && hour < 17) return 'Bon après-midi,';
+      return 'Bonsoir,';
+    }
+    if (currentLanguage?.id === 'es') {
+      if (hour >= 5 && hour < 12) return '¡Buenos días,';
+      if (hour >= 12 && hour < 17) return '¡Buenas tardes,';
+      return '¡Buenas noches,';
+    }
+    if (currentLanguage?.id === 'sa') {
+      return 'مرحباً،';
+    }
     if (hour >= 5 && hour < 12) return 'Good morning,';
     if (hour >= 12 && hour < 17) return 'Good afternoon,';
     if (hour >= 17 && hour < 22) return 'Good evening,';
@@ -193,7 +223,11 @@ export const DashboardView: React.FC = () => {
               type="text"
               value={promptInput}
               onChange={(e) => setPromptInput(e.target.value)}
-              placeholder="Ask me anything..."
+              placeholder={
+                currentLanguage?.labels?.askAiPlaceholder && currentLanguage.id !== 'en'
+                  ? currentLanguage.labels.askAiPlaceholder
+                  : "Ask Abdullah anything or assign a task..."
+              }
               className="w-full bg-transparent px-3 py-2 text-xs sm:text-sm text-white placeholder-white/50 focus:outline-none"
             />
 

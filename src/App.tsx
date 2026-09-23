@@ -13,6 +13,7 @@ import { ActivityView } from './components/activity/ActivityView';
 import { SettingsView } from './components/settings/SettingsView';
 import { UserProfileView } from './components/profile/UserProfileView';
 import { AILabView } from './components/ailab/AILabView';
+import { ImageStudioView } from './components/image-studio/ImageStudioView';
 import { LanguageModeModal } from './components/common/LanguageModeModal';
 import { InstallGuideModal } from './components/common/InstallGuideModal';
 import { sound } from './services/sound';
@@ -44,6 +45,8 @@ const MainLayout: React.FC = () => {
         return <ChatView />;
       case 'ailab':
         return <AILabView />;
+      case 'image-studio':
+        return <ImageStudioView />;
       case 'tasks':
         return <TasksView />;
       case 'files':

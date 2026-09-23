@@ -37,6 +37,7 @@ export type ActiveView =
   | 'settings'
   | 'tools'
   | 'ailab'
+  | 'image-studio'
   | 'profile';
 
 interface AgentContextType {

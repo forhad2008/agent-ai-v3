@@ -12,11 +12,12 @@ import {
   Sliders,
   Download,
   Cpu,
+  Palette,
 } from 'lucide-react';
 import { useAgent, ActiveView } from '../../context/AgentContext';
 
 export const Sidebar: React.FC = () => {
-  const { activeView, setActiveView, setIsInstallModalOpen } = useAgent();
+  const { activeView, setActiveView, setIsInstallModalOpen, currentLanguage } = useAgent();
 
   const handleInstallClick = () => {
     setIsInstallModalOpen(true);
@@ -28,17 +29,18 @@ export const Sidebar: React.FC = () => {
     icon: React.ComponentType<{ className?: string }>;
     badge?: number;
   }[] = [
-    { id: 'dashboard', label: 'Home', icon: Home },
+    { id: 'dashboard', label: currentLanguage?.labels?.dashboardTitle || 'Home', icon: Home },
     { id: 'profile', label: 'Agent OS', icon: Cpu },
-    { id: 'chat', label: 'Chat', icon: MessageSquare },
+    { id: 'chat', label: currentLanguage?.labels?.chatTitle || 'Chat', icon: MessageSquare },
+    { id: 'image-studio', label: 'Image Studio', icon: Palette },
     { id: 'ailab', label: 'AI Lab', icon: FlaskConical },
-    { id: 'tasks', label: 'Task Flow', icon: Zap, badge: 3 },
-    { id: 'approvals', label: 'Knowledge', icon: BookOpen },
+    { id: 'tasks', label: currentLanguage?.labels?.tasksTitle || 'Task Flow', icon: Zap, badge: 3 },
+    { id: 'approvals', label: currentLanguage?.labels?.approvalsTitle || 'Knowledge', icon: BookOpen },
     { id: 'automations', label: 'Automation', icon: Settings },
-    { id: 'files', label: 'Files', icon: Folder },
-    { id: 'integrations', label: 'Integrations', icon: Link },
-    { id: 'activity', label: 'Analytics', icon: BarChart3 },
-    { id: 'settings', label: 'Settings', icon: Sliders },
+    { id: 'files', label: currentLanguage?.labels?.filesTitle || 'Files', icon: Folder },
+    { id: 'integrations', label: currentLanguage?.labels?.toolsTitle || 'Integrations', icon: Link },
+    { id: 'activity', label: currentLanguage?.labels?.activityTitle || 'Analytics', icon: BarChart3 },
+    { id: 'settings', label: currentLanguage?.labels?.settingsTitle || 'Settings', icon: Sliders },
   ];
 
   return (

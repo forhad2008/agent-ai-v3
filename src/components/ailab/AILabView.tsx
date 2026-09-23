@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
 import { sound } from '../../services/sound';
+import { ImageStudioView } from '../image-studio/ImageStudioView';
 
 interface ChatMessage {
   id: string;
@@ -796,139 +797,10 @@ export const AILabView: React.FC = () => {
           </div>
         )}
 
-        {/* TAB 3: IMAGE GENERATOR & EDITOR */}
+        {/* TAB 3: PRO IMAGE STUDIO & ADVANCE CANVAS EDITOR */}
         {activeTab === 'image' && (
-          <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
-            {/* Input Configs */}
-            <div className="rounded-2xl neumorph-card p-5 sm:p-6 space-y-4">
-              <div>
-                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider neumorph-badge px-2.5 py-1 rounded-md">
-                  Nano Creative Engine
-                </span>
-                <h3 className="text-base font-bold text-[#F8FAFC] mt-3">Image Generation & Editing</h3>
-                <p className="text-xs text-[#94A3B8] mt-1">Transform concepts into images using gemini-3.1-flash-image, or upload a reference file to modify.</p>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider text-[10px]">Prompt Instructions</label>
-                <textarea
-                  rows={3}
-                  value={imagePrompt}
-                  onChange={(e) => setImagePrompt(e.target.value)}
-                  className="w-full rounded-xl neumorph-inset p-3 text-xs text-[#F8FAFC] focus:outline-none font-mono"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider text-[10px]">Optional Reference Image (Edit mode)</label>
-                <div className="flex gap-2">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    id="image_reference_file"
-                  />
-                  <label
-                    htmlFor="image_reference_file"
-                    className="flex-1 text-center border-dashed border border-[#E50914]/30 neumorph-inset hover:border-[#FF204E] p-3 rounded-xl cursor-pointer text-xs text-[#94A3B8] flex items-center justify-center gap-1.5"
-                  >
-                    <Plus className="h-4 w-4" />
-                    <span>{referenceImage ? 'Image uploaded!' : 'Upload file for edits'}</span>
-                  </label>
-                  {referenceImage && (
-                    <button
-                      onClick={() => {
-                        setReferenceImage(null);
-                        setIsEditing(false);
-                      }}
-                      className="text-xs text-rose-400 hover:underline cursor-pointer"
-                    >
-                      Remove
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider text-[10px]">Aspect Ratio</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {['1:1', '4:3', '16:9', '9:16'].map((aspect) => (
-                    <button
-                      key={aspect}
-                      onClick={() => setImageAspect(aspect)}
-                      className={`py-2 text-xs font-bold rounded-xl text-center transition-all cursor-pointer ${
-                        imageAspect === aspect
-                          ? 'neumorph-btn-primary'
-                          : 'neumorph-btn-secondary text-[#94A3B8]'
-                      }`}
-                    >
-                      {aspect}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <button
-                onClick={generateImage}
-                disabled={loading || !imagePrompt.trim()}
-                className="w-full flex items-center justify-center gap-2 rounded-xl neumorph-btn-primary py-3 text-xs font-bold disabled:opacity-50 cursor-pointer transition-all"
-              >
-                {loading ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    <span>Rendering creative canvas...</span>
-                  </>
-                ) : (
-                  <>
-                    <ImageIcon className="h-4 w-4" />
-                    <span>{isEditing ? 'Run Image Modification' : 'Generate Creative Image'}</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Display Canvas Output */}
-            <div className="rounded-2xl neumorph-card p-5 sm:p-6 flex flex-col justify-between min-h-[350px]">
-              {generatedImage ? (
-                <div className="space-y-4 flex-1 flex flex-col justify-between">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-[#FF204E] neumorph-badge px-2.5 py-1 rounded-md">
-                      Visual Render Frame
-                    </span>
-                    <span className="text-[10px] font-mono text-slate-400">{generatedImage.modelUsed}</span>
-                  </div>
-
-                  <div className="flex-1 neumorph-inset rounded-xl overflow-hidden flex items-center justify-center min-h-[220px] p-2">
-                    <img
-                      src={`data:image/png;base64,${generatedImage.imageBase64}`}
-                      alt="Gemini Creative"
-                      className="max-h-60 object-contain rounded-lg"
-                    />
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs pt-2 border-t border-[#E50914]/20">
-                    <span className="text-slate-400">Aspect Ratio: <span className="font-bold text-white">{generatedImage.aspectRatio}</span></span>
-                    <a
-                      href={`data:image/png;base64,${generatedImage.imageBase64}`}
-                      download="creative-synthesis.png"
-                      className="flex items-center gap-1.5 text-[#FF204E] font-bold hover:underline"
-                    >
-                      <Download className="h-4 w-4" />
-                      <span>Download Image PNG</span>
-                    </a>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-3">
-                  <div className="h-14 w-14 rounded-full neumorph-circle flex items-center justify-center">
-                    <ImageIcon className="h-7 w-7 text-[#FF204E]/60 animate-pulse" />
-                  </div>
-                  <div className="text-sm font-bold text-white/70">Creative Canvas Frame Empty</div>
-                  <p className="text-xs text-[#94A3B8] max-w-xs">Type your visual concepts or upload an image above to invoke the high-quality image generation model.</p>
-                </div>
-              )}
-            </div>
+          <div className="w-full">
+            <ImageStudioView />
           </div>
         )}
 

@@ -19,6 +19,7 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
     tasks,
     approvals,
     isGenerating,
+    currentLanguage,
   } = useAgent();
 
   const pendingApprovalsCount = approvals.filter((a) => a.status === 'pending').length;
@@ -40,7 +41,9 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
         aria-label="Home"
       >
         <Home className="h-5 w-5" />
-        <span className="mt-0.5 text-[10px] tracking-tight">Home</span>
+        <span className="mt-0.5 text-[10px] tracking-tight truncate max-w-[55px]">
+          {currentLanguage?.labels?.dashboardTitle || 'Home'}
+        </span>
         {activeView === 'dashboard' && (
           <span className="absolute bottom-0.5 h-1 w-6 rounded-full neumorph-badge-primary shadow-[0_0_8px_#FF204E]" />
         )}
@@ -64,7 +67,9 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
             </span>
           )}
         </div>
-        <span className="mt-0.5 text-[10px] tracking-tight">AI Chat</span>
+        <span className="mt-0.5 text-[10px] tracking-tight truncate max-w-[55px]">
+          {currentLanguage?.labels?.chatTitle || 'Chat'}
+        </span>
         {activeView === 'chat' && (
           <span className="absolute bottom-0.5 h-1 w-6 rounded-full neumorph-badge-primary shadow-[0_0_8px_#FF204E]" />
         )}
@@ -87,7 +92,9 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
             </span>
           )}
         </div>
-        <span className="mt-0.5 text-[10px] tracking-tight">Tasks</span>
+        <span className="mt-0.5 text-[10px] tracking-tight truncate max-w-[55px]">
+          {currentLanguage?.labels?.tasksTitle || 'Tasks'}
+        </span>
         {activeView === 'tasks' && (
           <span className="absolute bottom-0.5 h-1 w-6 rounded-full neumorph-badge-primary shadow-[0_0_8px_#FF204E]" />
         )}
@@ -110,7 +117,9 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
             </span>
           )}
         </div>
-        <span className="mt-0.5 text-[10px] tracking-tight">Approvals</span>
+        <span className="mt-0.5 text-[10px] tracking-tight truncate max-w-[55px]">
+          {currentLanguage?.labels?.approvalsTitle || 'Approvals'}
+        </span>
         {activeView === 'approvals' && (
           <span className="absolute bottom-0.5 h-1 w-6 rounded-full neumorph-badge-primary shadow-[0_0_8px_#FF204E]" />
         )}
