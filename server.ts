@@ -224,34 +224,30 @@ async function callGeminiWithRetryAndFallback(
   ai: GoogleGenAI,
   contents: any[],
   systemInstruction: string,
-  temperature: number = 0.4
+  temperature: number = 0.5
 ): Promise<any> {
-  const modelsToTry = ["gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-3.8-flash"];
+  const modelsToTry = ["gemini-2.5-flash", "gemini-2.5-pro"];
   const maxRetries = 1;
   let lastError = null;
 
-  // Add brevity instruction to guarantee extremely fast generation times
-  const rapidSystemInstruction = `${systemInstruction}\n\nCRITICAL SPEED REQUIREMENT: Keep your response extremely crisp, direct, and short (under 2 paragraphs or bullet points). This guarantees the response is generated and sent in under 3 seconds.`;
-
   for (const model of modelsToTry) {
-    let delay = 200;
+    let delay = 300;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         console.log(`[Gemini API] Attempting generateContent with model: ${model} (attempt ${attempt + 1}/${maxRetries + 1})`);
         
-        // Wrap with a hard timeout of 3200ms to guarantee overall response fits in 4 seconds
         const responsePromise = ai.models.generateContent({
           model: model,
           contents: contents,
           config: {
-            systemInstruction: rapidSystemInstruction,
+            systemInstruction: systemInstruction,
             temperature: temperature,
-            maxOutputTokens: 500, // Limiting output tokens drastically reduces generation time
+            maxOutputTokens: 2048,
           },
         });
 
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout: Gemini API exceeded target latency limit")), 3200)
+          setTimeout(() => reject(new Error("Timeout: Gemini API took longer than 25 seconds")), 25000)
         );
 
         const response = await Promise.race([responsePromise, timeoutPromise]);
@@ -275,7 +271,7 @@ async function callGeminiWithRetryAndFallback(
                             err?.message?.includes("resource");
         
         if (isTransient && attempt < maxRetries) {
-          console.log(`[Gemini API] Transient error detected. Fast retrying in ${delay}ms...`);
+          console.log(`[Gemini API] Transient error detected. Retrying in ${delay}ms...`);
           await new Promise((resolve) => setTimeout(resolve, delay));
           delay *= 1.5;
         } else {
@@ -284,7 +280,7 @@ async function callGeminiWithRetryAndFallback(
       }
     }
   }
-  throw lastError || new Error("All Gemini models are currently unavailable due to extremely high demand.");
+  throw lastError || new Error("All Gemini models are currently unavailable due to high demand.");
 }
 
 async function generateContentWithRetryAndFallback(
@@ -294,28 +290,27 @@ async function generateContentWithRetryAndFallback(
     config?: any;
   }
 ): Promise<any> {
-  const modelsToTry = ["gemini-3.1-flash-lite", "gemini-2.5-flash", "gemini-3.8-flash"];
+  const modelsToTry = ["gemini-2.5-flash", "gemini-2.5-pro"];
   const maxRetries = 1;
   let lastError = null;
 
   for (const model of modelsToTry) {
-    let delay = 200;
+    let delay = 300;
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         console.log(`[Gemini API] Attempting generic generateContent with model: ${model} (attempt ${attempt + 1}/${maxRetries + 1})`);
         
-        // Wrap with a hard timeout of 3200ms to guarantee overall response fits in 4 seconds
         const responsePromise = ai.models.generateContent({
           ...options,
           model: model,
           config: {
             ...options.config,
-            maxOutputTokens: 500, // Speed up response generation
+            maxOutputTokens: 2048,
           }
         });
 
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Timeout: Gemini API exceeded target latency limit")), 3200)
+          setTimeout(() => reject(new Error("Timeout: Gemini API generic took longer than 25 seconds")), 25000)
         );
 
         const response = await Promise.race([responsePromise, timeoutPromise]);
@@ -339,7 +334,7 @@ async function generateContentWithRetryAndFallback(
                             err?.message?.includes("resource");
         
         if (isTransient && attempt < maxRetries) {
-          console.log(`[Gemini API] Generic transient error detected. Fast retrying in ${delay}ms...`);
+          console.log(`[Gemini API] Generic transient error detected. Retrying in ${delay}ms...`);
           await new Promise((resolve) => setTimeout(resolve, delay));
           delay *= 1.5;
         } else {
@@ -783,7 +778,7 @@ app.post("/api/agent/tool/execute", async (req, res) => {
         if (ai) {
           try {
             const resp = await ai.models.generateContent({
-              model: "gemini-3.8-flash",
+              model: "gemini-2.5-flash",
               contents: `Act as an expert prompt engineer. Refine this raw, unstructured user intent: "${rawPrompt}" into a high-precision, production-grade system instruction or structured user prompt. Include Persona/Role, Objective, Constraints, Step-by-Step Chain of Thought, and Few-Shot templates or desired outputs.`,
             });
             result = {

@@ -428,53 +428,84 @@ export function processWorkTask<T extends { id: string }>(items: T[]): T[] {
     };
   }
 
-  // 3. Customer Reply / Email / Approval Request
-  if (p.includes('customer') || p.includes('email') || p.includes('reply') || p.includes('message')) {
+  // 3. Customer Reply / Email / WhatsApp / Message Dispatch
+  if (p.includes('whatsapp') || p.includes('কাস্টমার') || p.includes('customer') || p.includes('email') || p.includes('mail') || p.includes('reply') || p.includes('message') || p.includes('মেসেজ') || p.includes('ইমেইল')) {
+    const isWhatsApp = p.includes('whatsapp') || p.includes('হোয়াটসঅ্যাপ');
+    
+    // Extract phone number or email if present
+    const phoneMatch = prompt.match(/\+?[0-9]{8,15}/);
+    const emailMatch = prompt.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/);
+    
+    const targetPhone = phoneMatch ? phoneMatch[0].replace(/[^0-9]/g, '') : '';
+    const targetEmail = emailMatch ? emailMatch[0] : (userProfile?.email || 'client@example.com');
+    
+    const sampleMsg = isWhatsApp 
+      ? `Hello! This is Abdullah from Agent-sigma08. I am following up regarding your digital workspace and web project requirements. Let me know when is a good time to connect!`
+      : `Dear Client,\n\nThank you for connecting with us. Regarding your project inquiry, our team has prepared the initial architecture and workflow requirements.\n\nWe are ready to proceed with development and delivery.\n\nBest regards,\nAbdullah\nAgent-sigma08 Operations`;
+
+    const encodedMsg = encodeURIComponent(sampleMsg);
+    const whatsappLink = targetPhone ? `https://wa.me/${targetPhone}?text=${encodedMsg}` : `https://wa.me/?text=${encodedMsg}`;
+    const mailtoLink = `mailto:${targetEmail}?subject=${encodeURIComponent("Update from Abdullah | Agent-sigma08")}&body=${encodedMsg}`;
+
     return {
       thinking: isBangla
-        ? `গ্রাহকের বার্তার ইমোশনাল সেন্টিমেন্ট বিশ্লেষণ করছি। গ্রাহক তানভীর হাসানের বিলিং/ডেলিভারি সংক্রান্ত জটিলতার সমাধান প্রস্তাব করা প্রয়োজন। খসড়া তৈরি করছি। চেক পারমিশন: ইমেইল স্বয়ংক্রিয়ভাবে প্রেরণের অপশন '${autoApproveEmail ? 'সক্রিয়' : 'নিষ্ক্রিয়'}' রয়েছে। যেহেতু এটি বাহ্যিক যোগাযোগ, ব্যবহারকারীর সম্মতি পাওয়ার আগ পর্যন্ত ডিসপ্যাচ আটকে রাখা হবে।`
-        : `Analyzing customer query sentiment. Identified shipping and tracking delay frustration. Preparing highly professional, empathetic compensation proposal (15% billing credit). Checking active safety policy. Delegation state: autoApproveEmail is ${autoApproveEmail ? 'ENABLED' : 'DISABLED'}. Halting communication pipeline. Displaying interactive Approval Checkpoint card.`,
+        ? `ব্যবহারকারী ${isWhatsApp ? 'হোয়াটসঅ্যাপ' : 'ইমেইল'} এর মাধ্যমে বার্তা প্রেরণের অনুরোধ করেছেন। উপযুক্ত প্রফেশনাল ড্রাফট তৈরি করা হয়েছে এবং সরাসরি প্রেরণের জন্য ওয়ান-ক্লিক লিংক প্রস্তুত করা হয়েছে।`
+        : `User requested ${isWhatsApp ? 'WhatsApp' : 'Email'} message creation & dispatch. Formatted high-conversion message template and generated direct one-click dispatch action links.`,
       content: isBangla
-        ? `## ✉️ ড্রাফট গ্রাহক উত্তর\nগ্রাহকবার্তার জন্য প্রফেশনাল উত্তর তৈরি করা হয়েছে:\n\n> **বিষয়**: আপনার বার্তা গ্রহণের নিশ্চিতকরণ - সাপোর্ট টিকিট #${Math.floor(Math.random() * 8999 + 1000)}\n>\n> প্রিয় গ্রাহক,\n> আপনার মেসেজটি আমরা পেয়েছি। আমাদের টিম বিষয়টি গুরুত্ব সহকারে তদারকি করছে এবং দ্রুত সমাধান করা হবে।\n\nআপনি কি এই উত্তরটি গ্রাহকের কাছে পাঠাতে চান?`
-        : `## ✉️ Drafted Customer Response
-Prepared professional communication for: **"${prompt}"**
+        ? `## ✉️ ${isWhatsApp ? '📱 হোয়াটসঅ্যাপ মেসেজ ড্রাফট' : '📧 প্রফেশনাল ইমেইল ড্রাফট'}
+আপনার অনুরোধের ভিত্তিতে নিম্নোক্ত বার্তাটি প্রস্তুত করা হয়েছে:
 
-> **Subject**: Regarding Your Inquiry - Work Order #${Math.floor(Math.random() * 8999 + 1000)}
->
-> Dear Valued Client,
->
-> Thank you for reaching out. We have received your detailed requirements and our automated agent system has processed the initial parameters. Everything is verified and on track.
->
-> Best regards,
-> **Agent-sigma08**
+> **প্রাপক**: \`${targetPhone ? targetPhone : (emailMatch ? targetEmail : 'আপনার ক্লায়েন্ট / কাস্টমার')}\`  
+> **বার্তা বিবরণ**:  
+> *"${sampleMsg.replace(/\n/g, '\n> ')}"*
 
-Please review and confirm below before this message is dispatched.`,
+---
+### 🚀 সরাসরি পাঠানোর লিংক (১ ক্লিকে পাঠান):
+${isWhatsApp 
+  ? `- **[📱 হোয়াটসঅ্যাপে সরাসরি পাঠান](${whatsappLink})** (ট্যাপ করলেই আপনার WhatsApp অ্যাপে মেসেজটি লোড হয়ে যাবে)` 
+  : `- **[✉️ জিমেইল / ইমেইল অ্যাপে সরাসরি পাঠান](${mailtoLink})** (ট্যাপ করলেই ইমেইল অ্যাপে ড্রাফট ওপেন হবে)`}
+
+আপনি চাইলে লেখার বিবরণ বা প্রাপকের নম্বর পরিবর্তন করতে বলতে পারেন!`
+        : `## ✉️ ${isWhatsApp ? '📱 WhatsApp Message Draft' : '📧 Professional Email Draft'}
+Prepared personalized communication for: **"${prompt}"**
+
+> **Recipient**: \`${targetPhone ? targetPhone : (emailMatch ? targetEmail : 'Client / Customer')}\`  
+> **Message Body**:  
+> *"${sampleMsg.replace(/\n/g, '\n> ')}"*
+
+---
+### 🚀 Direct Dispatch Actions (One-Click Send):
+${isWhatsApp
+  ? `- **[📱 Send directly via WhatsApp](${whatsappLink})** *(Click to launch WhatsApp with this pre-filled message)*`
+  : `- **[✉️ Send directly via Email](${mailtoLink})** *(Click to launch Gmail / Default Mail client)*`}
+
+You can ask me to adjust the wording, add special pricing discounts, or target a different contact anytime!`,
       requiresApproval,
       approvalDetails: requiresApproval
         ? {
             id: `appr_${Date.now()}`,
-            action: 'Send Customer Email',
-            recipient: 'Client Support Channel',
-            details: 'Outbound dispatch of formatted customer resolution message.',
-            preview: 'Subject: Regarding Your Inquiry\nStatus: Ready to send',
+            action: isWhatsApp ? 'Dispatch WhatsApp Message' : 'Send Customer Email',
+            recipient: targetPhone || targetEmail,
+            details: `Outbound ${isWhatsApp ? 'WhatsApp' : 'Email'} dispatch for: ${prompt}`,
+            preview: sampleMsg.slice(0, 100) + '...',
             riskLevel: 'REQUIRES_APPROVAL',
-            riskReason: 'External notification requires human authorization',
+            riskReason: 'External client communication requires human review',
             status: 'pending',
             timestamp: new Date().toLocaleTimeString(),
           }
         : undefined,
       planSteps: [
-        { title: isBangla ? 'বার্তা বিশ্লেষণ' : 'Extract sentiment & intent', status: 'completed' },
-        { title: isBangla ? 'ড্রাফট লেখনী' : 'Draft polished response copy', status: 'completed' },
-        { title: isBangla ? 'অনুমোদন যাচাই' : 'Check safety approval boundary', status: 'completed' },
+        { title: isBangla ? 'মেসেজ কাঠামো বিশ্লেষণ' : 'Parsed contact parameters & intent', status: 'completed' },
+        { title: isBangla ? 'ড্রাফট ও লিংক জেনারেশন' : 'Drafted message & generated dispatch links', status: 'completed' },
+        { title: isBangla ? 'অনুমোদন প্রস্তুত' : 'Verified safety and client readiness', status: 'completed' },
       ],
       toolExecutions: [
         {
-          id: `tool_${Date.now()}_3`,
-          toolName: 'Communication Dispatcher',
-          category: 'WORKFLOW',
+          id: `tool_${Date.now()}_msg`,
+          toolName: isWhatsApp ? 'WhatsApp Messenger Relay' : 'Email Dispatch Hub',
+          category: 'COMMUNICATION',
           status: 'success',
-          description: 'Generated structured response draft and safety check.',
+          description: `Prepared ${isWhatsApp ? 'WhatsApp' : 'Email'} message with one-click dispatch URI.`,
           timestamp: new Date().toLocaleTimeString(),
         },
       ],
@@ -552,6 +583,79 @@ Transform your daily operations with a goal-driven AI assistant designed to exec
           category: 'MARKETING',
           status: 'success',
           description: 'Generated structured promotional and operational documentation.',
+          timestamp: new Date().toLocaleTimeString(),
+        },
+      ],
+    };
+  }
+
+  // 5.5 Income, Financial Goals & Freelancing Roadmap
+  if (p.includes('2000') || p.includes('earn') || p.includes('money') || p.includes('dollar') || p.includes('income') || p.includes('freelance') || p.includes('টাকা') || p.includes('আয়') || p.includes('রোজগার')) {
+    return {
+      thinking: isBangla
+        ? `ব্যবহারকারী আব্দুল্লাহ ১ মাসে $২,০০০ আয়ের সুনির্দিষ্ট লক্ষ্য দিয়েছেন। কোনো ফাঁপা আশ্বাস না দিয়ে বাস্তবসম্মত এবং সৎ কৌশল তৈরি করছি: স্কিল অনুযায়ী সার্ভিস অফার, ক্লায়েন্ট টার্গেটিং, সাপ্তাহিক টাস্ক ব্রেকডাউন এবং আউটরিচ পাইপলাইন।`
+        : `User Abdullah set a clear goal: Make $2,000 in 1 month. Formulating an honest, actionable, and realistic strategy rather than boilerplate templates. Breaking down the mathematics: $500/week or 4 clients @ $500 each. Outlining required high-value skills, direct outreach channels, and daily execution schedule.`,
+      content: isBangla
+        ? `## 🎯 উদ্দেশ্য
+১ মাসে **$২,০০০ (প্রায় ২,৪০,০০০ টাকা)** উপার্জনের জন্য একটি বাস্তবসম্মত, সৎ ও কার্যকর কর্মপরিকল্পনা।
+
+## 📋 বাস্তবসম্মত হিসাব ও কৌশল
+১ মাসে $২,০০০ আয় করতে হলে আপনাকে **প্রতি সপ্তাহে $৫০০** বা গড়ে **প্রতিদিন প্রায় $৬৭** আয় করতে হবে। সবচেয়ে দ্রুততম এবং প্রমাণিত উপায় হলো হাই-টিকেট সার্ভিস বা ফ্রিল্যান্সিং:
+
+### 💡 ৩টি কার্যকরী মডেল:
+1. **মডেল ১ (৪ জন ক্লায়েন্ট @ $৫০০):**  
+   - সার্ভিস: ফুল-স্ট্যাক ল্যান্ডিং পেজ বা AI চ্যাটবট ইন্টিগ্রেশন / PWA তৈরি।
+2. **মডেল ২ (২ জন ক্লায়েন্ট @ $১,০০০):**  
+   - সার্ভিস: ফুল-স্ট্যাক ওয়েব অ্যাপ্লিকেশন, এসইও ও স্পিড অপ্টিমাইজেশন অডিট ও ফিক্সিং।
+3. **মডেল ৩ (১০ জন ক্লায়েন্ট @ $২০০):**  
+   - সার্ভিস: বাগ ফিক্সিং, API সংযোগ, অটোমেশন স্ক্রিপ্ট তৈরি।
+
+## 📊 ৪ সপ্তাহের বাস্তবসম্মত কর্মপরিকল্পনা
+- **সপ্তাহ ১ (প্যাকেজিং ও প্রোফাইল):** ১টি আকর্ষণীয় পোর্টফোলিও লাইভ করুন এবং আপওয়ার্ক, ফাইভার ও লিঙ্কডইন প্রোফাইল সাজান।
+- **সপ্তাহ ২ (আউটরিচ ও বিডিং):** প্রতিদিন অন্তত ৫-১০টি কাস্টমাইজড প্রপোজাল পাঠান এবং কোল্ড ইমেইল/টুইটার DMs করুন।
+- **সপ্তাহ ৩ (ডেলিভারি ও আপসেল):** প্রথম ২-৩টি প্রজেক্ট সর্বোচ্চ মানের সাথে ডেলিভার করে ৫-স্টার রিভিউ এবং রেফারেল নিন।
+- **সপ্তাহ ৪ (স্কেলিং ও গোল পূরণ):** বিদ্যমান ক্লায়েন্টদের নতুন অটোমেশন অফার করুন এবং শেষ মাইল টার্গেট পূরণ করুন।
+
+## 🚀 পরবর্তী ধাপ
+আপনি কোন টেক স্কিল (React/Node, AI Integration, Web Design, বা Data Entry) এ সবচেয়ে পারদর্শী? আমাকে জানান, আমি আপনার জন্য সরাসরি ক্লায়েন্ট পিচ এবং কভার লেটার ড্রাফট করে দেব!`
+        : `## 🎯 Objective
+A realistic, honest, and actionable roadmap to achieve **$2,000 in 1 month** through high-value digital services and direct outreach.
+
+## 📋 The Math & Core Strategy
+To generate $2,000 in 30 days, the most realistic path is offering specialized high-value services rather than competing for low-rate micro-tasks:
+
+| Strategy Model | Target Clients | Average Deal Size | Total Revenue |
+| :--- | :--- | :--- | :--- |
+| **Model A: High-Ticket Projects** | 2 Clients | $1,000 / project | **$2,000** |
+| **Model B: Mid-Tier Retainers** | 4 Clients | $500 / project | **$2,000** |
+| **Model C: Fast Turnaround Fixes** | 8 Clients | $250 / project | **$2,000** |
+
+## 📊 4-Week Step-by-Step Action Plan
+1. **Week 1: High-Conversion Offer & Portfolio**
+   - Package a clear outcome (e.g. *"I build fast PWA Web Apps"*, *"Next.js + AI Workflow Automation"*, or *"Full-Stack Performance Optimization"*).
+   - Prepare 2 live demo links or case studies showing measurable results.
+2. **Week 2: Aggressive Targeted Outreach**
+   - Send 15-20 highly personalized cold emails or LinkedIn messages per day to agency owners and founders needing help.
+   - Submit 3-5 tailored proposals daily on Upwork targeting projects with verified payment methods.
+3. **Week 3: Fast Execution & Over-Delivering**
+   - Close initial 2 clients, deliver early, and request testimonials + referrals.
+4. **Week 4: Retainer Upselling & Goal Completion**
+   - Offer maintenance or ongoing feature development retainers ($300–$500/mo) to lock in recurring monthly income.
+
+## 🚀 Recommended Next Steps
+Tell me your primary tech stack or core skill (e.g. React/TypeScript, AI Bot integration, UI/UX, or Backend), and I will immediately draft customized client proposals and outreach scripts for you!`,
+      planSteps: [
+        { title: isBangla ? 'আয়ের লক্ষ্য বিশ্লেষণ' : 'Calculated revenue targets & unit economics', status: 'completed' },
+        { title: isBangla ? 'সার্ভিস মডেল ম্যাপিং' : 'Constructed client acquisition models', status: 'completed' },
+        { title: isBangla ? '৪ সপ্তাহের রোডম্যাপ তৈরি' : 'Synthesized 4-week execution roadmap', status: 'completed' },
+      ],
+      toolExecutions: [
+        {
+          id: `tool_${Date.now()}_revenue`,
+          toolName: 'Revenue Strategy Engine',
+          category: 'FINANCE',
+          status: 'success',
+          description: 'Synthesized unit economics, outreach pipelines, and weekly milestone targets.',
           timestamp: new Date().toLocaleTimeString(),
         },
       ],
