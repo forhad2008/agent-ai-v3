@@ -110,6 +110,7 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const sanitized = saved
           .replace(/Agent-alpha08/g, 'Agent-sigma08')
           .replace(/Agent-forest08/g, 'Agent-sigma08')
+          .replace(/Agent08/g, 'Agent-sigma08')
           .replace(/alpha08/g, 'sigma08')
           .replace(/forest08/g, 'sigma08');
         return JSON.parse(sanitized);
@@ -128,6 +129,7 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const sanitized = saved
           .replace(/Agent-alpha08/g, 'Agent-sigma08')
           .replace(/Agent-forest08/g, 'Agent-sigma08')
+          .replace(/Agent08/g, 'Agent-sigma08')
           .replace(/alpha08/g, 'sigma08')
           .replace(/forest08/g, 'sigma08');
         return JSON.parse(sanitized);
