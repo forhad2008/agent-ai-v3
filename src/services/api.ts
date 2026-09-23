@@ -199,6 +199,27 @@ function getLocalizedHeaders(langId: string) {
   };
 }
 
+function detectRequestedLanguageInPrompt(prompt: string): string | null {
+  const p = prompt.toLowerCase();
+  
+  if (p.includes('in spanish') || p.includes('en español') || p.includes('স্প্যানিশ')) return 'es';
+  if (p.includes('in french') || p.includes('en français') || p.includes('ফ্রেঞ্চ')) return 'fr';
+  if (p.includes('in german') || p.includes('auf deutsch') || p.includes('জার্মান')) return 'de';
+  if (p.includes('in bangla') || p.includes('in bengali') || p.includes('বাংলায়') || p.includes('বাংলা ভাষায়')) return 'bn';
+  if (p.includes('in hindi') || p.includes('हिंदी में') || p.includes('হিন্দিতে')) return 'hi';
+  if (p.includes('in arabic') || p.includes('بالعربية') || p.includes('আরবিতে')) return 'ar';
+  if (p.includes('in japanese') || p.includes('日本語で') || p.includes('জাপানিজ')) return 'ja';
+  if (p.includes('in chinese') || p.includes('中文') || p.includes('চাইনিজ')) return 'zh';
+  if (p.includes('in italian') || p.includes('in italiano') || p.includes('ইতালিয়ান')) return 'it';
+  if (p.includes('in russian') || p.includes('по-русски') || p.includes('রাশিয়ান')) return 'ru';
+  if (p.includes('in portuguese') || p.includes('em português') || p.includes('পর্তুগিজ')) return 'pt';
+  if (p.includes('in korean') || p.includes('한국어로') || p.includes('কোরিয়ান')) return 'ko';
+  if (p.includes('in turkish') || p.includes('türkçe') || p.includes('তুর্কি')) return 'tr';
+  if (p.includes('in english') || p.includes('in english please') || p.includes('ইংরেজিতে')) return 'en';
+
+  return null;
+}
+
 // Client-side AI Work Agent Orchestrator with localized decorator
 function generateClientSideAgentResponse(
   prompt: string,
@@ -207,14 +228,16 @@ function generateClientSideAgentResponse(
   userProfile?: UserProfile,
   settings?: any
 ): ChatResponse {
-  const response = generateClientSideAgentResponseRaw(prompt, language, attachedFiles, userProfile, settings);
-  const normLang = (language || "").toLowerCase().trim();
+  const promptLang = detectRequestedLanguageInPrompt(prompt);
+  const effectiveLang = promptLang || language;
+  const response = generateClientSideAgentResponseRaw(prompt, effectiveLang, attachedFiles, userProfile, settings);
+  const normLang = (effectiveLang || "").toLowerCase().trim();
   const isBangla = normLang === 'bn' || normLang === 'bangla' || normLang === 'bengali';
-  const isEnglish = normLang === 'en' || normLang === 'english' || !language;
+  const isEnglish = normLang === 'en' || normLang === 'english' || !effectiveLang;
 
   if (!isBangla && !isEnglish) {
-    const t = getPageTranslations(language);
-    const headers = getLocalizedHeaders(language);
+    const t = getPageTranslations(effectiveLang);
+    const headers = getLocalizedHeaders(effectiveLang);
 
     if (response.content) {
       response.content = response.content

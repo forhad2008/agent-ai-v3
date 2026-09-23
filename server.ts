@@ -98,8 +98,31 @@ function getLanguageName(code: string): string {
   return mapping[norm] || code || "English";
 }
 
-function getSystemInstruction(language: string = "en", userProfile?: any): string {
-  const langName = getLanguageName(language);
+// Detect explicit language requests inside the prompt itself
+function detectRequestedLanguageInPrompt(prompt: string): string | null {
+  const p = prompt.toLowerCase();
+  
+  if (p.includes('in spanish') || p.includes('en español') || p.includes('in espanyol') || p.includes('স্প্যানিশ')) return 'Spanish';
+  if (p.includes('in french') || p.includes('en français') || p.includes('ফ্রেঞ্চ')) return 'French';
+  if (p.includes('in german') || p.includes('auf deutsch') || p.includes('জার্মান')) return 'German';
+  if (p.includes('in bangla') || p.includes('in bengali') || p.includes('বাংলায়') || p.includes('বাংলা ভাষায়')) return 'Bangla';
+  if (p.includes('in hindi') || p.includes('हिंदी में') || p.includes('হিন্দিতে')) return 'Hindi';
+  if (p.includes('in arabic') || p.includes('بالعربية') || p.includes('আরবিতে')) return 'Arabic';
+  if (p.includes('in japanese') || p.includes('日本語で') || p.includes('জাপানিজ')) return 'Japanese';
+  if (p.includes('in chinese') || p.includes('中文') || p.includes('চাইনিজ')) return 'Chinese';
+  if (p.includes('in italian') || p.includes('in italiano') || p.includes('ইতালিয়ান')) return 'Italian';
+  if (p.includes('in russian') || p.includes('по-русски') || p.includes('রাশিয়ান')) return 'Russian';
+  if (p.includes('in portuguese') || p.includes('em português') || p.includes('পর্তুগিজ')) return 'Portuguese';
+  if (p.includes('in korean') || p.includes('한국어로') || p.includes('কোরিয়ান')) return 'Korean';
+  if (p.includes('in turkish') || p.includes('türkçe') || p.includes('তুর্কি')) return 'Turkish';
+  if (p.includes('in english') || p.includes('in english please') || p.includes('ইংরেজিতে')) return 'English';
+
+  return null;
+}
+
+function getSystemInstruction(language: string = "en", userProfile?: any, promptOverrideLang?: string | null): string {
+  const effectiveLang = promptOverrideLang || language;
+  const langName = getLanguageName(effectiveLang);
   const isBangla = langName === "Bangla";
   const userName = userProfile?.name || 'Abdullah';
   const userRole = userProfile?.role ? ` (${userProfile.role})` : '';
@@ -108,15 +131,20 @@ function getSystemInstruction(language: string = "en", userProfile?: any): strin
   const techStack = userProfile?.techStack ? `\n[USER TECH STACK]: ${userProfile.techStack}` : '';
   const goals = userProfile?.goals ? `\n[USER GOALS]: ${userProfile.goals}` : '';
 
+  const dynamicLangRule = `
+DYNAMIC MULTILINGUAL OVERRIDE:
+If the user in their prompt explicitly asks to explain, answer, or translate into any specific language (for example: "explain in Spanish", "tell me in French", "বাংলায় ব্যাখ্যা করো", "in German", "in Arabic", "in Hindi", "in Japanese", etc.), you MUST IMMEDIATELY and fully switch your explanation, structured headings, and entire response to that requested target language.`;
+
   if (isBangla) {
     return `You are Agent-sigma08, ${userName}'s personal AI Agent. You must introduce yourself as Agent-sigma08 everywhere and act & work as Agent-sigma08. You are assisting ${userName}${userRole}${company}.${customInstructions}${techStack}${goals}
 
 Your purpose is to understand ${userName}'s objectives and help complete real-world digital work.
 Always address the user as ${userName}.
 You are not merely a chatbot.
+${dynamicLangRule}
 
 CRITICAL INSTRUCTION - THINKING PROCESS:
-At the very beginning of your response, you MUST output a <thinking>...</thinking> block in Bangla explaining your deep cognitive reasoning, tool selection, delegation permissions, and safety risk evaluation. Do NOT write standard markdown or headings inside the thinking tag. Write in natural raw paragraphs. Immediately after the closing </thinking> tag, proceed to write the formatted response starting with the standard headings.
+At the very beginning of your response, you MUST output a <thinking>...</thinking> block in Bangla (or in the prompt's requested language) explaining your deep cognitive reasoning, tool selection, delegation permissions, and safety risk evaluation. Do NOT write standard markdown or headings inside the thinking tag. Write in natural raw paragraphs. Immediately after the closing </thinking> tag, proceed to write the formatted response starting with the standard headings.
 
 For each task:
 1. Understand the objective.
@@ -136,7 +164,7 @@ Provide only concise high-level progress information.
 Sensitive actions require explicit user approval.
 Never send messages, emails, publish content, delete important files, spend money, or perform other consequential external actions without confirmation.
 Protect private information.
-Always communicate with the user in natural professional Bangla (preserve English technical terminology).
+Always communicate with the user in natural professional Bangla (preserve English technical terminology) unless another language is explicitly requested in the prompt.
 Act professionally, accurately, transparently, and safely.
 
 CRITICAL RESPONSE FORMAT:
@@ -166,9 +194,10 @@ Avoid unnecessary long explanations.`;
 Your purpose is to understand ${userName}'s objectives and help complete real-world digital work.
 Always address the user as ${userName}.
 You are not merely a chatbot.
+${dynamicLangRule}
 
 CRITICAL INSTRUCTION - THINKING PROCESS:
-At the very beginning of your response, you MUST output a <thinking>...</thinking> block in English explaining your deep cognitive reasoning, tool alignment, risk mitigation, and step-by-step logic. Do NOT write standard markdown or headings inside the thinking tag. Write in raw paragraphs. Immediately after the closing </thinking> tag, proceed to write the formatted response starting with the standard headings.
+At the very beginning of your response, you MUST output a <thinking>...</thinking> block in English (or in the prompt's requested language) explaining your deep cognitive reasoning, tool alignment, risk mitigation, and step-by-step logic. Do NOT write standard markdown or headings inside the thinking tag. Write in raw paragraphs. Immediately after the closing </thinking> tag, proceed to write the formatted response starting with the standard headings.
 
 For each task:
 1. Understand the objective.
@@ -190,11 +219,10 @@ Never send messages, emails, publish content, delete important files, spend mone
 Protect private information.
 ${
   isEnglish
-    ? "Always communicate with the user in English by default."
+    ? "Always communicate with the user in English by default, unless the user's prompt explicitly requests a different language."
     : `CRITICAL LANGUAGE COMPLIANCE DIRECTIVE:
-The user has explicitly selected and configured their workspace language mode to: "${langName}" (${language}).
-You MUST write your entire response (all user-facing content, summaries, plans, outcomes, bullet points, and explanations) in "${langName}".
-Do NOT write your main response in English or any other language.
+The user has configured their workspace language mode to: "${langName}" (${language}).
+You MUST write your entire response (all user-facing content, summaries, plans, outcomes, bullet points, and explanations) in "${langName}", unless the user's prompt explicitly asks for a different language.
 Every single heading (e.g. ## Objective, ## Plan, ## Result, ## Next Steps), every bullet point, and every explanation MUST be written in "${langName}".
 You may preserve English technical terms or code snippets only where standard in "${langName}"'s technology industry, but all user communication must be in "${langName}".`
 }
@@ -447,16 +475,21 @@ app.post("/api/agent/chat", async (req, res) => {
       });
     }
 
-    // Add current user prompt with instructions and attached files
-    const langName = getLanguageName(language);
+    // Check if the user prompt explicitly requests a specific language
+    const promptOverrideLang = detectRequestedLanguageInPrompt(prompt);
+    const activeLang = promptOverrideLang || language;
+    const langName = getLanguageName(activeLang);
+    
     let langDirective = "Please respond in professional English.";
-    if (langName === "Bangla") {
+    if (promptOverrideLang) {
+      langDirective = `CRITICAL MANDATE: The user has explicitly asked for this response in "${promptOverrideLang}". You MUST write your entire response, explanation, headings, and next steps in "${promptOverrideLang}".`;
+    } else if (langName === "Bangla") {
       langDirective = "Please respond in natural professional Bangla (preserve English technical terms).";
     } else if (langName !== "English") {
       langDirective = `CRITICAL MANDATE: Please write your entire response in "${langName}". All headings, paragraphs, plans, and next steps must be fully translated and written in "${langName}". Do not use English for user-facing text under any circumstances.`;
     }
 
-    const promptWithDirectives = `${prompt}${fileContext}\n\n[User Language Preference: ${langDirective}]`;
+    const promptWithDirectives = `${prompt}${fileContext}\n\n[User Language Preference Directive: ${langDirective}]`;
 
     contents.push({
       role: "user",
@@ -466,8 +499,8 @@ app.post("/api/agent/chat", async (req, res) => {
     const response = await callGeminiWithRetryAndFallback(
       ai,
       contents,
-      getSystemInstruction(language, userProfile),
-      0.4
+      getSystemInstruction(language, userProfile, promptOverrideLang),
+      0.5
     );
 
     let rawText = response.text || "";
