@@ -223,7 +223,7 @@ function generateClientSideAgentResponse(
         .replace(/## ✉️ Drafted Customer Response/g, `${headers.objective}\n(Drafted Customer Reply)`)
         .replace(/## 🔍 Intelligence & Trend Research Report/g, `${headers.objective}\n(Intelligence Trend Report)`)
         .replace(/## 📝 Content & Product Copywriting Draft/g, `${headers.objective}\n(Product Copywriting Draft)`)
-        .replace(/## 👋 Hello! I am your \*\*Agent-forest08\*\*/g, `## 👋 Hello! [Operating in ${t.appName || 'Agent-forest08'}]`)
+        .replace(/## 👋 Hello! I am your \*\*Agent-sigma08\*\*/g, `## 👋 Hello! [Operating in ${t.appName || 'Agent-sigma08'}]`)
         .replace(/## 🎯 Work Order Executed/g, headers.objective)
         .replace(/## 📊 Performance & Security Audit Results/g, headers.result)
         .replace(/## 📊 Summary & Verified Outcomes/g, headers.result)
@@ -446,7 +446,7 @@ Prepared professional communication for: **"${prompt}"**
 > Thank you for reaching out. We have received your detailed requirements and our automated agent system has processed the initial parameters. Everything is verified and on track.
 >
 > Best regards,
-> **Agent-forest08**
+> **Agent-sigma08**
 
 Please review and confirm below before this message is dispatched.`,
       requiresApproval,
@@ -563,8 +563,8 @@ Transform your daily operations with a goal-driven AI assistant designed to exec
     return {
       thinking: `Greeting parsed. Greeting user Abdullah. Listing authorized workspace tools and permission modes in the configured language to ensure full visibility of capabilities.`,
       content: isBangla
-        ? `## 👋 হ্যালো! আমি আপনার Agent-forest08\nআমি আপনাকে নিম্নোক্ত কাজগুলোতে সরাসরি সাহায্য করতে পারি:\n\n- **🌐 ওয়েবসাইট ও এসইও অডিট**: যেকোনো ওয়েবসাইট অ্যানালাইজ ও পারফরম্যান্স রিপোর্ট তৈরি\n- **💻 কোড ফিল্টার ও ডিবাগিং**: টাইপস্ক্রিপ্ট/রিয়্যাক্ট কোড চেক এবং ফিক্সিং\n- **✉️ গ্রাহক বার্তা পরিচালনা**: ইমেইল ড্রাফট তৈরি ও সেন্ড করার পূর্বাহ্নে এপ্রুভাল গ্রহণ\n- **🔍 ট্রেন্ড ও মার্কেট রিসার্চ**: ডাটা ও আদেশ এনালিটিক্স তৈরি\n\nআপনি কী ধরনের কাজ সম্পন্ন করতে চান তা নিচে মেসেজ লিখে জানান!`
-        : `## 👋 Hello! I am your **Agent-forest08**
+        ? `## 👋 হ্যালো! আমি আপনার Agent-sigma08\nআমি আপনাকে নিম্নোক্ত কাজগুলোতে সরাসরি সাহায্য করতে পারি:\n\n- **🌐 ওয়েবসাইট ও এসইও অডিট**: যেকোনো ওয়েবসাইট অ্যানালাইজ ও পারফরম্যান্স রিপোর্ট তৈরি\n- **💻 কোড ফিল্টার ও ডিবাগিং**: টাইপস্ক্রিপ্ট/রিয়্যাক্ট কোড চেক এবং ফিক্সিং\n- **✉️ গ্রাহক বার্তা পরিচালনা**: ইমেইল ড্রাফট তৈরি ও সেন্ড করার পূর্বাহ্নে এপ্রুভাল গ্রহণ\n- **🔍 ট্রেন্ড ও মার্কেট রিসার্চ**: ডাটা ও আদেশ এনালিটিক্স তৈরি\n\nআপনি কী ধরনের কাজ সম্পন্ন করতে চান তা নিচে মেসেজ লিখে জানান!`
+        : `## 👋 Hello! I am your **Agent-sigma08**
 I am armed and ready to execute your instructions autonomously. Here is what I can do for you:
 
 1. **🌐 Web & SEO Audits**: Analyze any website URL for speed, structure, and security.

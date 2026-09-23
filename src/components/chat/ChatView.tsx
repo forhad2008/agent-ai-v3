@@ -286,7 +286,7 @@ export const ChatView: React.FC = () => {
                 {/* Sender badge & timestamp */}
                 <div className="flex items-center gap-2 mb-1 px-1 text-[11px] text-[#94A3B8]">
                   <span className="font-semibold text-[#F8FAFC]">
-                    {isUser ? 'You (Abdullah)' : (settings.agentName || 'Agent-forest08')}
+                    {isUser ? 'You (Abdullah)' : (settings.agentName || 'Agent-sigma08')}
                   </span>
                   <span>•</span>
                   <span>{msg.timestamp}</span>

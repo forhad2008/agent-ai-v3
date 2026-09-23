@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Sparkles,
   ArrowRight,
@@ -22,8 +22,15 @@ import {
   Trash2,
   Bell,
   Cpu,
+  Music,
+  Disc3,
+  Play,
+  Square,
+  Volume2,
+  ExternalLink,
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
+import { sound } from '../../services/sound';
 
 export const DashboardView: React.FC = () => {
   const {
@@ -40,6 +47,14 @@ export const DashboardView: React.FC = () => {
   const [newAlarmTime, setNewAlarmTime] = useState('');
   const [newAlarmLabel, setNewAlarmLabel] = useState('');
   const [showQuickAlarmInput, setShowQuickAlarmInput] = useState(false);
+  const [isRingtonePlaying, setIsRingtonePlaying] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = sound.subscribePiratesState((playing) => {
+      setIsRingtonePlaying(playing);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -701,7 +716,7 @@ export const DashboardView: React.FC = () => {
         id="section_alarms_scheduler"
         className="rounded-3xl p-5 space-y-4 border border-[#E50914]/25 bg-[#120307]/80 backdrop-blur-xl shadow-xl"
       >
-        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-white/10 pb-3 gap-3">
           <div className="flex items-center gap-3">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E50914]/20 border border-[#E50914]/30">
               <Bell className="h-4.5 w-4.5 text-[#FF204E]" />
@@ -711,19 +726,85 @@ export const DashboardView: React.FC = () => {
                 Agent-sigma08 Task Alarms & Reminders
               </h3>
               <p className="text-[10px] text-white/50">
-                Scheduled execution triggers and live sound alerts
+                Scheduled execution triggers with real "Pirates of the Caribbean" theme ringtone
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => setShowQuickAlarmInput(!showQuickAlarmInput)}
-            className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#E50914] to-[#FF204E] px-3 py-1.5 text-xs font-bold text-white transition-all hover:scale-105"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            <span>New Alarm</span>
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Quick Test Pirates of the Caribbean Ringtone Button */}
+            <button
+              type="button"
+              onClick={() => sound.togglePiratesTheme(false)}
+              className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-bold transition-all cursor-pointer shadow-md ${
+                isRingtonePlaying 
+                  ? 'bg-gradient-to-r from-[#FF204E] to-[#E50914] text-white animate-pulse' 
+                  : 'bg-black/60 hover:bg-[#E50914]/20 text-[#FF204E] border border-[#E50914]/40'
+              }`}
+            >
+              {isRingtonePlaying ? (
+                <>
+                  <Square className="h-3 w-3 fill-current" />
+                  <span>Stop Ringtone</span>
+                </>
+              ) : (
+                <>
+                  <Play className="h-3 w-3 fill-current" />
+                  <span>Test Pirates Ringtone</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setShowQuickAlarmInput(!showQuickAlarmInput)}
+              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#E50914] to-[#FF204E] px-3 py-1.5 text-xs font-bold text-white transition-all hover:scale-105 cursor-pointer shadow-md"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              <span>New Alarm</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Ringtone Banner Card */}
+        <div className="rounded-2xl bg-gradient-to-r from-[#1d050a]/90 via-black/80 to-[#1d050a]/90 p-3.5 border border-[#E50914]/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-inner">
+          <div className="flex items-center gap-3">
+            <div className={`h-10 w-10 rounded-xl bg-gradient-to-br from-[#E50914] to-[#800000] flex items-center justify-center flex-shrink-0 shadow-lg ${isRingtonePlaying ? 'animate-spin' : ''}`} style={{ animationDuration: '4s' }}>
+              <Disc3 className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#FF204E] bg-[#E50914]/15 px-2 py-0.5 rounded-md border border-[#E50914]/30">
+                  Active Alarm Audio
+                </span>
+                {isRingtonePlaying && (
+                  <div className="flex items-end gap-0.5 h-3">
+                    <span className="w-1 bg-[#FF204E] rounded-full animate-pulse h-full" />
+                    <span className="w-1 bg-[#E50914] rounded-full animate-pulse h-2" style={{ animationDelay: '0.15s' }} />
+                    <span className="w-1 bg-[#FF204E] rounded-full animate-pulse h-3" style={{ animationDelay: '0.3s' }} />
+                  </div>
+                )}
+              </div>
+              <h4 className="text-xs font-bold text-white mt-0.5">
+                Pirates of the Caribbean: "He's a Pirate" (Hans Zimmer & Klaus Badelt)
+              </h4>
+              <p className="text-[10px] text-[#94A3B8]">
+                Plays live on scheduled alarm trigger • Master audio file with Web Audio fallback
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-end sm:self-auto">
+            <a
+              href="https://www.youtube.com/watch?v=27mB8verLK8"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-[11px] text-[#94A3B8] hover:text-white bg-white/5 hover:bg-white/10 px-2.5 py-1.5 rounded-xl border border-white/10 transition-colors font-medium"
+            >
+              <span>Watch on YouTube</span>
+              <ExternalLink className="h-3 w-3 text-[#FF204E]" />
+            </a>
+          </div>
         </div>
 
         {showQuickAlarmInput && (

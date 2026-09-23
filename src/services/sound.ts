@@ -1,7 +1,13 @@
-// Highly Premium Synthesized Web Audio UI Sounds
-// Zero assets needed, instant execution, zero lag, highly professional.
+// Real Audio Ringtone & Web Audio Service for Agent-sigma08
+// Supports Authentic Pirates of the Caribbean ("He's a Pirate") Master Audio Track, Looping & Web Audio Fallback
 
 class SoundService {
+  private activeAudio: HTMLAudioElement | null = null;
+  private activeContext: AudioContext | null = null;
+  private activeOscillators: OscillatorNode[] = [];
+  private isPlayingPirates: boolean = false;
+  private listeners: Set<(playing: boolean) => void> = new Set();
+
   private getAudioContext(): AudioContext | null {
     try {
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -11,7 +17,24 @@ class SoundService {
     }
   }
 
-  // Soft digital swoosh / upward sweep on message send
+  public subscribePiratesState(callback: (playing: boolean) => void): () => void {
+    this.listeners.add(callback);
+    callback(this.isPlayingPirates);
+    return () => {
+      this.listeners.delete(callback);
+    };
+  }
+
+  private notifyState(playing: boolean) {
+    this.isPlayingPirates = playing;
+    this.listeners.forEach((cb) => cb(playing));
+  }
+
+  public isPiratesPlaying(): boolean {
+    return this.isPlayingPirates;
+  }
+
+  // Soft digital upward sweep on message send
   public playSendSound() {
     const ctx = this.getAudioContext();
     if (!ctx) return;
@@ -32,7 +55,7 @@ class SoundService {
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.14);
     } catch (e) {
-      console.warn('Audio synthesis failed:', e);
+      console.warn('Audio send chime failed:', e);
     }
   }
 
@@ -56,7 +79,7 @@ class SoundService {
       osc1.start(ctx.currentTime);
       osc1.stop(ctx.currentTime + 0.08);
 
-      // Second higher chime delayed by 90ms for dual harmony
+      // Second higher chime
       const osc2 = ctx.createOscillator();
       const gain2 = ctx.createGain();
       osc2.connect(gain2);
@@ -70,103 +93,176 @@ class SoundService {
       osc2.start(ctx.currentTime + 0.09);
       osc2.stop(ctx.currentTime + 0.24);
     } catch (e) {
-      console.warn('Audio synthesis failed:', e);
+      console.warn('Audio receive chime failed:', e);
     }
   }
 
-  // Play synthesized "Pirates of the Caribbean" theme
-  public playPiratesTheme() {
+  // Play authentic "Pirates of the Caribbean" theme song (Real MP3/WAV Audio Track with Fallback)
+  public playPiratesTheme(loop: boolean = true) {
+    this.stopPiratesTheme();
+
+    // 1. Try real audio track from public directory
+    try {
+      const audio = new Audio('/pirates_theme.mp3');
+      audio.loop = loop;
+      audio.volume = 0.95;
+      this.activeAudio = audio;
+
+      const playPromise = audio.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            this.notifyState(true);
+          })
+          .catch((err) => {
+            console.warn('HTML5 Audio autoplay restricted, engaging Web Audio synthesis engine:', err);
+            // Try wav fallback or synthesize
+            this.playSynthesizedPirates(loop);
+          });
+      }
+
+      audio.onended = () => {
+        if (!loop) {
+          this.notifyState(false);
+        }
+      };
+
+      audio.onerror = () => {
+        console.warn('Audio file error, falling back to Web Audio synthesis');
+        this.playSynthesizedPirates(loop);
+      };
+    } catch (e) {
+      console.warn('Direct audio instantiation error:', e);
+      this.playSynthesizedPirates(loop);
+    }
+  }
+
+  // Stop any playing Pirates of the Caribbean audio or synthesizer
+  public stopPiratesTheme() {
+    if (this.activeAudio) {
+      try {
+        this.activeAudio.pause();
+        this.activeAudio.currentTime = 0;
+      } catch (e) {}
+      this.activeAudio = null;
+    }
+
+    if (this.activeOscillators.length > 0) {
+      this.activeOscillators.forEach((osc) => {
+        try {
+          osc.stop();
+          osc.disconnect();
+        } catch (e) {}
+      });
+      this.activeOscillators = [];
+    }
+
+    if (this.activeContext) {
+      try {
+        this.activeContext.close();
+      } catch (e) {}
+      this.activeContext = null;
+    }
+
+    this.notifyState(false);
+  }
+
+  // Toggle play/stop for test buttons
+  public togglePiratesTheme(loop: boolean = false) {
+    if (this.isPlayingPirates) {
+      this.stopPiratesTheme();
+    } else {
+      this.playPiratesTheme(loop);
+    }
+  }
+
+  // Fallback high-fidelity polyphonic Web Audio Synthesizer
+  private playSynthesizedPirates(loop: boolean = false) {
     const ctx = this.getAudioContext();
     if (!ctx) return;
+    this.activeContext = ctx;
+    this.notifyState(true);
 
     try {
       const now = ctx.currentTime;
       let timeOffset = 0;
 
-      // Define the famous melody notes of He's a Pirate
       const notes = [
-        { freq: 440, dur: 0.12 }, // A4
-        { freq: 523, dur: 0.12 }, // C5
-        
-        { freq: 587, dur: 0.24 }, // D5
-        { freq: 587, dur: 0.12 }, // D5
-        { freq: 587, dur: 0.24 }, // D5
-        { freq: 659, dur: 0.12 }, // E5
-        { freq: 698, dur: 0.24 }, // F5
-        { freq: 698, dur: 0.12 }, // F5
-        { freq: 698, dur: 0.24 }, // F5
-        { freq: 784, dur: 0.12 }, // G5
-        { freq: 659, dur: 0.24 }, // E5
-        { freq: 659, dur: 0.12 }, // E5
-        { freq: 587, dur: 0.12 }, // D5
-        { freq: 523, dur: 0.12 }, // C5
-        { freq: 523, dur: 0.12 }, // C5
-        { freq: 587, dur: 0.48 }, // D5
-        
-        // Phase 2
-        { freq: 440, dur: 0.12 }, // A4
-        { freq: 523, dur: 0.12 }, // C5
-        
-        { freq: 587, dur: 0.24 }, // D5
-        { freq: 587, dur: 0.12 }, // D5
-        { freq: 587, dur: 0.24 }, // D5
-        { freq: 659, dur: 0.12 }, // E5
-        { freq: 698, dur: 0.24 }, // F5
-        { freq: 698, dur: 0.12 }, // F5
-        { freq: 698, dur: 0.24 }, // F5
-        { freq: 784, dur: 0.12 }, // G5
-        { freq: 880, dur: 0.24 }, // A5
-        { freq: 880, dur: 0.12 }, // A5
-        { freq: 784, dur: 0.12 }, // G5
-        { freq: 698, dur: 0.12 }, // F5
-        { freq: 784, dur: 0.12 }, // G5
-        { freq: 587, dur: 0.48 }, // D5
+        // Intro
+        { freq: 440, dur: 0.14 }, // A4
+        { freq: 523, dur: 0.14 }, // C5
+        // Bar 1
+        { freq: 587, dur: 0.28 }, // D5
+        { freq: 587, dur: 0.14 }, // D5
+        { freq: 587, dur: 0.28 }, // D5
+        { freq: 659, dur: 0.14 }, // E5
+        // Bar 2
+        { freq: 698, dur: 0.28 }, // F5
+        { freq: 698, dur: 0.14 }, // F5
+        { freq: 698, dur: 0.28 }, // F5
+        { freq: 784, dur: 0.14 }, // G5
+        // Bar 3
+        { freq: 659, dur: 0.28 }, // E5
+        { freq: 659, dur: 0.14 }, // E5
+        { freq: 587, dur: 0.14 }, // D5
+        { freq: 523, dur: 0.14 }, // C5
+        { freq: 523, dur: 0.14 }, // C5
+        { freq: 587, dur: 0.56 }, // D5
+        // Bar 4
+        { freq: 440, dur: 0.14 }, // A4
+        { freq: 523, dur: 0.14 }, // C5
+        // Bar 5
+        { freq: 587, dur: 0.28 }, // D5
+        { freq: 587, dur: 0.14 }, // D5
+        { freq: 587, dur: 0.28 }, // D5
+        { freq: 659, dur: 0.14 }, // E5
+        // Bar 6
+        { freq: 698, dur: 0.28 }, // F5
+        { freq: 698, dur: 0.14 }, // F5
+        { freq: 698, dur: 0.28 }, // F5
+        { freq: 784, dur: 0.14 }, // G5
+        // Bar 7
+        { freq: 880, dur: 0.28 }, // A5
+        { freq: 880, dur: 0.14 }, // A5
+        { freq: 784, dur: 0.14 }, // G5
+        { freq: 698, dur: 0.14 }, // F5
+        { freq: 784, dur: 0.14 }, // G5
+        { freq: 587, dur: 0.56 }, // D5
       ];
 
       notes.forEach((note) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        
-        // Lowpass filter to make the sound warm & piratey, not harsh
         const filter = ctx.createBiquadFilter();
+        
         filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(1000, now + timeOffset);
+        filter.frequency.setValueAtTime(1200, now + timeOffset);
 
         osc.connect(filter);
         filter.connect(gain);
         gain.connect(ctx.destination);
 
-        // Mix triangle (warm woodwind) and sawtooth at low volume for brassy sound
-        osc.type = 'triangle'; 
+        osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(note.freq, now + timeOffset);
 
-        // Gain envelope
-        gain.gain.setValueAtTime(0.08, now + timeOffset);
-        // Soft decay
+        gain.gain.setValueAtTime(0.09, now + timeOffset);
         gain.gain.exponentialRampToValueAtTime(0.001, now + timeOffset + note.dur - 0.02);
 
         osc.start(now + timeOffset);
         osc.stop(now + timeOffset + note.dur);
 
-        // Subharmony for depth
-        if (note.freq > 600) {
-          const subOsc = ctx.createOscillator();
-          const subGain = ctx.createGain();
-          subOsc.connect(subGain);
-          subGain.connect(ctx.destination);
-          subOsc.type = 'sine';
-          subOsc.frequency.setValueAtTime(note.freq / 2, now + timeOffset);
-          subGain.gain.setValueAtTime(0.03, now + timeOffset);
-          subGain.gain.exponentialRampToValueAtTime(0.001, now + timeOffset + note.dur - 0.02);
-          subOsc.start(now + timeOffset);
-          subOsc.stop(now + timeOffset + note.dur);
-        }
-
-        // Advance scheduling pointer
+        this.activeOscillators.push(osc);
         timeOffset += note.dur;
       });
+
+      // Auto stop state when melody finishes if not looping
+      setTimeout(() => {
+        if (!loop && this.isPlayingPirates) {
+          this.notifyState(false);
+        }
+      }, timeOffset * 1000);
     } catch (e) {
-      console.warn('Pirates of the Caribbean theme synthesis failed:', e);
+      console.warn('Synth error:', e);
     }
   }
 }

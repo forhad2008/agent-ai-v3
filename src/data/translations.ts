@@ -428,7 +428,7 @@ export const BN_TRANSLATIONS: PageTranslations = {
   voiceInputTooltip: 'ভয়েস ইনপুট (স্পিচ-টু-টেক্সট)',
   stopBtn: 'উৎপাদন বন্ধ করুন',
   welcomeMessageHeading: 'উদ্দেশ্য',
-  welcomeMessageBody: 'স্বাগতম! আমি **Agent-forest08**।\n\n## পরিকল্পনা\n- আপনার প্রাকৃতিক ভাষার নির্দেশ বুঝে স্বয়ংক্রিয় পরিকল্পনা তৈরি করা।\n- অনুমতিপ্রাপ্ত ফাইল, কোড, ওয়েব রিসার্চ এবং ডেটা টুল ব্যবহার করা।\n- ফলাফল পরীক্ষা ও যাচাই করে স্বচ্ছ প্রতিবেদন প্রদান করা।\n- সংবেদনশীল কাজের জন্য আপনার অনুমোদন নেওয়া।\n\n## ফলাফল\nসিস্টেম সম্পূর্ণ প্রস্তুত। যেকোনো নির্দেশ দিন।',
+  welcomeMessageBody: 'স্বাগতম! আমি **Agent-sigma08**।\n\n## পরিকল্পনা\n- আপনার প্রাকৃতিক ভাষার নির্দেশ বুঝে স্বয়ংক্রিয় পরিকল্পনা তৈরি করা।\n- অনুমতিপ্রাপ্ত ফাইল, কোড, ওয়েব রিসার্চ এবং ডেটা টুল ব্যবহার করা।\n- ফলাফল পরীক্ষা ও যাচাই করে স্বচ্ছ প্রতিবেদন প্রদান করা।\n- সংবেদনশীল কাজের জন্য আপনার অনুমোদন নেওয়া।\n\n## ফলাফল\nসিস্টেম সম্পূর্ণ প্রস্তুত। যেকোনো নির্দেশ দিন।',
 
   planUnderstanding: 'নির্দেশ ও উদ্দেশ্য অনুধাবন',
   planScanning: 'প্রয়োজনীয় টুল ও ফাইল স্ক্যান',
@@ -557,7 +557,7 @@ export const BN_TRANSLATIONS: PageTranslations = {
 // Japanese Translations (Japan #3)
 export const JA_TRANSLATIONS: PageTranslations = {
   ...EN_TRANSLATIONS,
-  appName: 'Agent-forest08',
+  appName: 'Agent-sigma08',
   appSubtitle: '専属AIワークOS',
   agentReady: 'エージェント稼働中',
   agentStatus: 'エージェントステータス',
@@ -621,7 +621,7 @@ export const JA_TRANSLATIONS: PageTranslations = {
 // German Translations (Germany #4)
 export const DE_TRANSLATIONS: PageTranslations = {
   ...EN_TRANSLATIONS,
-  appName: 'Agent-forest08',
+  appName: 'Agent-sigma08',
   appSubtitle: 'Persönliches KI-Arbeits-Betriebssystem',
   agentReady: 'Agent Bereit & Aktiv',
   agentStatus: 'Agentenstatus',
@@ -666,7 +666,7 @@ export const DE_TRANSLATIONS: PageTranslations = {
 // French Translations (France #13)
 export const FR_TRANSLATIONS: PageTranslations = {
   ...EN_TRANSLATIONS,
-  appName: 'Agent-forest08',
+  appName: 'Agent-sigma08',
   appSubtitle: 'Système d’Exploitation IA Personnel',
   agentReady: 'Agent Prêt & Actif',
   agentStatus: 'Statut de l’Agent',
@@ -711,7 +711,7 @@ export const FR_TRANSLATIONS: PageTranslations = {
 // Spanish Translations (Spain #25)
 export const ES_TRANSLATIONS: PageTranslations = {
   ...EN_TRANSLATIONS,
-  appName: 'Agent-forest08',
+  appName: 'Agent-sigma08',
   appSubtitle: 'Sistema Operativo de Trabajo con IA Personal',
   agentReady: 'Agente Listo y Activo',
   agentStatus: 'Estado del Agente',
@@ -756,7 +756,7 @@ export const ES_TRANSLATIONS: PageTranslations = {
 // Chinese Translations (China #8 & Taiwan #17 & Singapore #9)
 export const ZH_TRANSLATIONS: PageTranslations = {
   ...EN_TRANSLATIONS,
-  appName: 'Agent-forest08',
+  appName: 'Agent-sigma08',
   appSubtitle: '个人 AI 工作操作系统',
   agentReady: '智能体就绪与就位',
   agentStatus: '智能体状态',

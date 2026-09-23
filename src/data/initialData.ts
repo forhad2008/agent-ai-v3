@@ -291,7 +291,7 @@ async function processClientOrder(orderId, customerPayload) {
     category: 'data',
     content: `{
   "productId": "AGENT-PRO-2026",
-  "name": "Agent-forest08 Autonomous Operating System",
+  "name": "Agent-sigma08 Autonomous Operating System",
   "version": "3.8.0-flash",
   "features": [
     "Full-stack agentic execution",
@@ -407,12 +407,12 @@ export const INITIAL_APPROVALS: ApprovalRequest[] = [
     details: 'Send drafted message regarding delivery tracking resolution to customer.',
     preview: `Dear Tanvir Hasan,
 
-Thank you for contacting Agent-forest08 AI Services. We sincerely apologize for the delay in providing your tracking code. 
+Thank you for contacting Agent-sigma08 AI Services. We sincerely apologize for the delay in providing your tracking code. 
 
 Our logistics team has verified that your package is currently in transit and scheduled for delivery before 4:00 PM today. We have also credited 15% towards your next monthly billing cycle as a courtesy.
 
 Warm regards,
-Agent-forest08 AI Work Operations`,
+Agent-sigma08 AI Work Operations`,
     riskLevel: 'REQUIRES_APPROVAL',
     riskReason: 'External communication with real client',
     status: 'pending',
@@ -469,7 +469,7 @@ export const INITIAL_MESSAGES: MessageItem[] = [
     id: 'msg_welcome',
     sender: 'agent',
     text: `## Objective
-Welcome! I am **Agent-forest08**, your personal AI work operating system powered by Gemini.
+Welcome! I am **Agent-sigma08**, your personal AI work operating system powered by Gemini.
 
 ## Plan
 - Understand natural language instructions and construct autonomous execution pipelines.

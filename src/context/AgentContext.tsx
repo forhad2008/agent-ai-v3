@@ -107,7 +107,11 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const saved = localStorage.getItem('abdullah_tasks');
       if (saved) {
-        const sanitized = saved.replace(/Agent-alpha08/g, 'Agent-forest08').replace(/alpha08/g, 'forest08');
+        const sanitized = saved
+          .replace(/Agent-alpha08/g, 'Agent-sigma08')
+          .replace(/Agent-forest08/g, 'Agent-sigma08')
+          .replace(/alpha08/g, 'sigma08')
+          .replace(/forest08/g, 'sigma08');
         return JSON.parse(sanitized);
       }
     } catch (e) {}
@@ -121,7 +125,11 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       const saved = localStorage.getItem('abdullah_messages');
       if (saved) {
-        const sanitized = saved.replace(/Agent-alpha08/g, 'Agent-forest08').replace(/alpha08/g, 'forest08');
+        const sanitized = saved
+          .replace(/Agent-alpha08/g, 'Agent-sigma08')
+          .replace(/Agent-forest08/g, 'Agent-sigma08')
+          .replace(/alpha08/g, 'sigma08')
+          .replace(/forest08/g, 'sigma08');
         return JSON.parse(sanitized);
       }
     } catch (e) {}
@@ -207,8 +215,8 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           setTriggeredAlarm(alarm);
           // Toggle off so it doesn't loop
           setAlarms(prev => prev.map(a => a.id === alarm.id ? { ...a, enabled: false } : a));
-          // Play synthesized "Pirates of the Caribbean" theme song
-          sound.playPiratesTheme();
+          // Play authentic "Pirates of the Caribbean" theme song (looping until dismissed)
+          sound.playPiratesTheme(true);
         }
       });
     }, 1000);
@@ -269,7 +277,7 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const initialLang = useMemo(() => getInitialLanguage(), []);
 
   const [settings, setSettings] = useState<SettingsState>({
-    agentName: 'Agent-forest08',
+    agentName: 'Agent-sigma08',
     language: initialLang.id,
     aiBehavior: 'semi-autonomous',
     permissionSensitivity: 'Medium',
@@ -635,8 +643,8 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         id: `msg_new_${Date.now()}`,
         sender: 'agent',
         text: settings.language === 'Bangla' 
-          ? `## কাজ\nনতুন কথোপকথন প্রস্তুত করা হয়েছে। Agent-forest08 আপনার নতুন নির্দেশনার অপেক্ষায় রয়েছে।`
-          : `## Action\nNew conversation workspace initialized. Agent-forest08 is standing by for instructions.`,
+          ? `## কাজ\nনতুন কথোপকথন প্রস্তুত করা হয়েছে। Agent-sigma08 আপনার নতুন নির্দেশনার অপেক্ষায় রয়েছে।`
+          : `## Action\nNew conversation workspace initialized. Agent-sigma08 is standing by for instructions.`,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         planSteps: [
           { title: 'Workspace reset', status: 'completed' },
