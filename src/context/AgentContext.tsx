@@ -574,6 +574,7 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         planSteps: resolvedPlan,
         toolExecutions: agentResponse.toolExecutions,
+        groundingMetadata: agentResponse.groundingMetadata,
         requiresApproval: agentResponse.requiresApproval,
         approvalDetails: approvalReq,
         thinkingText: agentResponse.thinking,

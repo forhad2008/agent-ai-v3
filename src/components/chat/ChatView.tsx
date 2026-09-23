@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import {
   Send,
@@ -8,22 +8,32 @@ import {
   Check,
   Paperclip,
   Mic,
+  MicOff,
   Sparkles,
   Plus,
   FileText,
   AlertCircle,
-  HelpCircle,
   X,
-  FileCode,
-  ShieldAlert,
   MoreVertical,
   Trash2,
+  Volume2,
+  VolumeX,
+  Search,
+  Pin,
+  Download,
+  Edit2,
+  Smile,
+  ArrowDown,
+  Globe,
+  ExternalLink,
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
 import { PlanProgressCard } from './PlanProgressCard';
 import { ApprovalCard } from './ApprovalCard';
 import { ToolExecutionCard } from './ToolExecutionCard';
-import { FileItem } from '../../types';
+import { FileItem, MessageItem } from '../../types';
+
+const EMOJI_OPTIONS = ['👍', '❤️', '🔥', '🚀', '💡', '👏'];
 
 const ThinkingTraceSection: React.FC<{ thinkingText: string }> = ({ thinkingText }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -58,6 +68,7 @@ const ThinkingTraceSection: React.FC<{ thinkingText: string }> = ({ thinkingText
 export const ChatView: React.FC = () => {
   const {
     messages,
+    setMessages,
     handleSendMessage,
     isGenerating,
     stopGeneration,
@@ -76,10 +87,19 @@ export const ChatView: React.FC = () => {
   const [selectedAttachedFiles, setSelectedAttachedFiles] = useState<FileItem[]>([]);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
+  const [speakingMsgId, setSpeakingMsgId] = useState<string | null>(null);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const [emojiPickerMsgId, setEmojiPickerMsgId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const speechRecognitionRef = useRef<any>(null);
 
   // High-performance response action timer (10s guarantee countdown)
   const [countdown, setCountdown] = useState(10);
@@ -103,6 +123,15 @@ export const ChatView: React.FC = () => {
     };
   }, [isGenerating]);
 
+  // Clean up speech synthesis on unmount
+  useEffect(() => {
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
   const demoSuggestions = [
     { title: t.demoAnalyzeWebsite, prompt: t.demoAnalyzeWebsitePrompt },
     { title: t.demoCustomerReply, prompt: t.demoCustomerReplyPrompt },
@@ -111,17 +140,26 @@ export const ChatView: React.FC = () => {
     { title: t.demoResearchTrends, prompt: t.demoResearchTrendsPrompt },
   ];
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  const scrollToBottom = (behavior: ScrollBehavior = 'smooth') => {
+    messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (!isSearchOpen) {
+      scrollToBottom();
+    }
   }, [messages, isGenerating, activePlan]);
 
-  const handleSend = async () => {
-    if (!input.trim() || isGenerating) return;
-    const textToSend = input;
+  // Scroll listener for jump to bottom button
+  const handleScroll = () => {
+    if (!scrollContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = scrollContainerRef.current;
+    setShowScrollBottom(scrollHeight - scrollTop - clientHeight > 250);
+  };
+
+  const handleSend = async (customPrompt?: string) => {
+    const textToSend = customPrompt || input;
+    if (!textToSend.trim() || isGenerating) return;
     const attachedToSend = [...selectedAttachedFiles];
     setInput('');
     setSelectedAttachedFiles([]);
@@ -139,6 +177,98 @@ export const ChatView: React.FC = () => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  // Text-To-Speech Reader
+  const toggleSpeech = (msgId: string, text: string) => {
+    if (!('speechSynthesis' in window)) {
+      alert('Speech synthesis is not supported on this browser.');
+      return;
+    }
+
+    if (speakingMsgId === msgId) {
+      window.speechSynthesis.cancel();
+      setSpeakingMsgId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    // Strip markdown formatting for cleaner audio reading
+    const cleanText = text
+      .replace(/[#*_`>~\[\]\(\)]/g, '')
+      .replace(/<[^>]*>/g, '')
+      .trim();
+
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    // Detect language
+    const isBangla = /[ঀ-৿]/.test(cleanText);
+    utterance.lang = isBangla ? 'bn-BD' : 'en-US';
+
+    utterance.onend = () => setSpeakingMsgId(null);
+    utterance.onerror = () => setSpeakingMsgId(null);
+
+    setSpeakingMsgId(msgId);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Live Web Speech Recognition (Mic Input)
+  const toggleVoiceInput = () => {
+    if (isRecording) {
+      if (speechRecognitionRef.current) {
+        speechRecognitionRef.current.stop();
+      }
+      setIsRecording(false);
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      // Fallback simulation
+      setIsRecording(true);
+      const simulatedText = settings.language === 'Bangla' 
+        ? 'ওয়েবসাইটের নিরাপত্তা ও কর্মক্ষমতা বিশ্লেষণ করো'
+        : 'Analyze website performance and security vulnerabilities';
+      setTimeout(() => {
+        setInput((prev) => (prev ? `${prev} ${simulatedText}` : simulatedText));
+        setIsRecording(false);
+      }, 2500);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      speechRecognitionRef.current = recognition;
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = settings.language === 'Bangla' ? 'bn-BD' : 'en-US';
+
+      recognition.onstart = () => {
+        setIsRecording(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0].transcript)
+          .join('');
+        setInput(transcript);
+      };
+
+      recognition.onerror = () => {
+        setIsRecording(false);
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.warn('Speech recognition error:', err);
+      setIsRecording(false);
+    }
   };
 
   const handleAttachWorkspaceFile = (file: FileItem) => {
@@ -178,27 +308,78 @@ export const ChatView: React.FC = () => {
     setShowAttachMenu(false);
   };
 
-  const toggleVoiceInput = () => {
-    if (!isRecording) {
-      setIsRecording(true);
-      const simulatedText = settings.language === 'Bangla' 
-        ? 'ওয়েবসাইটের নিরাপত্তা ও কর্মক্ষমতা বিশ্লেষণ করো'
-        : 'Analyze website performance and security vulnerabilities';
-      setTimeout(() => {
-        setInput((prev) => (prev ? `${prev} ${simulatedText}` : simulatedText));
-        setIsRecording(false);
-      }, 2500);
-    } else {
-      setIsRecording(false);
-    }
+  // Toggle emoji reaction
+  const handleToggleReaction = (msgId: string, emoji: string) => {
+    setMessages((prev: MessageItem[]) =>
+      prev.map((msg: MessageItem) => {
+        if (msg.id !== msgId) return msg;
+        const currentReactions = msg.reactions || [];
+        const exists = currentReactions.includes(emoji);
+        const updated = exists
+          ? currentReactions.filter((e) => e !== emoji)
+          : [...currentReactions, emoji];
+        return { ...msg, reactions: updated };
+      })
+    );
+    setEmojiPickerMsgId(null);
   };
+
+  // Toggle pin message
+  const handleTogglePin = (msgId: string) => {
+    setMessages((prev: MessageItem[]) =>
+      prev.map((msg: MessageItem) =>
+        msg.id === msgId ? { ...msg, isPinned: !msg.isPinned } : msg
+      )
+    );
+    setActiveMenuId(null);
+  };
+
+  // Edit user message
+  const handleEditPrompt = (text: string) => {
+    setInput(text);
+    textareaRef.current?.focus();
+  };
+
+  // Export Chat as Markdown
+  const handleExportChat = () => {
+    const formatted = messages
+      .filter((m) => !m.isDeleted)
+      .map((m) => `### ${m.sender === 'user' ? 'You' : 'Agent-sigma08'} (${m.timestamp})\n\n${m.text}\n`)
+      .join('\n---\n\n');
+
+    const blob = new Blob([`# Agent-sigma08 Conversation Transcript\nExported on: ${new Date().toLocaleString()}\n\n---\n\n${formatted}`], {
+      type: 'text/markdown;charset=utf-8',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Agent-sigma08-Chat-${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Pinned messages list
+  const pinnedMessages = useMemo(() => {
+    return messages.filter((m) => m.isPinned && !m.isDeleted);
+  }, [messages]);
+
+  // Filtered messages if search is active
+  const filteredMessages = useMemo(() => {
+    if (!searchQuery.trim()) return messages;
+    const q = searchQuery.toLowerCase();
+    return messages.filter(
+      (m) =>
+        !m.isDeleted &&
+        (m.text.toLowerCase().includes(q) || (m.thinkingText && m.thinkingText.toLowerCase().includes(q)))
+    );
+  }, [messages, searchQuery]);
 
   return (
     <div id="ai_chat_view" className="flex h-full flex-col bg-[#080204]/90 text-[#F8FAFC]">
       {/* Chat Top Subheader */}
-      <div className="flex shrink-0 items-center justify-between border-b border-[#E50914]/25 bg-[#0f0306]/80 px-3.5 py-2.5 sm:px-6">
+      <div className="flex shrink-0 items-center justify-between border-b border-[#E50914]/25 bg-[#0f0306]/90 px-3.5 py-2.5 sm:px-6">
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E50914]/20 text-[#FF204E] border border-[#E50914]/30">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E50914]/20 text-[#FF204E] border border-[#E50914]/30 shadow-[0_0_15px_rgba(229,9,20,0.3)]">
             <Sparkles className="h-4 w-4 text-[#FF204E]" />
           </div>
           <div>
@@ -208,7 +389,8 @@ export const ChatView: React.FC = () => {
               </h3>
               <button
                 onClick={() => setIsLanguageModalOpen(true)}
-                className="hidden sm:inline-flex items-center gap-1 rounded-full bg-[#080204]/85 px-2 py-0.5 text-[10px] text-[#FF204E] border border-[#E50914]/30 hover:border-[#FF204E]"
+                className="hidden sm:inline-flex items-center gap-1 rounded-full bg-[#080204]/85 px-2 py-0.5 text-[10px] text-[#FF204E] border border-[#E50914]/30 hover:border-[#FF204E] transition-all"
+                title="Change system language"
               >
                 <span>{currentLanguage.flag}</span>
                 <span>{currentLanguage.country}</span>
@@ -220,7 +402,40 @@ export const ChatView: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        {/* Chat Header Actions */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Autonomous Web-Research & Learning Indicator */}
+          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-950/40 border border-sky-500/30 text-[10px] text-sky-300 font-mono">
+            <Globe className="h-3 w-3 text-sky-400 animate-pulse" />
+            <span className="font-semibold">Web Grounding & Self-Learning Active</span>
+          </div>
+
+          {/* Search Toggle */}
+          <button
+            onClick={() => {
+              setIsSearchOpen(!isSearchOpen);
+              if (isSearchOpen) setSearchQuery('');
+            }}
+            className={`p-1.5 rounded-xl border transition-all ${
+              isSearchOpen
+                ? 'bg-[#E50914]/20 border-[#FF204E] text-[#FF204E]'
+                : 'bg-[#080204]/85 border-[#E50914]/30 text-[#94A3B8] hover:text-white'
+            }`}
+            title="Search inside conversation"
+          >
+            <Search className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Export Chat */}
+          <button
+            onClick={handleExportChat}
+            className="p-1.5 rounded-xl bg-[#080204]/85 border border-[#E50914]/30 text-[#94A3B8] hover:text-[#FF204E] hover:border-[#FF204E] transition-all"
+            title="Export conversation as Markdown"
+          >
+            <Download className="h-3.5 w-3.5" />
+          </button>
+
+          {/* Language Mobile Button */}
           <button
             onClick={() => setIsLanguageModalOpen(true)}
             className="flex sm:hidden items-center gap-1 rounded-lg bg-[#080204]/85 px-2 py-1 text-xs text-[#F8FAFC] border border-[#E50914]/25"
@@ -229,6 +444,7 @@ export const ChatView: React.FC = () => {
             <span>{currentLanguage.flag}</span>
           </button>
 
+          {/* New Session Button */}
           <button
             id="btn_new_conversation"
             onClick={startNewConversation}
@@ -242,10 +458,62 @@ export const ChatView: React.FC = () => {
         </div>
       </div>
 
+      {/* Chat Search Bar if active */}
+      {isSearchOpen && (
+        <div className="flex items-center gap-2 border-b border-[#E50914]/20 bg-[#0f0306]/95 px-4 py-2 text-xs">
+          <Search className="h-3.5 w-3.5 text-[#FF204E] shrink-0" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search keywords, code, advice in this chat..."
+            className="flex-1 bg-transparent text-sm text-[#F8FAFC] placeholder:text-[#94A3B8] focus:outline-none"
+            autoFocus
+          />
+          {searchQuery && (
+            <span className="text-[10px] text-[#94A3B8]">
+              {filteredMessages.length} matches
+            </span>
+          )}
+          <button
+            onClick={() => {
+              setIsSearchOpen(false);
+              setSearchQuery('');
+            }}
+            className="p-1 text-slate-400 hover:text-white"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Pinned Messages Banner */}
+      {pinnedMessages.length > 0 && !isSearchOpen && (
+        <div className="bg-[#1a0408]/90 border-b border-[#FF204E]/30 px-4 py-2 text-xs flex items-center justify-between gap-2 overflow-x-auto">
+          <div className="flex items-center gap-2 text-[#FF204E] font-medium shrink-0">
+            <Pin className="h-3.5 w-3.5 fill-current rotate-45" />
+            <span className="text-[11px] uppercase tracking-wider font-bold">Pinned:</span>
+          </div>
+          <div className="flex-1 truncate text-slate-300 text-xs">
+            {pinnedMessages[pinnedMessages.length - 1].text.slice(0, 100)}...
+          </div>
+          <button
+            onClick={() => handleTogglePin(pinnedMessages[pinnedMessages.length - 1].id)}
+            className="text-[10px] text-slate-400 hover:text-rose-400 shrink-0 font-mono"
+          >
+            Unpin
+          </button>
+        </div>
+      )}
+
       {/* Message Stream */}
-      <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+      <div
+        ref={scrollContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6 relative"
+      >
         {/* Suggestion Prompts if history is short */}
-        {messages.length <= 2 && (
+        {messages.length <= 2 && !searchQuery && (
           <div className="mx-auto max-w-3xl mb-6">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">
               {t.quickSuggestionsTitle}
@@ -271,7 +539,7 @@ export const ChatView: React.FC = () => {
 
         {/* Message Items */}
         <div className="mx-auto max-w-3xl space-y-6">
-          {messages.map((msg) => {
+          {filteredMessages.map((msg) => {
             if (msg.isDeleted && msg.deletedType === 'me') {
               return null; // WhatsApp "Delete for Me" fully hides the message locally
             }
@@ -290,11 +558,16 @@ export const ChatView: React.FC = () => {
                   </span>
                   <span>•</span>
                   <span>{msg.timestamp}</span>
+                  {msg.isPinned && (
+                    <span className="flex items-center gap-0.5 text-[#FF204E] text-[10px] font-bold">
+                      <Pin className="h-2.5 w-2.5 fill-current" /> Pinned
+                    </span>
+                  )}
                 </div>
 
                 {/* Message Bubble Container */}
                 <div
-                  className={`relative max-w-[92%] sm:max-w-[85%] rounded-2xl p-4 sm:p-5 shadow-sm text-sm leading-relaxed transition-all duration-200 ${
+                  className={`relative max-w-[94%] sm:max-w-[85%] rounded-2xl p-4 sm:p-5 shadow-sm text-sm leading-relaxed transition-all duration-200 ${
                     msg.isDeleted
                       ? 'bg-slate-950/40 text-slate-500 border border-slate-800/60 rounded-2xl italic shadow-inner'
                       : isUser
@@ -302,9 +575,23 @@ export const ChatView: React.FC = () => {
                         : 'bg-[#0f0306]/90 text-[#F8FAFC] border border-[#E50914]/30 rounded-tl-none shadow-[0_0_30px_rgba(229,9,20,0.12)]'
                   }`}
                 >
-                  {/* WhatsApp Menu Dropdown Trigger */}
+                  {/* WhatsApp Menu Dropdown & Action Trigger */}
                   {!msg.isDeleted && (
-                    <div className="absolute right-2 top-2 z-20 sm:opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150">
+                    <div className="absolute right-2 top-2 z-20 flex items-center gap-1 sm:opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-150">
+                      {/* Emoji Picker Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEmojiPickerMsgId(emojiPickerMsgId === msg.id ? null : msg.id);
+                        }}
+                        className="p-1 rounded-lg bg-black/40 hover:bg-black/60 text-slate-400 hover:text-amber-300 transition-all cursor-pointer"
+                        title="React with Emoji"
+                      >
+                        <Smile className="h-3.5 w-3.5" />
+                      </button>
+
+                      {/* Dropdown Options */}
                       <button
                         type="button"
                         onClick={(e) => {
@@ -312,13 +599,63 @@ export const ChatView: React.FC = () => {
                           setActiveMenuId(activeMenuId === msg.id ? null : msg.id);
                         }}
                         className="p-1 rounded-lg bg-black/40 hover:bg-black/60 text-slate-400 hover:text-white transition-all cursor-pointer"
-                        title="Delete Options"
+                        title="Options"
                       >
                         <MoreVertical className="h-3.5 w-3.5" />
                       </button>
 
+                      {/* Floating Emoji Picker Popover */}
+                      {emojiPickerMsgId === msg.id && (
+                        <div className="absolute right-0 top-7 z-30 flex items-center gap-1 rounded-full bg-[#0f0306] border border-[#FF204E]/30 p-1.5 shadow-2xl animate-fadeIn">
+                          {EMOJI_OPTIONS.map((emoji) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => handleToggleReaction(msg.id, emoji)}
+                              className="text-base p-1 hover:scale-125 transition-transform"
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Dropdown Menu */}
                       {activeMenuId === msg.id && (
-                        <div className="absolute right-0 mt-1.5 w-40 rounded-xl bg-[#0f0306]/95 border border-[#FF204E]/25 py-1 shadow-2xl z-30 animate-fadeIn">
+                        <div className="absolute right-0 top-7 w-44 rounded-xl bg-[#0f0306]/95 border border-[#FF204E]/25 py-1 shadow-2xl z-30 animate-fadeIn">
+                          {isUser && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleEditPrompt(msg.text);
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-slate-300 hover:bg-white/5 flex items-center gap-2 transition-colors cursor-pointer"
+                            >
+                              <Edit2 className="h-3.5 w-3.5 text-[#FF204E]" />
+                              <span>Edit & Resend</span>
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleTogglePin(msg.id)}
+                            className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-slate-300 hover:bg-white/5 flex items-center gap-2 transition-colors cursor-pointer"
+                          >
+                            <Pin className="h-3.5 w-3.5 text-amber-400" />
+                            <span>{msg.isPinned ? 'Unpin Message' : 'Pin to Top'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleCopyText(msg.id, msg.text);
+                              setActiveMenuId(null);
+                            }}
+                            className="w-full text-left px-3 py-1.5 text-[10px] font-bold text-slate-300 hover:bg-white/5 flex items-center gap-2 transition-colors cursor-pointer"
+                          >
+                            <Copy className="h-3.5 w-3.5 text-sky-400" />
+                            <span>Copy Text</span>
+                          </button>
+                          <div className="border-t border-[#FF204E]/15 my-0.5" />
                           <button
                             type="button"
                             onClick={() => {
@@ -336,9 +673,9 @@ export const ChatView: React.FC = () => {
                               deleteMessageWhatsAppStyle(msg.id, 'me');
                               setActiveMenuId(null);
                             }}
-                            className="w-full text-left px-3 py-1.5 text-[10px] font-black text-slate-300 hover:bg-white/5 flex items-center gap-2 transition-colors cursor-pointer"
+                            className="w-full text-left px-3 py-1.5 text-[10px] font-black text-slate-400 hover:bg-white/5 flex items-center gap-2 transition-colors cursor-pointer"
                           >
-                            <X className="h-3.5 w-3.5 text-slate-400" />
+                            <X className="h-3.5 w-3.5" />
                             <span>Delete for Me</span>
                           </button>
                         </div>
@@ -391,6 +728,57 @@ export const ChatView: React.FC = () => {
                         </div>
                       )}
 
+                      {/* Google Search Live Grounding & Web Sources Card */}
+                      {msg.groundingMetadata && (Boolean(msg.groundingMetadata.searchQueries?.length) || Boolean(msg.groundingMetadata.sources?.length)) && (
+                        <div className="my-3 rounded-xl bg-[#030712]/90 border border-sky-500/35 p-3 text-xs shadow-lg space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-sky-400 font-bold text-[11px] sm:text-xs">
+                              <Globe className="h-3.5 w-3.5 text-sky-400 animate-pulse" />
+                              <span>Google Live Web Search & Grounding</span>
+                            </div>
+                            {msg.groundingMetadata.sources && msg.groundingMetadata.sources.length > 0 && (
+                              <span className="text-[10px] text-sky-300 font-mono bg-sky-500/15 px-2 py-0.5 rounded-full border border-sky-500/30">
+                                {msg.groundingMetadata.sources.length} sources retrieved
+                              </span>
+                            )}
+                          </div>
+
+                          {msg.groundingMetadata.searchQueries && msg.groundingMetadata.searchQueries.length > 0 && (
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="text-[10px] text-slate-400 font-mono">Query:</span>
+                              {msg.groundingMetadata.searchQueries.map((q, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center gap-1 rounded-md bg-sky-950/60 border border-sky-500/30 px-2 py-0.5 text-[10px] text-sky-200 font-mono"
+                                >
+                                  <Search className="h-2.5 w-2.5 text-sky-400" />
+                                  <span>"{q}"</span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {msg.groundingMetadata.sources && msg.groundingMetadata.sources.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-sky-500/20">
+                              {msg.groundingMetadata.sources.slice(0, 6).map((source, idx) => (
+                                <a
+                                  key={idx}
+                                  href={source.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1.5 rounded-lg bg-white/5 hover:bg-sky-500/10 border border-white/10 hover:border-sky-400/40 px-2 py-1 text-[11px] text-slate-300 hover:text-white transition-all group max-w-[240px]"
+                                  title={source.title}
+                                >
+                                  <span className="text-[9px] font-bold text-sky-400 bg-sky-500/20 rounded px-1">{idx + 1}</span>
+                                  <span className="truncate text-[10px]">{source.title || source.domain}</span>
+                                  <ExternalLink className="h-2.5 w-2.5 text-slate-500 group-hover:text-sky-400 shrink-0" />
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       {/* Markdown formatted content */}
                       <div className="prose prose-invert prose-sm max-w-none text-slate-200">
                         <ReactMarkdown>{msg.text}</ReactMarkdown>
@@ -399,6 +787,22 @@ export const ChatView: React.FC = () => {
                       {/* Embedded Approval Card if waiting for user confirmation */}
                       {msg.requiresApproval && msg.approvalDetails && (
                         <ApprovalCard approval={msg.approvalDetails} />
+                      )}
+
+                      {/* Reactions display */}
+                      {msg.reactions && msg.reactions.length > 0 && (
+                        <div className="mt-2.5 flex flex-wrap gap-1">
+                          {msg.reactions.map((emoji, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => handleToggleReaction(msg.id, emoji)}
+                              className="inline-flex items-center gap-1 rounded-full bg-black/40 border border-white/10 px-2 py-0.5 text-xs hover:bg-black/60 transition-colors"
+                            >
+                              <span>{emoji}</span>
+                              <span className="text-[10px] text-slate-400 font-mono">1</span>
+                            </button>
+                          ))}
+                        </div>
                       )}
 
                       {/* Error recovery card */}
@@ -421,41 +825,66 @@ export const ChatView: React.FC = () => {
                         </div>
                       )}
 
-                      {/* Actions (Copy / Regenerate) for agent responses */}
+                      {/* Actions (Copy / Audio Speak / Regenerate) for agent responses */}
                       {!isUser && (
                         <div className="mt-3 flex items-center gap-2 pt-2 border-t border-[#FF204E]/20 text-[11px] text-slate-400">
-                      <button
-                        onClick={() => handleCopyText(msg.id, msg.text)}
-                        className="flex items-center gap-1 rounded px-2 py-1 hover:bg-[#FF204E]/15 hover:text-slate-200 transition-colors"
-                        title="Copy message text"
-                      >
-                        {copiedId === msg.id ? (
-                          <>
-                            <Check className="h-3 w-3 text-[#FF204E]" />
-                            <span className="text-[#FF204E] font-medium">Copied!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="h-3 w-3" />
-                            <span>Copy</span>
-                          </>
-                        )}
-                      </button>
+                          {/* Copy Action */}
+                          <button
+                            onClick={() => handleCopyText(msg.id, msg.text)}
+                            className="flex items-center gap-1 rounded px-2 py-1 hover:bg-[#FF204E]/15 hover:text-slate-200 transition-colors"
+                            title="Copy message text"
+                          >
+                            {copiedId === msg.id ? (
+                              <>
+                                <Check className="h-3 w-3 text-[#FF204E]" />
+                                <span className="text-[#FF204E] font-medium">Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="h-3 w-3" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
 
-                      <button
-                        onClick={regenerateLastResponse}
-                        className="flex items-center gap-1 rounded px-2 py-1 hover:bg-[#FF204E]/15 hover:text-slate-200 transition-colors"
-                        title="Regenerate response"
-                      >
-                        <RotateCw className="h-3 w-3" />
-                        <span>Regenerate</span>
-                      </button>
-                    </div>
+                          {/* Audio Voice Speaker */}
+                          <button
+                            onClick={() => toggleSpeech(msg.id, msg.text)}
+                            className={`flex items-center gap-1 rounded px-2 py-1 transition-colors ${
+                              speakingMsgId === msg.id
+                                ? 'bg-[#E50914]/25 text-[#FF204E] font-bold'
+                                : 'hover:bg-[#FF204E]/15 hover:text-slate-200'
+                            }`}
+                            title={speakingMsgId === msg.id ? 'Stop audio' : 'Read aloud with AI voice'}
+                          >
+                            {speakingMsgId === msg.id ? (
+                              <>
+                                <VolumeX className="h-3 w-3 text-[#FF204E] animate-pulse" />
+                                <span>Stop Audio</span>
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 className="h-3 w-3" />
+                                <span>Read Aloud</span>
+                              </>
+                            )}
+                          </button>
+
+                          {/* Regenerate Action */}
+                          <button
+                            onClick={regenerateLastResponse}
+                            className="flex items-center gap-1 rounded px-2 py-1 hover:bg-[#FF204E]/15 hover:text-slate-200 transition-colors"
+                            title="Regenerate response"
+                          >
+                            <RotateCw className="h-3 w-3" />
+                            <span>Regenerate</span>
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
-                </>
-              )}
-            </div>
-          </div>
+                </div>
+              </div>
             );
           })}
 
@@ -506,6 +935,17 @@ export const ChatView: React.FC = () => {
 
           <div ref={messagesEndRef} />
         </div>
+
+        {/* Jump to bottom button */}
+        {showScrollBottom && (
+          <button
+            onClick={() => scrollToBottom('smooth')}
+            className="fixed bottom-28 right-8 z-30 p-2.5 rounded-full bg-[#FF204E] text-white shadow-2xl hover:scale-110 transition-transform animate-bounce"
+            title="Scroll to bottom"
+          >
+            <ArrowDown className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       {/* Input Bar & Controls */}
@@ -539,12 +979,12 @@ export const ChatView: React.FC = () => {
             <div className="mb-2 flex items-center justify-between rounded-lg bg-[#E50914]/20 p-2 text-xs text-[#FF204E] border border-[#E50914]/30 animate-pulse">
               <div className="flex items-center gap-2">
                 <Mic className="h-4 w-4 text-[#FF204E]" />
-                <span>
-                  {settings.language === 'Bangla' ? 'ভয়েস শুনছি... নির্দেশ বলুন...' : 'Listening... Speak your task...'}
+                <span className="font-medium">
+                  {settings.language === 'Bangla' ? 'ভয়েস শুনছি... মুখে নির্দেশ বলুন...' : 'Listening to your voice... Speak your prompt...'}
                 </span>
               </div>
               <button
-                onClick={() => setIsRecording(false)}
+                onClick={toggleVoiceInput}
                 className="text-[11px] font-semibold text-rose-400 hover:underline"
               >
                 Stop
@@ -621,11 +1061,12 @@ export const ChatView: React.FC = () => {
               }`}
               title="Voice Input (Speech-to-Text)"
             >
-              <Mic className="h-4 w-4" />
+              {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
             </button>
 
             {/* Main Textarea */}
             <textarea
+              ref={textareaRef}
               id="chat_input_textarea"
               value={input}
               onChange={(e) => setInput(e.target.value)}
@@ -650,7 +1091,7 @@ export const ChatView: React.FC = () => {
               <button
                 id="btn_send_message"
                 type="button"
-                onClick={handleSend}
+                onClick={() => handleSend()}
                 disabled={!input.trim()}
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
                   input.trim()
@@ -670,7 +1111,7 @@ export const ChatView: React.FC = () => {
             </span>
             <span className="flex items-center gap-1 text-[#FF204E]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#FF204E] animate-pulse" />
-              Autonomous Agent Mode
+              Autonomous Agent Active
             </span>
           </div>
         </div>

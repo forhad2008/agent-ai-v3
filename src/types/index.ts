@@ -102,6 +102,10 @@ export interface MessageItem {
   timestamp: string;
   planSteps?: PlanStep[];
   toolExecutions?: ToolExecutionRecord[];
+  groundingMetadata?: {
+    searchQueries?: string[];
+    sources?: { title: string; url: string; domain?: string }[];
+  };
   requiresApproval?: boolean;
   approvalDetails?: ApprovalRequest;
   attachedFiles?: { name: string; size: string; type?: string }[];
@@ -115,6 +119,8 @@ export interface MessageItem {
   };
   isDeleted?: boolean;
   deletedType?: 'me' | 'everyone';
+  reactions?: string[];
+  isPinned?: boolean;
 }
 
 export interface UserProfile {

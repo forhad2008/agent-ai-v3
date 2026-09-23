@@ -31,6 +31,15 @@ export const TasksView: React.FC = () => {
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newPriority, setNewPriority] = useState<TaskPriority>('Medium');
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const handleDeleteTask = (taskId: string) => {
+    deleteTaskWithSync(taskId);
+    if (selectedTask?.id === taskId) {
+      setSelectedTask(null);
+    }
+    setConfirmDeleteId(null);
+  };
 
   const filteredTasks = tasks.filter((t) => {
     const matchesSearch =
@@ -208,17 +217,42 @@ export const TasksView: React.FC = () => {
                     View Details
                   </button>
 
-                  <button
-                    onClick={() => {
-                      if (window.confirm(settings.language === 'Bangla' ? 'আপনি কি নিশ্চিতভাবে এই কাজটি ডিলিট করতে চান?' : 'Are you sure you want to delete this task permanently?')) {
-                        deleteTaskWithSync(task.id);
-                      }
-                    }}
-                    className="p-1.5 rounded-lg bg-[#E50914]/10 hover:bg-[#E50914]/25 text-[#FF204E] transition-colors cursor-pointer"
-                    title={settings.language === 'Bangla' ? 'কাজ ডিলিট করুন' : 'Delete Task'}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+                  {confirmDeleteId === task.id ? (
+                    <div className="flex items-center gap-1 rounded-lg bg-[#1a0205] border border-[#FF204E]/50 p-0.5 animate-fadeIn">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteTask(task.id);
+                        }}
+                        className="rounded bg-[#E50914] px-2 py-0.5 text-[10px] font-bold text-white hover:bg-[#FF204E] transition-colors cursor-pointer"
+                        title="Confirm Delete"
+                      >
+                        Delete
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setConfirmDeleteId(null);
+                        }}
+                        className="rounded p-0.5 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                        title="Cancel"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      id={`btn_delete_task_${task.id}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteId(task.id);
+                      }}
+                      className="p-1.5 rounded-lg bg-[#E50914]/10 hover:bg-[#E50914]/25 text-[#FF204E] hover:text-white transition-colors cursor-pointer"
+                      title={settings.language === 'Bangla' ? 'কাজ ডিলিট করুন' : 'Delete Task'}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
 
                 <button
@@ -304,23 +338,34 @@ export const TasksView: React.FC = () => {
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E50914]/25">
+            <div className="flex items-center justify-between pt-3 border-t border-[#E50914]/25">
               <button
-                onClick={() => setSelectedTask(null)}
-                className="rounded-xl px-4 py-2 text-[#94A3B8] hover:bg-[#070103]"
+                onClick={() => handleDeleteTask(selectedTask.id)}
+                className="flex items-center gap-1.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-500/30 px-3 py-2 text-xs font-semibold transition-colors cursor-pointer"
+                title="Delete this task"
               >
-                {t.closeModal}
+                <Trash2 className="h-3.5 w-3.5 text-rose-400" />
+                <span>{settings.language === 'Bangla' ? 'টাস্ক ডিলিট করুন' : 'Delete Task'}</span>
               </button>
-              <button
-                onClick={() => {
-                  handleExecuteInChat(selectedTask);
-                  setSelectedTask(null);
-                }}
-                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] px-4 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(229,9,20,0.4)]"
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>{t.runWithAgent}</span>
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setSelectedTask(null)}
+                  className="rounded-xl px-4 py-2 text-[#94A3B8] hover:bg-[#070103] cursor-pointer"
+                >
+                  {t.closeModal}
+                </button>
+                <button
+                  onClick={() => {
+                    handleExecuteInChat(selectedTask);
+                    setSelectedTask(null);
+                  }}
+                  className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] px-4 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(229,9,20,0.4)] cursor-pointer"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>{t.runWithAgent}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
