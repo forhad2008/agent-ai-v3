@@ -339,13 +339,16 @@ export const UserProfileView: React.FC = () => {
 
             <div className="space-y-3 text-xs">
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
-                <span className="text-[10px] uppercase font-mono text-[#FF204E] font-bold block">User Identity</span>
+                <span className="text-[10px] uppercase font-mono text-[#FF204E] font-bold block">User Identity & Bio Context</span>
                 <p className="text-white font-semibold">{userProfile.name || 'User'}</p>
-                <p className="text-[#94A3B8]">{userProfile.role}</p>
+                <p className="text-[#FF204E] text-[11px] font-medium">{userProfile.role}</p>
+                <p className="text-[#CBD5E1] text-[11px] mt-1 italic border-l-2 border-[#FF204E]/40 pl-2">
+                  {userProfile.bio || 'AI Engineer & Workspace Operator'}
+                </p>
               </div>
 
               <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
-                <span className="text-[10px] uppercase font-mono text-[#FF204E] font-bold block">Organization</span>
+                <span className="text-[10px] uppercase font-mono text-[#FF204E] font-bold block">Organization & Contact</span>
                 <p className="text-white">{userProfile.company || 'Autonomous Work OS'}</p>
                 <p className="text-[#94A3B8] text-[11px]">{userProfile.email}</p>
               </div>

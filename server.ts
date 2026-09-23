@@ -140,9 +140,17 @@ function getSystemInstruction(language: string = "en", userProfile?: any, prompt
   const userName = userProfile?.name || 'Abdullah';
   const userRole = userProfile?.role ? ` (${userProfile.role})` : '';
   const company = userProfile?.company ? ` at ${userProfile.company}` : '';
+  const userBio = userProfile?.bio ? `\n[USER BIO & PROFESSIONAL BACKGROUND]: ${userProfile.bio}` : '';
   const customInstructions = userProfile?.customAgentInstructions ? `\n\n[USER CUSTOM DIRECTIVE]: ${userProfile.customAgentInstructions}` : '';
   const techStack = userProfile?.techStack ? `\n[USER TECH STACK]: ${userProfile.techStack}` : '';
   const goals = userProfile?.goals ? `\n[USER GOALS]: ${userProfile.goals}` : '';
+
+  const userContextDirective = `
+[USER PERSONA & ADDRESSING DIRECTIVE]:
+- You are assisting "${userName}".
+- Address the user respectfully by their name: "${userName}".
+- You MUST define and know the user from their bio: "${userProfile?.bio || 'Professional'}" and their role "${userProfile?.role || 'Engineer'}".
+- Adapt your tone, technical depth, and contextual examples specifically to align with ${userName}'s bio and role.`;
 
   const dynamicLangRule = `
 CHATGPT-GRADE CONVERSATIONAL & MULTILINGUAL MASTERY:
@@ -155,7 +163,8 @@ CHATGPT-GRADE CONVERSATIONAL & MULTILINGUAL MASTERY:
 3. MULTILINGUAL SWITCHING: If the user asks for another language (Spanish, French, Arabic, Hindi, German, Japanese, etc.), immediately switch your entire response to that requested language.`;
 
   if (isBangla) {
-    return `You are Agent-sigma08, ${userName}'s personal AI Agent. You must introduce yourself as Agent-sigma08 everywhere and act & work as Agent-sigma08. You are assisting ${userName}${userRole}${company}.${customInstructions}${techStack}${goals}
+    return `You are Agent-sigma08, ${userName}'s personal AI Agent. You must introduce yourself as Agent-sigma08 everywhere and act & work as Agent-sigma08. You are assisting ${userName}${userRole}${company}.${userBio}${customInstructions}${techStack}${goals}
+${userContextDirective}
 
 Your purpose is to understand ${userName}'s objectives and help complete real-world digital work.
 Always address the user as ${userName}.
@@ -208,7 +217,8 @@ Avoid unnecessary long explanations.`;
 
   const isEnglish = langName === "English";
 
-  return `You are Agent-sigma08, ${userName}'s personal AI Agent. You must introduce yourself as Agent-sigma08 everywhere and act & work as Agent-sigma08. You are assisting ${userName}${userRole}${company}.${customInstructions}${techStack}${goals}
+  return `You are Agent-sigma08, ${userName}'s personal AI Agent. You must introduce yourself as Agent-sigma08 everywhere and act & work as Agent-sigma08. You are assisting ${userName}${userRole}${company}.${userBio}${customInstructions}${techStack}${goals}
+${userContextDirective}
 
 Your purpose is to understand ${userName}'s objectives and help complete real-world digital work.
 Always address the user as ${userName}.
