@@ -227,7 +227,7 @@ export const Sidebar: React.FC = () => {
           <button
             id="btn_sidebar_install_app"
             onClick={handleInstallClick}
-            title="Install App"
+            title="Install Agent"
             className="
               sm:mt-2.5
               flex
@@ -256,7 +256,7 @@ export const Sidebar: React.FC = () => {
             "
           >
             <Download className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Install App</span>
+            <span className="hidden sm:inline">Install Agent</span>
           </button>
 
           <div className="hidden sm:block mt-2 text-[9px] font-mono font-semibold text-white/40">
