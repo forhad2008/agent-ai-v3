@@ -12,6 +12,42 @@ export default defineConfig(() => {
       VitePWA({
         registerType: 'autoUpdate',
         includeAssets: ['logomax.png', 'logo.png', 'bg2.png', 'bg100.png', 'bg99.png', 'pirates_theme.mp3'],
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,mp3,json,woff,woff2}'],
+          cleanupOutdatedCaches: true,
+          navigateFallback: 'index.html',
+          maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+          runtimeCaching: [
+            {
+              urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'google-fonts-cache',
+                expiration: {
+                  maxEntries: 10,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+            {
+              urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+              handler: 'CacheFirst',
+              options: {
+                cacheName: 'gstatic-fonts-cache',
+                expiration: {
+                  maxEntries: 20,
+                  maxAgeSeconds: 60 * 60 * 24 * 365,
+                },
+                cacheableResponse: {
+                  statuses: [0, 200],
+                },
+              },
+            },
+          ],
+        },
         manifest: {
           id: '/',
           name: 'Agent-sigma08',
@@ -20,35 +56,36 @@ export default defineConfig(() => {
           theme_color: '#080204',
           background_color: '#080204',
           display: 'standalone',
-          start_url: '/',
-          scope: '/',
+          orientation: 'portrait-primary',
+          start_url: './',
+          scope: './',
           icons: [
             {
-              src: '/logomax.png',
+              src: './logomax.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/logomax.png',
+              src: './logomax.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/logomax.png',
+              src: './logomax.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'maskable',
             },
             {
-              src: '/logo.png',
+              src: './logo.png',
               sizes: '192x192',
               type: 'image/png',
               purpose: 'any',
             },
             {
-              src: '/logo.png',
+              src: './logo.png',
               sizes: '512x512',
               type: 'image/png',
               purpose: 'any',
