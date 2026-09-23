@@ -56,13 +56,9 @@ export const Sidebar: React.FC = () => {
         flex-col
         rounded-2xl
         sm:rounded-3xl
-        border
-        border-[#E50914]/25
-        bg-[#0a0306]/90
+        neumorph-card
         p-2
         sm:p-3.5
-        backdrop-blur-xl
-        shadow-[0_8px_32px_rgba(229,9,20,0.25)]
         transition-all
       "
     >
@@ -72,25 +68,25 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* TOP BRAND LOCKUP */}
-      <div className="relative z-10 flex flex-col items-center pt-1.5 sm:pt-2 pb-2 sm:pb-4 text-center border-b border-white/10 mb-2">
+      <div className="relative z-10 flex flex-col items-center pt-1.5 sm:pt-2 pb-2 sm:pb-4 text-center border-b border-[#E50914]/20 mb-2">
         <div 
           onClick={() => setActiveView('dashboard')}
           className="cursor-pointer group flex flex-col items-center"
         >
-          {/* Logo image from logomax.png */}
-          <div className="relative h-10 w-10 sm:h-14 sm:w-14 mb-0.5 sm:mb-1 flex items-center justify-center">
+          {/* Logo image from logomax.png with Neumorphic circular halo */}
+          <div className="relative h-10 w-10 sm:h-14 sm:w-14 mb-0.5 sm:mb-1 flex items-center justify-center neumorph-circle">
             <div className="absolute inset-0 rounded-full bg-[#E50914]/20 blur-xl group-hover:bg-[#FF204E]/30 transition-all" />
             <img
               src={`${import.meta.env.BASE_URL}logomax.png`}
               alt="Agent-sigma08 Logo"
-              className="relative h-9 w-9 sm:h-12 sm:w-12 object-contain drop-shadow-[0_0_15px_rgba(229,9,20,0.8)] transition-transform group-hover:scale-105"
+              className="relative h-7 w-7 sm:h-10 sm:w-10 object-contain drop-shadow-[0_0_12px_rgba(229,9,20,0.8)] transition-transform group-hover:scale-105"
               onError={(e) => {
                 (e.currentTarget as HTMLImageElement).src = `${import.meta.env.BASE_URL}logo.png`;
               }}
             />
           </div>
 
-          <h2 className="hidden sm:block text-base font-black text-white tracking-tight leading-none">
+          <h2 className="hidden sm:block text-base font-black text-white tracking-tight leading-none mt-1">
             Agent-sigma08
           </h2>
           <p className="hidden sm:block text-[8px] font-bold tracking-[0.25em] text-[#FF4D4D] uppercase mt-1">
@@ -101,7 +97,7 @@ export const Sidebar: React.FC = () => {
 
       {/* NAVIGATION LIST */}
       <div className="relative z-10 flex flex-1 flex-col py-1 overflow-y-auto no-scrollbar">
-        <nav className="space-y-1">
+        <nav className="space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeView === item.id;
@@ -125,21 +121,18 @@ export const Sidebar: React.FC = () => {
                   sm:px-3
                   py-2
                   text-left
+                  cursor-pointer
                   transition-all
                   duration-200
                   ${
                     isActive
                       ? `
-                        bg-gradient-to-r
-                        from-[#E50914]
-                        to-[#990000]
-                        text-white
+                        neumorph-btn-primary
                         font-bold
-                        shadow-[0_4px_15px_rgba(229,9,20,0.5)]
                       `
                       : `
                         text-white/70
-                        hover:bg-white/[0.06]
+                        hover:neumorph-btn-secondary
                         hover:text-white
                       `
                   }
@@ -152,7 +145,7 @@ export const Sidebar: React.FC = () => {
                       w-4
                       shrink-0
                       transition-all
-                      ${isActive ? 'text-white' : 'text-white/60 group-hover:text-[#FF204E]'}
+                      ${isActive ? 'text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]' : 'text-white/60 group-hover:text-[#FF204E]'}
                     `}
                   />
                   <span className="hidden sm:inline-block text-xs tracking-tight truncate">
@@ -176,12 +169,11 @@ export const Sidebar: React.FC = () => {
                       items-center
                       justify-center
                       rounded-full
-                      bg-[#E50914]
-                      text-white
+                      neumorph-badge-primary
                       text-[9px]
                       sm:text-[10px]
                       font-bold
-                      shadow-[0_0_8px_rgba(229,9,20,0.8)]
+                      text-white
                     "
                   >
                     {item.badge}
@@ -202,17 +194,14 @@ export const Sidebar: React.FC = () => {
             overflow-hidden
             rounded-xl
             sm:rounded-2xl
-            border
-            border-[#E50914]/30
-            bg-[#15040a]/90
+            neumorph-inset
             p-1.5
             sm:p-3
             text-center
-            shadow-[0_4px_20px_rgba(229,9,20,0.2)]
           "
         >
           {/* Cosmic red nebula orb backdrop */}
-          <div className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-[#E50914]/30 blur-2xl animate-pulse" />
+          <div className="pointer-events-none absolute -top-10 -right-10 h-28 w-28 rounded-full bg-[#E50914]/25 blur-2xl animate-pulse" />
 
           <h3 className="hidden sm:block text-xs font-black text-white leading-tight">
             Smarter
@@ -236,11 +225,7 @@ export const Sidebar: React.FC = () => {
               justify-center
               gap-1.5
               rounded-full
-              bg-gradient-to-r
-              from-[#E50914]
-              to-[#FF204E]
-              hover:from-[#FF204E]
-              hover:to-[#E50914]
+              neumorph-btn-primary
               py-1.5
               sm:py-2
               px-2
@@ -248,11 +233,7 @@ export const Sidebar: React.FC = () => {
               text-[10px]
               sm:text-[11px]
               font-extrabold
-              text-white
-              shadow-[0_4px_15px_rgba(229,9,20,0.5)]
-              transition-all
-              transform
-              active:scale-95
+              cursor-pointer
             "
           >
             <Download className="h-3.5 w-3.5" />

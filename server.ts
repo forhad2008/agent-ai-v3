@@ -1054,6 +1054,7 @@ function inferToolExecutions(prompt: string) {
 
 // Realistic agent fallback response if API key is not yet set or during transit
 function generateAgentFallbackResponse(prompt: string, language: string, isSensitive: boolean, history: any[] = []) {
+  const userName = "Abdullah";
   const p = prompt.toLowerCase();
   const isBangla = language === "Bangla" || language === "bn" || language === "Bengali" || /bangla|বাংলা|bengali/i.test(prompt);
 

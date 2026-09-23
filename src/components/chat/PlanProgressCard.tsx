@@ -20,9 +20,9 @@ export const PlanProgressCard: React.FC<PlanProgressCardProps> = ({
   return (
     <div
       id="plan_progress_card"
-      className="my-3 overflow-hidden rounded-2xl bg-[#0f0306]/90 border border-[#E50914]/30 shadow-lg backdrop-blur-sm"
+      className="my-3 overflow-hidden rounded-2xl neumorph-card"
     >
-      <div className="flex items-center justify-between border-b border-[#E50914]/20 bg-[#18040a] px-4 py-2.5">
+      <div className="flex items-center justify-between border-b border-[#E50914]/20 bg-[#140307]/70 px-4 py-2.5">
         <div className="flex items-center gap-2">
           <ListOrdered className="h-4 w-4 text-[#FF204E]" />
           <span className="text-xs font-semibold uppercase tracking-wider text-[#F8FAFC]">
@@ -30,7 +30,7 @@ export const PlanProgressCard: React.FC<PlanProgressCardProps> = ({
           </span>
         </div>
         {isGenerating && (
-          <span className="flex items-center gap-1.5 text-[11px] font-medium text-[#FF204E]">
+          <span className="flex items-center gap-1.5 text-[11px] font-medium text-[#FF204E] neumorph-badge px-2.5 py-0.5 rounded-full">
             <Loader2 className="h-3 w-3 animate-spin text-[#FF204E]" />
             {t.inProgress}
           </span>
@@ -52,17 +52,17 @@ export const PlanProgressCard: React.FC<PlanProgressCardProps> = ({
             return (
               <div
                 key={idx}
-                className={`flex items-center gap-3 text-xs transition-colors ${
+                className={`flex items-center gap-3 text-xs transition-colors p-1.5 rounded-xl ${
                   isDone
-                    ? 'text-[#F8FAFC]'
+                    ? 'text-[#F8FAFC] neumorph-inset'
                     : isRunning
-                    ? 'text-[#FF204E] font-medium'
+                    ? 'text-[#FF204E] font-medium neumorph-raised'
                     : 'text-[#94A3B8]/60'
                 }`}
               >
                 <div className="flex h-5 w-5 items-center justify-center shrink-0">
                   {isDone ? (
-                    <div className="flex h-4 w-4 items-center justify-center rounded-full bg-[#E50914]/20 text-[#FF204E] border border-[#FF204E]/40">
+                    <div className="flex h-4 w-4 items-center justify-center rounded-full neumorph-btn-primary">
                       <Check className="h-2.5 w-2.5 stroke-[3]" />
                     </div>
                   ) : isRunning ? (

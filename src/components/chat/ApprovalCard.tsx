@@ -36,13 +36,7 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({ approval }) => {
   return (
     <div
       id={`approval_card_${approval.id}`}
-      className={`my-4 overflow-hidden rounded-2xl border backdrop-blur-md transition-all shadow-xl ${
-        isApproved
-          ? 'bg-[#0f0306]/90 border-[#FF204E]/40 text-[#F8FAFC]'
-          : isRejected
-          ? 'bg-[#0f0306]/90 border-rose-500/40 text-[#F8FAFC]'
-          : 'bg-[#0f0306]/90 border-[#E50914]/30 shadow-[0_0_25px_rgba(229,9,20,0.2)]'
-      }`}
+      className="my-4 overflow-hidden rounded-2xl neumorph-card"
     >
       {/* Header Banner */}
       <div
@@ -51,7 +45,7 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({ approval }) => {
             ? 'bg-[#E50914]/15 border-[#FF204E]/30'
             : isRejected
             ? 'bg-rose-950/40 border-rose-500/30'
-            : 'bg-[#080204] border-[#E50914]/25'
+            : 'bg-[#140307]/70 border-[#E50914]/20'
         }`}
       >
         <div className="flex items-center gap-2">
@@ -71,7 +65,7 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({ approval }) => {
           </span>
         </div>
 
-        <div className="flex items-center gap-1.5 rounded-lg bg-[#080204] px-2.5 py-1 text-[10px] font-mono border border-[#E50914]/30">
+        <div className="flex items-center gap-1.5 rounded-full neumorph-badge px-3 py-1 text-[10px] font-mono">
           <AlertTriangle className="h-3 w-3 text-[#FF204E]" />
           <span className="text-[#FF204E] font-semibold">{approval.riskLevel}</span>
         </div>
@@ -80,13 +74,13 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({ approval }) => {
       {/* Body Details */}
       <div className="p-4 sm:p-5 space-y-3.5 text-xs">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[#94A3B8]">
-          <div className="rounded-xl bg-[#080204] p-2.5 border border-[#E50914]/20">
+          <div className="rounded-xl neumorph-inset p-3">
             <span className="text-[10px] font-medium text-[#94A3B8] block uppercase tracking-wide">
               {settings.language === 'Bangla' ? 'অ্যাকশন:' : 'Action:'}
             </span>
             <span className="font-semibold text-[#F8FAFC]">{approval.action}</span>
           </div>
-          <div className="rounded-xl bg-[#080204] p-2.5 border border-[#E50914]/20">
+          <div className="rounded-xl neumorph-inset p-3">
             <span className="text-[10px] font-medium text-[#94A3B8] block uppercase tracking-wide">
               {settings.language === 'Bangla' ? 'প্রাপক / লক্ষ্য:' : 'Recipient / Target:'}
             </span>
@@ -94,7 +88,7 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({ approval }) => {
           </div>
         </div>
 
-        <div className="rounded-xl bg-[#080204] p-2.5 border border-[#E50914]/20">
+        <div className="rounded-xl neumorph-inset p-3">
           <span className="text-[10px] font-medium text-[#94A3B8] block uppercase tracking-wide">
             {settings.language === 'Bangla' ? 'ঝুঁকির কারণ:' : 'Risk Category:'}
           </span>
@@ -110,7 +104,7 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({ approval }) => {
             {isPending && !isEditing && (
               <button
                 onClick={() => setIsEditing(true)}
-                className="flex items-center gap-1 text-[11px] text-[#FF204E] hover:text-[#FF4D4D]"
+                className="flex items-center gap-1 text-[11px] text-[#FF204E] hover:text-[#FF4D4D] cursor-pointer"
               >
                 <Edit3 className="h-3 w-3" />
                 {settings.language === 'Bangla' ? 'সংশোধন' : 'Edit Draft'}
@@ -124,25 +118,25 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({ approval }) => {
                 value={editedPreview}
                 onChange={(e) => setEditedPreview(e.target.value)}
                 rows={4}
-                className="w-full rounded-xl bg-[#080204] p-3 text-xs text-[#F8FAFC] border border-[#FF204E]/60 focus:border-[#FF204E] focus:outline-none"
+                className="w-full rounded-xl neumorph-inset p-3 text-xs text-[#F8FAFC] focus:outline-none"
               />
               <div className="flex justify-end gap-2">
                 <button
                   onClick={() => setIsEditing(false)}
-                  className="rounded-lg px-2.5 py-1 text-[11px] text-[#94A3B8] hover:bg-[#080204]"
+                  className="rounded-xl neumorph-btn-secondary px-3 py-1 text-[11px] text-[#94A3B8] cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleSaveEdit}
-                  className="rounded-lg bg-[#E50914]/20 px-3 py-1 text-[11px] font-medium text-[#FF204E] border border-[#E50914]/40 hover:bg-[#E50914]/30"
+                  className="rounded-xl neumorph-btn-primary px-3 py-1 text-[11px] font-medium cursor-pointer"
                 >
                   Save Changes
                 </button>
               </div>
             </div>
           ) : (
-            <div className="rounded-xl bg-[#080204] p-3 text-[#F8FAFC] border border-[#E50914]/20 font-mono text-[11px] leading-relaxed whitespace-pre-wrap">
+            <div className="rounded-xl neumorph-inset p-3 text-[#F8FAFC] font-mono text-[11px] leading-relaxed whitespace-pre-wrap">
               {editedPreview}
             </div>
           )}
@@ -154,7 +148,7 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({ approval }) => {
             <button
               id={`btn_regenerate_${approval.id}`}
               onClick={handleRegenerate}
-              className="flex items-center gap-1.5 rounded-xl bg-[#080204] px-3 py-2 text-xs font-medium text-[#94A3B8] border border-[#E50914]/25 hover:bg-[#E50914]/15 hover:text-[#F8FAFC] transition-colors"
+              className="flex items-center gap-1.5 rounded-xl neumorph-btn-secondary px-3.5 py-2 text-xs font-medium text-[#94A3B8] hover:text-[#F8FAFC] cursor-pointer"
             >
               <RotateCw className="h-3.5 w-3.5" />
               <span>{t.regenerateOption}</span>
@@ -163,7 +157,7 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({ approval }) => {
             <button
               id={`btn_reject_${approval.id}`}
               onClick={handleReject}
-              className="flex items-center gap-1.5 rounded-xl bg-rose-500/15 px-3 py-2 text-xs font-semibold text-rose-300 border border-rose-500/30 hover:bg-rose-500/25 transition-colors"
+              className="flex items-center gap-1.5 rounded-xl neumorph-btn-secondary px-3.5 py-2 text-xs font-semibold text-rose-300 cursor-pointer"
             >
               <X className="h-3.5 w-3.5" />
               <span>{t.rejectCancel}</span>
@@ -172,7 +166,7 @@ export const ApprovalCard: React.FC<ApprovalCardProps> = ({ approval }) => {
             <button
               id={`btn_approve_${approval.id}`}
               onClick={handleApprove}
-              className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#E50914] to-[#FF204E] px-4 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(229,9,20,0.4)] hover:brightness-110 transition-all"
+              className="flex items-center gap-1.5 rounded-xl neumorph-btn-primary px-4 py-2 text-xs font-bold cursor-pointer"
             >
               <Check className="h-3.5 w-3.5 stroke-[3]" />
               <span>{t.approveExecute}</span>

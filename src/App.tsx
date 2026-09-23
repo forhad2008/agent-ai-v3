@@ -125,15 +125,15 @@ const MainLayout: React.FC = () => {
       {/* Alarm ringing popup overlay */}
       {triggeredAlarm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-          <div className="relative w-full max-w-md overflow-hidden rounded-3xl border border-[#E50914]/50 bg-[#0f0306]/95 p-6 sm:p-7 shadow-[0_0_60px_rgba(229,9,20,0.5)] text-center space-y-5">
+          <div className="relative w-full max-w-md overflow-hidden rounded-3xl neumorph-card p-6 sm:p-7 shadow-2xl text-center space-y-5">
             {/* Pulsing ring graphic */}
-            <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-[#E50914]/30 to-[#FF204E]/30 border border-[#E50914]/50 shadow-[0_0_30px_rgba(229,9,20,0.5)]">
+            <div className="relative mx-auto flex h-20 w-20 items-center justify-center rounded-full neumorph-circle text-[#FF204E]">
               <div className="absolute inset-0 rounded-full border border-[#FF204E]/40 animate-ping" />
               <Bell className="h-10 w-10 text-[#FF204E] animate-bounce" />
             </div>
 
             <div className="space-y-1.5">
-              <span className="inline-block rounded-full bg-[#E50914]/20 px-3 py-1 text-[10px] font-black tracking-widest text-[#FF204E] uppercase border border-[#E50914]/40 shadow-sm">
+              <span className="inline-block rounded-full neumorph-badge px-3 py-1 text-[10px] font-black tracking-widest text-[#FF204E] uppercase">
                 🚨 Agent-sigma08 Live Alarm
               </span>
               <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
@@ -145,7 +145,7 @@ const MainLayout: React.FC = () => {
             </div>
 
             {/* Pirates of the Caribbean Theme Ringtone Audio Player Status */}
-            <div className="rounded-2xl bg-black/70 p-4 border border-[#E50914]/30 space-y-2.5 text-left">
+            <div className="rounded-2xl neumorph-inset p-4 space-y-2.5 text-left">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Disc3 className="h-4 w-4 text-[#FF204E] animate-spin" style={{ animationDuration: '3s' }} />
@@ -165,9 +165,9 @@ const MainLayout: React.FC = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-2.5 bg-[#1a0509] p-2.5 rounded-xl border border-[#E50914]/20">
-                <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-[#E50914] to-[#990000] flex items-center justify-center flex-shrink-0 shadow-md">
-                  <Music className="h-4 w-4 text-white" />
+              <div className="flex items-center gap-2.5 neumorph-card p-2.5 rounded-xl">
+                <div className="h-8 w-8 rounded-lg neumorph-circle flex items-center justify-center flex-shrink-0 text-[#FF204E]">
+                  <Music className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="text-xs font-bold text-white truncate">
@@ -199,7 +199,7 @@ const MainLayout: React.FC = () => {
               <button
                 type="button"
                 onClick={handleDismissAlarm}
-                className="w-full rounded-2xl bg-gradient-to-r from-[#E50914] via-[#FF204E] to-[#E50914] hover:opacity-95 py-3.5 text-xs font-black tracking-wider text-white shadow-xl shadow-[#E50914]/50 transition-all transform active:scale-95 cursor-pointer uppercase"
+                className="w-full rounded-2xl neumorph-btn-primary py-3.5 text-xs font-black tracking-wider text-white shadow-xl transition-all cursor-pointer uppercase"
               >
                 DISMISS & STOP RINGTONE
               </button>

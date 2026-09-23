@@ -87,15 +87,15 @@ export const InstallGuideModal: React.FC = () => {
       />
 
       {/* Modal Container */}
-      <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-3xl border border-[#E50914]/30 bg-[#0f0306] p-6 shadow-[0_0_50px_rgba(229,9,20,0.3)] text-[#F8FAFC]">
+      <div className="relative z-10 w-full max-w-lg overflow-hidden rounded-3xl neumorph-card p-6 shadow-2xl text-[#F8FAFC]">
         {/* Decorative lighting */}
-        <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#E50914]/20 blur-3xl" />
+        <div className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-[#E50914]/15 blur-3xl" />
         <div className="pointer-events-none absolute -left-16 -bottom-16 h-48 w-48 rounded-full bg-[#990000]/15 blur-3xl" />
 
         {/* Header */}
         <div className="flex items-start justify-between border-b border-[#E50914]/20 pb-4">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#E50914] to-[#FF204E] text-white shadow-[0_0_15px_rgba(229,9,20,0.4)]">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl neumorph-circle text-[#FF204E]">
               <Download className="h-4 w-4" />
             </div>
             <div>
@@ -111,15 +111,15 @@ export const InstallGuideModal: React.FC = () => {
           </div>
           <button
             onClick={() => setIsInstallModalOpen(false)}
-            className="rounded-lg p-1 text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+            className="h-8 w-8 rounded-xl neumorph-circle flex items-center justify-center text-white/60 hover:text-white cursor-pointer"
           >
-            <X className="h-5 w-5" />
+            <X className="h-4 w-4" />
           </button>
         </div>
 
         {/* Quick Installed Status */}
         {isInstalled && (
-          <div className="my-4 flex items-center gap-2 rounded-xl bg-rose-950/40 p-3 border border-[#E50914]/30 text-rose-300 text-xs font-semibold">
+          <div className="my-4 flex items-center gap-2 rounded-xl neumorph-badge p-3 text-rose-300 text-xs font-semibold">
             <CheckCircle className="h-4.5 w-4.5 text-[#FF204E] shrink-0" />
             <span>
               {isBangla
@@ -130,7 +130,7 @@ export const InstallGuideModal: React.FC = () => {
         )}
 
         {installSuccess && (
-          <div className="my-4 flex items-center gap-2 rounded-xl bg-rose-950/40 p-3 border border-[#E50914]/30 text-rose-300 text-xs font-semibold">
+          <div className="my-4 flex items-center gap-2 rounded-xl neumorph-badge p-3 text-rose-300 text-xs font-semibold">
             <Sparkles className="h-4.5 w-4.5 text-[#FF204E] shrink-0 animate-pulse" />
             <span>
               {isBangla
@@ -141,7 +141,7 @@ export const InstallGuideModal: React.FC = () => {
         )}
 
         {/* Benefits Panel */}
-        <div className="my-4 grid grid-cols-3 gap-2.5 rounded-2xl bg-black/60 p-3 border border-white/5">
+        <div className="my-4 grid grid-cols-3 gap-2.5 rounded-2xl neumorph-inset p-3">
           <div className="flex flex-col items-center text-center p-1">
             <Zap className="h-4 w-4 text-[#FF204E] mb-1" />
             <span className="text-[10px] font-bold text-white/90">
@@ -172,13 +172,13 @@ export const InstallGuideModal: React.FC = () => {
         </div>
 
         {/* Device Platforms Tab Selector */}
-        <div className="flex border-b border-[#E50914]/20 mb-4">
+        <div className="grid grid-cols-3 gap-2 mb-4">
           <button
             onClick={() => setActiveTab('ios')}
-            className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 cursor-pointer ${
+            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
               activeTab === 'ios'
-                ? 'border-[#FF204E] text-white bg-[#E50914]/10'
-                : 'border-transparent text-white/60 hover:text-white'
+                ? 'neumorph-btn-primary text-white'
+                : 'neumorph-btn-secondary text-white/60 hover:text-white'
             }`}
           >
             <Smartphone className="h-3.5 w-3.5" />
@@ -186,30 +186,30 @@ export const InstallGuideModal: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('android')}
-            className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 cursor-pointer ${
+            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
               activeTab === 'android'
-                ? 'border-[#FF204E] text-white bg-[#E50914]/10'
-                : 'border-transparent text-white/60 hover:text-white'
+                ? 'neumorph-btn-primary text-white'
+                : 'neumorph-btn-secondary text-white/60 hover:text-white'
             }`}
           >
-            <Smartphone className="h-3.5 w-3.5 text-[#FF204E]" />
-            <span>Android OS</span>
+            <Smartphone className="h-3.5 w-3.5" />
+            <span>Android</span>
           </button>
           <button
             onClick={() => setActiveTab('desktop')}
-            className={`flex flex-1 items-center justify-center gap-1.5 py-2.5 text-xs font-bold uppercase tracking-wider transition-colors border-b-2 cursor-pointer ${
+            className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
               activeTab === 'desktop'
-                ? 'border-[#FF204E] text-white bg-[#E50914]/10'
-                : 'border-transparent text-white/60 hover:text-white'
+                ? 'neumorph-btn-primary text-white'
+                : 'neumorph-btn-secondary text-white/60 hover:text-white'
             }`}
           >
-            <Laptop className="h-3.5 w-3.5 text-[#FF204E]" />
-            <span>PC / Desktop</span>
+            <Laptop className="h-3.5 w-3.5" />
+            <span>Desktop</span>
           </button>
         </div>
 
         {/* Guide Contents */}
-        <div className="min-h-[170px] bg-black/40 rounded-2xl p-4 border border-white/5">
+        <div className="min-h-[170px] neumorph-inset rounded-2xl p-4">
           {activeTab === 'ios' && (
             <div className="space-y-3.5 text-xs">
               <p className="text-white/80 font-medium">
@@ -219,7 +219,7 @@ export const InstallGuideModal: React.FC = () => {
               </p>
               <div className="space-y-2">
                 <div className="flex items-start gap-2.5">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1e0409] text-[10px] font-bold text-white border border-[#FF204E]/30">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full neumorph-circle text-[10px] font-bold text-white">
                     1
                   </div>
                   <div>
@@ -233,7 +233,7 @@ export const InstallGuideModal: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1e0409] text-[10px] font-bold text-white border border-[#FF204E]/30">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full neumorph-circle text-[10px] font-bold text-white">
                     2
                   </div>
                   <div>
@@ -252,7 +252,7 @@ export const InstallGuideModal: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex items-start gap-2.5">
-                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1e0409] text-[10px] font-bold text-white border border-[#FF204E]/30">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full neumorph-circle text-[10px] font-bold text-white">
                     3
                   </div>
                   <span className="text-white/80">
@@ -274,7 +274,7 @@ export const InstallGuideModal: React.FC = () => {
               </p>
 
               {deferredPrompt ? (
-                <div className="p-3 bg-[#E50914]/10 rounded-xl border border-[#E50914]/20 text-center space-y-2">
+                <div className="p-3 neumorph-card rounded-xl text-center space-y-2">
                   <p className="text-white/80 text-[11px]">
                     {isBangla
                       ? 'অ্যাপটি সরাসরি আপনার অ্যান্ড্রয়েডে ইনস্টল করতে নিচের বাটনে চাপ দিন।'
@@ -282,7 +282,7 @@ export const InstallGuideModal: React.FC = () => {
                   </p>
                   <button
                     onClick={handleNativeInstall}
-                    className="mx-auto flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#E50914] to-[#FF204E] px-4 py-2 text-xs font-bold text-white shadow-lg shadow-[#E50914]/30 hover:brightness-110 transition cursor-pointer"
+                    className="mx-auto flex items-center gap-2 rounded-xl neumorph-btn-primary px-4 py-2 text-xs font-bold text-white cursor-pointer"
                   >
                     <Download className="h-4 w-4 text-white shrink-0" />
                     <span>{isBangla ? 'রিয়েল অ্যাপ ইনস্টল করুন' : 'Direct PWA Install'}</span>
@@ -291,7 +291,7 @@ export const InstallGuideModal: React.FC = () => {
               ) : (
                 <div className="space-y-2 text-white/80">
                   <div className="flex items-start gap-2.5">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1e0409] text-[10px] font-bold text-white border border-[#FF204E]/30">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full neumorph-circle text-[10px] font-bold text-white">
                       1
                     </div>
                     <span>
@@ -301,7 +301,7 @@ export const InstallGuideModal: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1e0409] text-[10px] font-bold text-white border border-[#FF204E]/30">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full neumorph-circle text-[10px] font-bold text-white">
                       2
                     </div>
                     <span>
@@ -311,7 +311,7 @@ export const InstallGuideModal: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1e0409] text-[10px] font-bold text-white border border-[#FF204E]/30">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full neumorph-circle text-[10px] font-bold text-white">
                       3
                     </div>
                     <span>
@@ -334,7 +334,7 @@ export const InstallGuideModal: React.FC = () => {
               </p>
 
               {deferredPrompt ? (
-                <div className="p-3 bg-[#E50914]/10 rounded-xl border border-[#E50914]/20 text-center space-y-2">
+                <div className="p-3 neumorph-card rounded-xl text-center space-y-2">
                   <p className="text-white/80 text-[11px]">
                     {isBangla
                       ? 'পিসিতে সরাসরি ইনস্টলেশন সম্পন্ন করতে নিচের বাটনে চাপ দিন।'
@@ -342,7 +342,7 @@ export const InstallGuideModal: React.FC = () => {
                   </p>
                   <button
                     onClick={handleNativeInstall}
-                    className="mx-auto flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#E50914] to-[#FF204E] px-4 py-2 text-xs font-bold text-white shadow-lg shadow-[#E50914]/30 hover:brightness-110 transition cursor-pointer"
+                    className="mx-auto flex items-center gap-2 rounded-xl neumorph-btn-primary px-4 py-2 text-xs font-bold text-white cursor-pointer"
                   >
                     <Monitor className="h-4 w-4 shrink-0" />
                     <span>{isBangla ? 'পিসিতে অ্যাপ ইনস্টল করুন' : 'Install Desktop App'}</span>
@@ -351,7 +351,7 @@ export const InstallGuideModal: React.FC = () => {
               ) : (
                 <div className="space-y-2 text-white/80">
                   <div className="flex items-start gap-2.5">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1e0409] text-[10px] font-bold text-white border border-[#FF204E]/30">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full neumorph-circle text-[10px] font-bold text-white">
                       1
                     </div>
                     <span>
@@ -361,7 +361,7 @@ export const InstallGuideModal: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1e0409] text-[10px] font-bold text-white border border-[#FF204E]/30">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full neumorph-circle text-[10px] font-bold text-white">
                       2
                     </div>
                     <span>
@@ -371,7 +371,7 @@ export const InstallGuideModal: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#1e0409] text-[10px] font-bold text-white border border-[#FF204E]/30">
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full neumorph-circle text-[10px] font-bold text-white">
                       3
                     </div>
                     <span>
@@ -388,13 +388,13 @@ export const InstallGuideModal: React.FC = () => {
 
         {/* Footer info and Close */}
         <div className="mt-5 flex items-center justify-between border-t border-white/10 pt-4 text-[11px] text-[#94A3B8]">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <Info className="h-3.5 w-3.5 text-[#FF204E]" />
-            <span>PWA Compliant v1.4</span>
+            <span className="neumorph-badge px-2 py-0.5 rounded-md text-[10px]">PWA Compliant v1.4</span>
           </div>
           <button
             onClick={() => setIsInstallModalOpen(false)}
-            className="rounded-xl bg-white/5 hover:bg-white/10 px-4 py-2 font-bold text-[#F8FAFC] border border-white/10 hover:border-white/20 transition-all focus:outline-none cursor-pointer"
+            className="rounded-xl neumorph-btn-secondary px-4 py-2 font-bold text-[#F8FAFC] hover:text-white cursor-pointer"
           >
             {isBangla ? 'বন্ধ করুন' : 'Dismiss'}
           </button>

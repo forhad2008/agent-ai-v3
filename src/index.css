@@ -46,7 +46,7 @@
   background: linear-gradient(180deg, rgba(255, 77, 77, 0.8), rgba(229, 9, 20, 0.9));
 }
 
-/* Red Cosmic Liquid Glass Panel Styling */
+/* Neumorphic Liquid & Cosmic Glass Panel Styling */
 .glass-panel,
 .glass-container,
 .liquid-glass,
@@ -57,14 +57,15 @@
 .transparent-light-glass,
 .red-glass-card {
   position: relative;
-  background: rgba(18, 4, 8, 0.60) !important;
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border: 1px solid rgba(229, 9, 20, 0.22);
+  background: linear-gradient(145deg, rgba(22, 5, 11, 0.85), rgba(12, 2, 6, 0.92)) !important;
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(229, 9, 20, 0.26);
   box-shadow: 
-    0 8px 28px rgba(0, 0, 0, 0.45),
-    0 0 15px rgba(229, 9, 20, 0.15);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    8px 8px 24px rgba(0, 0, 0, 0.8),
+    -6px -6px 20px rgba(255, 32, 78, 0.12),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.08);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-card-hover:hover,
@@ -72,52 +73,269 @@
 .transparent-light-glass:hover,
 .red-glass-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(255, 32, 78, 0.45);
+  border-color: rgba(255, 32, 78, 0.55);
   box-shadow: 
-    0 12px 32px rgba(229, 9, 20, 0.28),
-    0 0 25px rgba(255, 32, 78, 0.35);
+    12px 12px 32px rgba(0, 0, 0, 0.9),
+    -8px -8px 24px rgba(255, 32, 78, 0.25),
+    inset 1px 1px 3px rgba(255, 255, 255, 0.15),
+    0 0 20px rgba(255, 32, 78, 0.3);
 }
 
 .glass-input {
-  background-color: rgba(15, 3, 6, 0.75);
+  background: linear-gradient(145deg, #070103, #110206) !important;
   border: 1px solid rgba(229, 9, 20, 0.3);
   backdrop-filter: blur(18px);
-  box-shadow: inset 0 1.5px 2px rgba(0, 0, 0, 0.45);
-  transition: all 0.2s ease;
+  box-shadow: 
+    inset 4px 4px 10px rgba(0, 0, 0, 0.92),
+    inset -3px -3px 8px rgba(255, 32, 78, 0.15),
+    0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-input:focus {
   border-color: #FF204E;
   box-shadow: 
-    0 0 20px rgba(255, 32, 78, 0.4),
-    inset 0 1px 2px rgba(0, 0, 0, 0.25);
+    inset 4px 4px 10px rgba(0, 0, 0, 0.95),
+    inset -3px -3px 8px rgba(255, 32, 78, 0.3),
+    0 0 20px rgba(255, 32, 78, 0.4);
   outline: none;
 }
 
-/* Red Glowing Primary Buttons */
-.btn-purple-glow,
-.btn-primary,
-.btn-gradient,
-.btn-blue-purple,
-.btn-red-glow {
-  background: linear-gradient(135deg, #E50914 0%, #FF204E 50%, #990000 100%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+/* ======================================================== */
+/* NEUMORPHISM DESIGN SYSTEM: MODERN & LUXURY PREMIUM       */
+/* Dual Shadow Physics:                                     */
+/*   Light Source: Top-Left specular highlight (-x, -y)     */
+/*   Drop Shadow: Bottom-Right deep absorption (+x, +y)     */
+/* ======================================================== */
+
+/* 1. Neumorphic Raised Panels & Cards (Floating Extrusion) */
+.neumorph-card,
+.neumorph-raised,
+.morphic-card-drop {
+  background: linear-gradient(145deg, #17040b, #0d0206) !important;
   box-shadow: 
-    0 8px 25px rgba(229, 9, 20, 0.45),
-    0 0 20px rgba(255, 32, 78, 0.35);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    8px 8px 22px rgba(0, 0, 0, 0.85),
+    -6px -6px 18px rgba(255, 32, 78, 0.12),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(229, 9, 20, 0.24) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.btn-purple-glow:hover,
-.btn-primary:hover,
-.btn-gradient:hover,
-.btn-blue-purple:hover,
-.btn-red-glow:hover {
-  background: linear-gradient(135deg, #FF3B30 0%, #E50914 50%, #FF204E 100%);
+.neumorph-card:hover,
+.neumorph-raised:hover,
+.morphic-card-drop:hover {
+  border-color: rgba(255, 32, 78, 0.45) !important;
   box-shadow: 
-    0 12px 35px rgba(229, 9, 20, 0.65),
-    0 0 30px rgba(255, 32, 78, 0.55);
+    10px 10px 28px rgba(0, 0, 0, 0.92),
+    -8px -8px 22px rgba(255, 32, 78, 0.22),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-2px);
+}
+
+/* 2. Neumorphic Sunken / Inset Plates (Carved Wells) */
+.neumorph-inset,
+.neumorph-recessed,
+.neumorph-pressed,
+.morphic-card-inset {
+  background: linear-gradient(145deg, #090104, #140309) !important;
+  box-shadow: 
+    inset 6px 6px 14px rgba(0, 0, 0, 0.92),
+    inset -5px -5px 12px rgba(255, 32, 78, 0.20),
+    0 1px 1px rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(229, 9, 20, 0.20) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neumorph-inset:hover,
+.neumorph-recessed:hover,
+.neumorph-pressed:hover,
+.morphic-card-inset:hover {
+  box-shadow: 
+    inset 8px 8px 18px rgba(0, 0, 0, 0.96),
+    inset -6px -6px 14px rgba(255, 32, 78, 0.32) !important;
+  border-color: rgba(255, 32, 78, 0.4) !important;
+}
+
+/* 3. Neumorphic Buttons: Primary Action (Vibrant Raised Crimson) */
+.neumorph-btn-primary,
+.btn-morphism-drop,
+.morphic-drop-btn {
+  background: linear-gradient(145deg, #FF204E, #B8001F) !important;
+  box-shadow: 
+    5px 5px 14px rgba(0, 0, 0, 0.8),
+    -4px -4px 12px rgba(255, 50, 90, 0.32),
+    inset 0 1px 1px rgba(255, 255, 255, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neumorph-btn-primary:hover,
+.btn-morphism-drop:hover,
+.morphic-drop-btn:hover {
+  background: linear-gradient(145deg, #FF3B65, #CF0024) !important;
+  box-shadow: 
+    7px 7px 18px rgba(0, 0, 0, 0.9),
+    -5px -5px 16px rgba(255, 80, 120, 0.45),
+    inset 0 1px 2px rgba(255, 255, 255, 0.6),
+    0 0 20px rgba(255, 32, 78, 0.5) !important;
   transform: translateY(-1.5px);
+}
+
+/* Tactile Click Physics: Raised flips to Sunken Inset on press! */
+.neumorph-btn-primary:active,
+.btn-morphism-drop:active,
+.morphic-drop-btn:active {
+  box-shadow: 
+    inset 5px 5px 10px rgba(0, 0, 0, 0.92),
+    inset -4px -4px 10px rgba(255, 32, 78, 0.35) !important;
+  transform: translateY(1px) scale(0.98) !important;
+}
+
+/* 4. Neumorphic Buttons: Dark Tactile Raised (Secondary / Icons / Controls) */
+.neumorph-btn-secondary,
+.neumorph-btn-dark {
+  background: linear-gradient(145deg, #1a040d, #0d0206) !important;
+  box-shadow: 
+    5px 5px 14px rgba(0, 0, 0, 0.8),
+    -4px -4px 10px rgba(255, 32, 78, 0.14),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(229, 9, 20, 0.25) !important;
+  color: #F8FAFC !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neumorph-btn-secondary:hover,
+.neumorph-btn-dark:hover {
+  border-color: rgba(255, 32, 78, 0.55) !important;
+  box-shadow: 
+    7px 7px 18px rgba(0, 0, 0, 0.9),
+    -5px -5px 14px rgba(255, 32, 78, 0.28),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.15) !important;
+  color: #FFFFFF !important;
+  transform: translateY(-1px);
+}
+
+.neumorph-btn-secondary:active,
+.neumorph-btn-dark:active {
+  box-shadow: 
+    inset 4px 4px 10px rgba(0, 0, 0, 0.95),
+    inset -3px -3px 8px rgba(255, 32, 78, 0.28) !important;
+  transform: translateY(1px) scale(0.98) !important;
+}
+
+/* 5. Neumorphic Inset Buttons (Sunken Wells like chips, mic, search toggles) */
+.neumorph-btn-inset,
+.btn-morphism-inner,
+.morphic-inner-btn {
+  background: linear-gradient(145deg, #0a0105, #16030a) !important;
+  box-shadow: 
+    inset 5px 5px 12px rgba(0, 0, 0, 0.92),
+    inset -4px -4px 10px rgba(255, 32, 78, 0.22) !important;
+  border: 1px solid rgba(229, 9, 20, 0.24) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neumorph-btn-inset:hover,
+.btn-morphism-inner:hover,
+.morphic-inner-btn:hover {
+  box-shadow: 
+    inset 7px 7px 15px rgba(0, 0, 0, 0.96),
+    inset -5px -5px 12px rgba(255, 32, 78, 0.35) !important;
+  border-color: rgba(255, 32, 78, 0.48) !important;
+}
+
+.neumorph-btn-inset:active,
+.btn-morphism-inner:active,
+.morphic-inner-btn:active {
+  transform: scale(0.97) !important;
+}
+
+/* 6. Neumorphic Inputs & Textareas */
+.neumorph-input {
+  background: linear-gradient(145deg, #070103, #110207) !important;
+  box-shadow: 
+    inset 4px 4px 10px rgba(0, 0, 0, 0.95),
+    inset -3px -3px 8px rgba(255, 32, 78, 0.15),
+    0 1px 0 rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(229, 9, 20, 0.25) !important;
+  color: #F8FAFC !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neumorph-input:focus {
+  border-color: #FF204E !important;
+  box-shadow: 
+    inset 4px 4px 10px rgba(0, 0, 0, 0.95),
+    inset -3px -3px 8px rgba(255, 32, 78, 0.3),
+    0 0 20px rgba(255, 32, 78, 0.35) !important;
+  outline: none !important;
+}
+
+/* 7. Neumorphic Segmented Tab Trays (Recessed Sockets) */
+.neumorph-tab-tray {
+  background: linear-gradient(145deg, #070103, #130208) !important;
+  box-shadow: 
+    inset 5px 5px 12px rgba(0, 0, 0, 0.95),
+    inset -4px -4px 10px rgba(255, 32, 78, 0.16) !important;
+  border: 1px solid rgba(229, 9, 20, 0.22) !important;
+}
+
+/* 8. Neumorphic Circular Controls */
+.neumorph-circle {
+  border-radius: 9999px !important;
+  background: linear-gradient(145deg, #1b040e, #0e0207) !important;
+  box-shadow: 
+    5px 5px 14px rgba(0, 0, 0, 0.82),
+    -4px -4px 10px rgba(255, 32, 78, 0.18),
+    inset 1px 1px 1px rgba(255, 255, 255, 0.12) !important;
+  border: 1px solid rgba(229, 9, 20, 0.25) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.neumorph-circle:hover {
+  box-shadow: 
+    7px 7px 18px rgba(0, 0, 0, 0.9),
+    -5px -5px 14px rgba(255, 32, 78, 0.3),
+    inset 1px 1px 2px rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 32, 78, 0.5) !important;
+  transform: translateY(-1px);
+}
+
+.neumorph-circle:active {
+  box-shadow: 
+    inset 4px 4px 10px rgba(0, 0, 0, 0.95),
+    inset -3px -3px 8px rgba(255, 32, 78, 0.3) !important;
+  transform: translateY(1px) scale(0.96) !important;
+}
+
+.neumorph-circle-inset,
+.morphic-ring-inset {
+  border-radius: 9999px !important;
+  background: linear-gradient(145deg, #090104, #15030a) !important;
+  box-shadow: 
+    inset 5px 5px 12px rgba(0, 0, 0, 0.92),
+    inset -4px -4px 10px rgba(255, 32, 78, 0.28) !important;
+  border: 1px solid rgba(229, 9, 20, 0.22) !important;
+}
+
+/* 9. Neumorphic Badges & Micro-Pills */
+.neumorph-badge {
+  background: linear-gradient(145deg, #1c040e, #0e0207);
+  box-shadow: 
+    3px 3px 8px rgba(0, 0, 0, 0.8),
+    -2px -2px 6px rgba(255, 32, 78, 0.18),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(229, 9, 20, 0.3);
+}
+
+.neumorph-badge-primary {
+  background: linear-gradient(145deg, #E50914, #990000);
+  box-shadow: 
+    3px 3px 8px rgba(0, 0, 0, 0.8),
+    -2px -2px 6px rgba(255, 80, 110, 0.3),
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Red Orb Glowing Animation */

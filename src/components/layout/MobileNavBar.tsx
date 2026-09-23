@@ -28,13 +28,13 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
     <nav
       id="mobile_bottom_nav"
       aria-label="Mobile Navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-[#E50914]/25 bg-[#080204]/90 px-2 backdrop-blur-[32px] lg:hidden safe-area-pb shadow-2xl"
+      className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around border-t border-[#E50914]/25 bg-[#080204]/95 px-2 backdrop-blur-[32px] lg:hidden safe-area-pb shadow-[0_-8px_25px_rgba(0,0,0,0.85)]"
     >
       {/* 1. Home */}
       <button
         id="mobile_nav_home"
         onClick={() => setActiveView('dashboard')}
-        className={`relative flex flex-1 flex-col items-center justify-center py-1 transition-all ${
+        className={`relative flex flex-1 flex-col items-center justify-center py-1 transition-all cursor-pointer ${
           activeView === 'dashboard' ? 'text-[#FF204E] font-bold' : 'text-[#94A3B8] hover:text-[#F8FAFC]'
         }`}
         aria-label="Home"
@@ -42,7 +42,7 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
         <Home className="h-5 w-5" />
         <span className="mt-0.5 text-[10px] tracking-tight">Home</span>
         {activeView === 'dashboard' && (
-          <span className="absolute bottom-0.5 h-1 w-6 rounded-full bg-[#E50914] shadow-[0_0_8px_#E50914]" />
+          <span className="absolute bottom-0.5 h-1 w-6 rounded-full neumorph-badge-primary shadow-[0_0_8px_#FF204E]" />
         )}
       </button>
 
@@ -50,7 +50,7 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
       <button
         id="mobile_nav_chat"
         onClick={() => setActiveView('chat')}
-        className={`relative flex flex-1 flex-col items-center justify-center py-1 transition-all ${
+        className={`relative flex flex-1 flex-col items-center justify-center py-1 transition-all cursor-pointer ${
           activeView === 'chat' ? 'text-[#FF204E] font-bold' : 'text-[#94A3B8] hover:text-[#F8FAFC]'
         }`}
         aria-label="AI Chat"
@@ -66,7 +66,7 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
         </div>
         <span className="mt-0.5 text-[10px] tracking-tight">AI Chat</span>
         {activeView === 'chat' && (
-          <span className="absolute bottom-0.5 h-1 w-6 rounded-full bg-[#E50914] shadow-[0_0_8px_#E50914]" />
+          <span className="absolute bottom-0.5 h-1 w-6 rounded-full neumorph-badge-primary shadow-[0_0_8px_#FF204E]" />
         )}
       </button>
 
@@ -74,7 +74,7 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
       <button
         id="mobile_nav_tasks"
         onClick={() => setActiveView('tasks')}
-        className={`relative flex flex-1 flex-col items-center justify-center py-1 transition-all ${
+        className={`relative flex flex-1 flex-col items-center justify-center py-1 transition-all cursor-pointer ${
           activeView === 'tasks' ? 'text-[#FF204E] font-bold' : 'text-[#94A3B8] hover:text-[#F8FAFC]'
         }`}
         aria-label="Tasks"
@@ -82,14 +82,14 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
         <div className="relative">
           <CheckSquare className="h-5 w-5" />
           {activeTasksCount > 0 && (
-            <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#E50914] px-1 text-[9px] font-mono font-bold text-white border border-[#FF204E]/40">
+            <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-[16px] items-center justify-center rounded-full neumorph-badge-primary px-1 text-[9px] font-mono font-bold text-white">
               {activeTasksCount}
             </span>
           )}
         </div>
         <span className="mt-0.5 text-[10px] tracking-tight">Tasks</span>
         {activeView === 'tasks' && (
-          <span className="absolute bottom-0.5 h-1 w-6 rounded-full bg-[#E50914] shadow-[0_0_8px_#E50914]" />
+          <span className="absolute bottom-0.5 h-1 w-6 rounded-full neumorph-badge-primary shadow-[0_0_8px_#FF204E]" />
         )}
       </button>
 
@@ -97,7 +97,7 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
       <button
         id="mobile_nav_approvals"
         onClick={() => setActiveView('approvals')}
-        className={`relative flex flex-1 flex-col items-center justify-center py-1 transition-all ${
+        className={`relative flex flex-1 flex-col items-center justify-center py-1 transition-all cursor-pointer ${
           activeView === 'approvals' ? 'text-[#FF204E] font-bold' : 'text-[#94A3B8] hover:text-[#F8FAFC]'
         }`}
         aria-label="Approvals"
@@ -105,14 +105,14 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
         <div className="relative">
           <ShieldCheck className="h-5 w-5" />
           {pendingApprovalsCount > 0 && (
-            <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-[#FF204E] px-1 text-[9px] font-mono font-bold text-white shadow-sm">
+            <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-[16px] items-center justify-center rounded-full neumorph-badge-primary px-1 text-[9px] font-mono font-bold text-white">
               {pendingApprovalsCount}
             </span>
           )}
         </div>
         <span className="mt-0.5 text-[10px] tracking-tight">Approvals</span>
         {activeView === 'approvals' && (
-          <span className="absolute bottom-0.5 h-1 w-6 rounded-full bg-[#E50914] shadow-[0_0_8px_#E50914]" />
+          <span className="absolute bottom-0.5 h-1 w-6 rounded-full neumorph-badge-primary shadow-[0_0_8px_#FF204E]" />
         )}
       </button>
 
@@ -120,7 +120,7 @@ export const MobileNavBar: React.FC<MobileNavBarProps> = ({ onOpenMobileMenu }) 
       <button
         id="mobile_nav_menu"
         onClick={onOpenMobileMenu}
-        className="flex flex-1 flex-col items-center justify-center py-1 text-[#94A3B8] hover:text-[#F8FAFC] transition-all"
+        className="flex flex-1 flex-col items-center justify-center py-1 text-[#94A3B8] hover:text-[#F8FAFC] transition-all cursor-pointer"
         aria-label="Open Full Menu"
       >
         <Menu className="h-5 w-5" />

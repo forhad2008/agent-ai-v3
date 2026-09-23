@@ -377,9 +377,9 @@ export const ChatView: React.FC = () => {
   return (
     <div id="ai_chat_view" className="flex h-full flex-col bg-[#080204]/90 text-[#F8FAFC]">
       {/* Chat Top Subheader */}
-      <div className="flex shrink-0 items-center justify-between border-b border-[#E50914]/25 bg-[#0f0306]/90 px-3.5 py-2.5 sm:px-6">
+      <div className="flex shrink-0 items-center justify-between border-b border-[#E50914]/20 bg-[#0c0205] px-3.5 py-2.5 sm:px-6 shadow-[0_4px_15px_rgba(0,0,0,0.6)]">
         <div className="flex items-center gap-2.5 sm:gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E50914]/20 text-[#FF204E] border border-[#E50914]/30 shadow-[0_0_15px_rgba(229,9,20,0.3)]">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl neumorph-circle text-[#FF204E]">
             <Sparkles className="h-4 w-4 text-[#FF204E]" />
           </div>
           <div>
@@ -389,7 +389,7 @@ export const ChatView: React.FC = () => {
               </h3>
               <button
                 onClick={() => setIsLanguageModalOpen(true)}
-                className="hidden sm:inline-flex items-center gap-1 rounded-full bg-[#080204]/85 px-2 py-0.5 text-[10px] text-[#FF204E] border border-[#E50914]/30 hover:border-[#FF204E] transition-all"
+                className="hidden sm:inline-flex items-center gap-1 rounded-full neumorph-badge px-2.5 py-0.5 text-[10px] text-[#FF204E] cursor-pointer"
                 title="Change system language"
               >
                 <span>{currentLanguage.flag}</span>
@@ -405,9 +405,9 @@ export const ChatView: React.FC = () => {
         {/* Chat Header Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Autonomous Web-Research & Learning Indicator */}
-          <div className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-sky-950/40 border border-sky-500/30 text-[10px] text-sky-300 font-mono">
+          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full neumorph-badge text-[10px] text-sky-300 font-mono">
             <Globe className="h-3 w-3 text-sky-400 animate-pulse" />
-            <span className="font-semibold">Web Grounding & Self-Learning Active</span>
+            <span className="font-semibold">Web Grounding Active</span>
           </div>
 
           {/* Search Toggle */}
@@ -416,10 +416,10 @@ export const ChatView: React.FC = () => {
               setIsSearchOpen(!isSearchOpen);
               if (isSearchOpen) setSearchQuery('');
             }}
-            className={`p-1.5 rounded-xl border transition-all ${
+            className={`p-2 rounded-xl transition-all cursor-pointer ${
               isSearchOpen
-                ? 'bg-[#E50914]/20 border-[#FF204E] text-[#FF204E]'
-                : 'bg-[#080204]/85 border-[#E50914]/30 text-[#94A3B8] hover:text-white'
+                ? 'neumorph-btn-primary'
+                : 'neumorph-btn-secondary text-[#94A3B8] hover:text-white'
             }`}
             title="Search inside conversation"
           >
@@ -429,7 +429,7 @@ export const ChatView: React.FC = () => {
           {/* Export Chat */}
           <button
             onClick={handleExportChat}
-            className="p-1.5 rounded-xl bg-[#080204]/85 border border-[#E50914]/30 text-[#94A3B8] hover:text-[#FF204E] hover:border-[#FF204E] transition-all"
+            className="p-2 rounded-xl neumorph-btn-secondary text-[#94A3B8] hover:text-[#FF204E] cursor-pointer"
             title="Export conversation as Markdown"
           >
             <Download className="h-3.5 w-3.5" />
@@ -438,7 +438,7 @@ export const ChatView: React.FC = () => {
           {/* Language Mobile Button */}
           <button
             onClick={() => setIsLanguageModalOpen(true)}
-            className="flex sm:hidden items-center gap-1 rounded-lg bg-[#080204]/85 px-2 py-1 text-xs text-[#F8FAFC] border border-[#E50914]/25"
+            className="flex sm:hidden items-center gap-1 rounded-xl neumorph-btn-secondary px-2.5 py-1.5 text-xs text-[#F8FAFC] cursor-pointer"
             title="Change Language Mode"
           >
             <span>{currentLanguage.flag}</span>
@@ -448,9 +448,9 @@ export const ChatView: React.FC = () => {
           <button
             id="btn_new_conversation"
             onClick={startNewConversation}
-            className="flex items-center gap-1.5 rounded-xl bg-[#080204]/85 px-3 py-1.5 text-xs font-medium text-[#FF204E] border border-[#E50914]/30 hover:bg-[#E50914]/20 hover:text-white transition-colors"
+            className="flex items-center gap-1.5 rounded-xl neumorph-btn-primary px-3.5 py-1.5 text-xs font-semibold cursor-pointer"
           >
-            <Plus className="h-3.5 w-3.5 text-[#FF204E]" />
+            <Plus className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">
               {t.newSession}
             </span>
@@ -518,12 +518,12 @@ export const ChatView: React.FC = () => {
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-[#94A3B8]">
               {t.quickSuggestionsTitle}
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {demoSuggestions.map((item, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSendMessage(item.prompt)}
-                  className="flex flex-col items-start p-3 text-left rounded-2xl bg-[#0f0306]/85 border border-[#E50914]/25 hover:border-[#FF204E]/50 hover:bg-[#E50914]/15 transition-all group shadow-sm"
+                  className="flex flex-col items-start p-3 text-left rounded-2xl neumorph-card hover:border-[#FF204E] transition-all group cursor-pointer"
                 >
                   <span className="text-xs font-bold text-[#F8FAFC] group-hover:text-[#FF204E]">
                     {item.title}
@@ -567,12 +567,12 @@ export const ChatView: React.FC = () => {
 
                 {/* Message Bubble Container */}
                 <div
-                  className={`relative max-w-[94%] sm:max-w-[85%] rounded-2xl p-4 sm:p-5 shadow-sm text-sm leading-relaxed transition-all duration-200 ${
+                  className={`relative max-w-[94%] sm:max-w-[85%] rounded-2xl p-4 sm:p-5 text-sm leading-relaxed transition-all duration-200 ${
                     msg.isDeleted
-                      ? 'bg-slate-950/40 text-slate-500 border border-slate-800/60 rounded-2xl italic shadow-inner'
+                      ? 'neumorph-inset text-slate-500 rounded-2xl italic'
                       : isUser
-                        ? 'bg-gradient-to-r from-[#E50914] via-[#FF204E] to-[#990000] text-[#F8FAFC] rounded-tr-none shadow-[0_0_20px_rgba(229,9,20,0.4)] border border-[#FF204E]/40'
-                        : 'bg-[#0f0306]/90 text-[#F8FAFC] border border-[#E50914]/30 rounded-tl-none shadow-[0_0_30px_rgba(229,9,20,0.12)]'
+                        ? 'neumorph-raised bg-gradient-to-r from-[#E50914] via-[#FF204E] to-[#990000] text-[#F8FAFC] rounded-tr-none border border-[#FF204E]/50 shadow-[0_0_20px_rgba(229,9,20,0.4)]'
+                        : 'neumorph-card text-[#F8FAFC] rounded-tl-none'
                   }`}
                 >
                   {/* WhatsApp Menu Dropdown & Action Trigger */}
@@ -993,14 +993,14 @@ export const ChatView: React.FC = () => {
           )}
 
           {/* Text Input Row */}
-          <div className="relative flex items-end gap-2 rounded-2xl bg-[#080204] p-2 border border-[#E50914]/35 focus-within:border-[#FF204E] focus-within:ring-2 focus-within:ring-[#FF204E]/20 shadow-[0_0_25px_rgba(229,9,20,0.2)] transition-all duration-300">
+          <div className="relative flex items-end gap-2 rounded-2xl neumorph-inset p-2">
             {/* Attachment Dropdown Toggle */}
             <div className="relative">
               <button
                 id="btn_attach_file"
                 type="button"
                 onClick={() => setShowAttachMenu(!showAttachMenu)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#94A3B8] hover:bg-[#080204] hover:text-[#F8FAFC] transition-colors"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[#94A3B8] neumorph-btn-secondary hover:text-[#FF204E] cursor-pointer"
                 title="Attach workspace file or upload"
               >
                 <Paperclip className="h-4 w-4" />
@@ -1010,7 +1010,7 @@ export const ChatView: React.FC = () => {
               {showAttachMenu && (
                 <div
                   id="attach_menu"
-                  className="absolute bottom-12 left-0 z-50 w-64 rounded-2xl bg-[#0f0306] p-2.5 border border-[#E50914]/30 shadow-2xl space-y-1 text-xs"
+                  className="absolute bottom-12 left-0 z-50 w-64 rounded-2xl neumorph-card p-3 space-y-1 text-xs"
                 >
                   <p className="px-2 py-1 font-semibold text-[#94A3B8] uppercase text-[10px]">
                     Workspace Files
@@ -1021,7 +1021,7 @@ export const ChatView: React.FC = () => {
                         key={f.id}
                         type="button"
                         onClick={() => handleAttachWorkspaceFile(f)}
-                        className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-[#F8FAFC] hover:bg-[#080204] hover:text-[#FF204E]"
+                        className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-[#F8FAFC] hover:bg-white/5 hover:text-[#FF204E] cursor-pointer"
                       >
                         <span className="truncate">{f.name}</span>
                         <span className="text-[10px] text-[#94A3B8]">{f.size}</span>
@@ -1032,7 +1032,7 @@ export const ChatView: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[#FF204E] hover:bg-[#080204]"
+                      className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[#FF204E] hover:bg-white/5 cursor-pointer"
                     >
                       <Plus className="h-3.5 w-3.5" />
                       <span>Upload from Device</span>
@@ -1054,10 +1054,10 @@ export const ChatView: React.FC = () => {
               id="btn_voice_input"
               type="button"
               onClick={toggleVoiceInput}
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors ${
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all cursor-pointer ${
                 isRecording
-                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                  : 'text-[#94A3B8] hover:bg-[#080204] hover:text-[#F8FAFC]'
+                  ? 'neumorph-btn-primary animate-pulse'
+                  : 'text-[#94A3B8] neumorph-btn-secondary hover:text-white'
               }`}
               title="Voice Input (Speech-to-Text)"
             >
@@ -1082,7 +1082,7 @@ export const ChatView: React.FC = () => {
                 id="btn_stop_generation"
                 type="button"
                 onClick={stopGeneration}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 border border-rose-500/40 transition-colors"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl neumorph-btn-primary cursor-pointer"
                 title="Stop generation"
               >
                 <Square className="h-4 w-4 fill-current" />
@@ -1093,10 +1093,10 @@ export const ChatView: React.FC = () => {
                 type="button"
                 onClick={() => handleSend()}
                 disabled={!input.trim()}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all cursor-pointer ${
                   input.trim()
-                    ? 'bg-gradient-to-r from-[#E50914] to-[#FF204E] text-[#F8FAFC] shadow-[0_0_15px_rgba(229,9,20,0.5)]'
-                    : 'bg-[#080204] text-[#94A3B8]/40 border border-[#E50914]/15 cursor-not-allowed'
+                    ? 'neumorph-btn-primary'
+                    : 'neumorph-btn-secondary text-[#94A3B8]/40 cursor-not-allowed opacity-60'
                 }`}
                 title="Send instruction"
               >

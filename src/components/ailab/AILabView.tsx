@@ -464,12 +464,12 @@ export const AILabView: React.FC = () => {
   };
 
   return (
-    <div className="flex h-full flex-col bg-[#0b0204] text-[#F8FAFC]">
+    <div className="flex h-full flex-col bg-[#080204] text-[#F8FAFC]">
       {/* Tab Navigation Header */}
-      <div className="flex shrink-0 items-center justify-between border-b border-[#FF204E]/25 bg-[#070103] px-3 py-3 sm:px-6">
+      <div className="flex shrink-0 items-center justify-between border-b border-[#E50914]/20 bg-[#0c0205] px-3 py-3 sm:px-6 shadow-[0_4px_15px_rgba(0,0,0,0.6)]">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-tr from-[#990000] to-[#E50914] text-white shadow-md shadow-[#E50914]/20">
-            <Sparkles className="h-4 w-4" />
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl neumorph-circle text-[#FF204E]">
+            <Sparkles className="h-4 w-4 text-[#FF204E]" />
           </div>
           <div>
             <h1 className="text-sm font-black uppercase tracking-wider text-[#F8FAFC]">AI Laboratory</h1>
@@ -478,7 +478,7 @@ export const AILabView: React.FC = () => {
         </div>
 
         {/* Tab Selector Pillbox */}
-        <div className="flex items-center gap-1 rounded-xl bg-[#0d0305] p-1 border border-[#FF204E]/20 overflow-x-auto scrollbar-none max-w-[65vw] sm:max-w-full">
+        <div className="flex items-center gap-1.5 rounded-2xl neumorph-inset p-1.5 overflow-x-auto scrollbar-none max-w-[65vw] sm:max-w-full">
           {[
             { id: 'chat', label: 'Specialist Chat', icon: MessageSquare },
             { id: 'music', label: 'Lyria Music', icon: Music },
@@ -494,10 +494,10 @@ export const AILabView: React.FC = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold whitespace-nowrap transition-all cursor-pointer ${
                   isActive
-                    ? 'bg-gradient-to-r from-[#E50914] to-[#FF204E] text-white shadow-md shadow-[#E50914]/30 font-bold'
-                    : 'text-[#94A3B8] hover:bg-[#E50914]/15 hover:text-[#F8FAFC]'
+                    ? 'neumorph-btn-primary'
+                    : 'neumorph-btn-secondary text-[#94A3B8] hover:text-[#F8FAFC]'
                 }`}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -515,10 +515,10 @@ export const AILabView: React.FC = () => {
         {activeTab === 'chat' && (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 max-w-6xl mx-auto items-stretch">
             {/* Sidebar Controller */}
-            <div className="lg:col-span-1 rounded-2xl bg-[#0f0306]/90 p-5 border border-[#FF204E]/25 shadow-xl space-y-5 flex flex-col justify-between">
+            <div className="lg:col-span-1 rounded-2xl neumorph-card p-5 space-y-5 flex flex-col justify-between">
               <div className="space-y-4">
                 <div>
-                  <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider bg-[#FF204E]/10 px-2.5 py-1 rounded-md border border-[#FF204E]/25">
+                  <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider neumorph-badge px-2.5 py-1 rounded-md">
                     Engine Controls
                   </span>
                   <h3 className="text-sm font-bold text-[#F8FAFC] mt-3">Specialist Persona</h3>
@@ -536,25 +536,25 @@ export const AILabView: React.FC = () => {
                     <button
                       key={role.id}
                       onClick={() => setChatRole(role.id as any)}
-                      className={`w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-semibold border transition-all cursor-pointer ${
+                      className={`w-full flex items-center justify-between rounded-xl px-3.5 py-2.5 text-left text-xs font-semibold transition-all cursor-pointer ${
                         chatRole === role.id
-                          ? 'bg-[#E50914]/20 border-[#FF204E] text-[#FF204E] shadow-inner font-bold'
-                          : 'bg-[#070103] border-white/5 text-[#94A3B8] hover:border-white/10'
+                          ? 'neumorph-btn-primary'
+                          : 'neumorph-btn-secondary text-[#94A3B8] hover:text-[#F8FAFC]'
                       }`}
                     >
                       <span>{role.label}</span>
-                      {chatRole === role.id && <CheckCircle className="h-3.5 w-3.5 text-[#FF204E]" />}
+                      {chatRole === role.id && <CheckCircle className="h-3.5 w-3.5 text-white" />}
                     </button>
                   ))}
                 </div>
 
                 {/* Model speed/intelligence choice */}
-                <div className="space-y-2 pt-3 border-t border-white/5">
+                <div className="space-y-2 pt-3 border-t border-[#E50914]/20">
                   <label className="text-xs font-bold text-[#94A3B8] uppercase tracking-wider text-[10px]">Active Gemini Model</label>
                   <select
                     value={chatModel}
                     onChange={(e) => setChatModel(e.target.value as any)}
-                    className="w-full rounded-xl bg-[#070103] p-2.5 text-xs border border-white/10 text-white focus:outline-none focus:border-[#FF204E]"
+                    className="w-full rounded-xl neumorph-inset p-2.5 text-xs text-white focus:outline-none focus:border-[#FF204E]"
                   >
                     <option value="gemini-3.1-pro-preview">gemini-3.1-pro-preview (Complex)</option>
                     <option value="gemini-3.5-flash">gemini-3.5-flash (Balanced)</option>
@@ -563,22 +563,22 @@ export const AILabView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="bg-[#070103] p-3 rounded-xl border border-[#FF204E]/15 text-[10px] text-[#94A3B8] leading-relaxed font-mono">
+              <div className="neumorph-inset p-3 rounded-xl text-[10px] text-[#94A3B8] leading-relaxed font-mono">
                 💡 Change the persona anytime! Future turns will automatically incorporate the new expert guardrails.
               </div>
             </div>
 
             {/* Chat Conversation Thread */}
-            <div className="lg:col-span-3 flex flex-col rounded-2xl bg-[#0f0306]/90 border border-[#FF204E]/25 shadow-xl overflow-hidden min-h-[480px]">
+            <div className="lg:col-span-3 flex flex-col rounded-2xl neumorph-card overflow-hidden min-h-[480px]">
               {/* Specialist Header */}
-              <div className="bg-[#070103] px-4 py-3 border-b border-[#FF204E]/15 flex items-center justify-between">
+              <div className="bg-[#140307]/70 px-4 py-3 border-b border-[#E50914]/20 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-[#FF204E] animate-pulse"></span>
                   <span className="text-xs font-bold text-[#F8FAFC]">
                     Active Persona: <span className="text-[#FF204E]">{chatRole.toUpperCase()} Expert</span>
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-[#94A3B8] bg-[#070103] px-2.5 py-1 rounded-md border border-white/5">
+                <span className="text-[10px] font-mono text-[#94A3B8] neumorph-badge px-2.5 py-1 rounded-md">
                   {chatModel}
                 </span>
               </div>
@@ -595,8 +595,8 @@ export const AILabView: React.FC = () => {
                       <div
                         className={`rounded-2xl p-3.5 text-xs max-w-[85%] whitespace-pre-wrap leading-relaxed ${
                           isUser
-                            ? 'bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] text-white rounded-tr-none font-medium'
-                            : 'bg-[#070103] border border-[#FF204E]/20 text-white/90 rounded-tl-none'
+                            ? 'neumorph-raised bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] text-white rounded-tr-none font-medium'
+                            : 'neumorph-card text-white/90 rounded-tl-none'
                         }`}
                       >
                         {msg.text}
@@ -613,19 +613,19 @@ export const AILabView: React.FC = () => {
               </div>
 
               {/* Chat Input Bar */}
-              <form onSubmit={sendChatMessage} className="p-3 sm:p-4 bg-[#070103] border-t border-[#FF204E]/15 flex items-center gap-2 w-full shrink-0 relative z-10">
+              <form onSubmit={sendChatMessage} className="p-3 sm:p-4 bg-[#140307]/70 border-t border-[#E50914]/20 flex items-center gap-2 w-full shrink-0 relative z-10">
                 <input
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   placeholder="Enter technical scenarios, architecture queries, or code..."
                   disabled={loading}
-                  className="flex-1 h-11 min-w-0 rounded-xl bg-[#070103] px-3.5 text-xs border border-white/10 focus:outline-none focus:border-[#FF204E] focus:ring-1 focus:ring-[#FF204E]/30 text-white placeholder:text-[#94A3B8]/60"
+                  className="flex-1 h-11 min-w-0 rounded-xl neumorph-inset px-3.5 text-xs text-white placeholder:text-[#94A3B8]/60 focus:outline-none"
                 />
                 <button
                   type="submit"
                   disabled={loading || !chatInput.trim()}
-                  className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl bg-gradient-to-r from-[#E50914] to-[#FF204E] hover:brightness-110 text-white shadow-md shadow-[#E50914]/25 disabled:opacity-40 transition-all cursor-pointer active:scale-95"
+                  className="h-11 w-11 shrink-0 flex items-center justify-center rounded-xl neumorph-btn-primary disabled:opacity-40 transition-all cursor-pointer"
                 >
                   <Send className="h-4 w-4" />
                 </button>
@@ -638,9 +638,9 @@ export const AILabView: React.FC = () => {
         {activeTab === 'music' && (
           <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             {/* Input form */}
-            <div className="rounded-2xl bg-[#0f0306]/90 p-5 sm:p-6 border border-[#FF204E]/25 shadow-xl space-y-4">
+            <div className="rounded-2xl neumorph-card p-5 sm:p-6 space-y-4">
               <div>
-                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider bg-[#FF204E]/10 px-2.5 py-1 rounded-md border border-[#FF204E]/25">
+                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider neumorph-badge px-2.5 py-1 rounded-md">
                   Lyria Audio Synthesis
                 </span>
                 <h3 className="text-base font-bold text-[#F8FAFC] mt-3">Compose High-Fidelity Tracks</h3>
@@ -653,7 +653,7 @@ export const AILabView: React.FC = () => {
                   rows={3}
                   value={musicPrompt}
                   onChange={(e) => setMusicPrompt(e.target.value)}
-                  className="w-full rounded-xl bg-[#070103] p-3 text-xs text-[#F8FAFC] border border-[#FF204E]/25 focus:outline-none focus:border-[#FF204E] font-mono"
+                  className="w-full rounded-xl neumorph-inset p-3 text-xs text-[#F8FAFC] focus:outline-none font-mono"
                 />
               </div>
 
@@ -663,7 +663,7 @@ export const AILabView: React.FC = () => {
                   <select
                     value={musicDuration}
                     onChange={(e) => setMusicDuration(e.target.value)}
-                    className="w-full rounded-xl bg-[#070103] p-2.5 text-xs border border-white/5 text-white focus:outline-none"
+                    className="w-full rounded-xl neumorph-inset p-2.5 text-xs text-white focus:outline-none"
                   >
                     <option value="15s">Short Clip (15s)</option>
                     <option value="30s">Standard Loop (30s)</option>
@@ -676,7 +676,7 @@ export const AILabView: React.FC = () => {
                   <select
                     value={musicModel}
                     onChange={(e) => setMusicModel(e.target.value)}
-                    className="w-full rounded-xl bg-[#070103] p-2.5 text-xs border border-white/5 text-white focus:outline-none"
+                    className="w-full rounded-xl neumorph-inset p-2.5 text-xs text-white focus:outline-none"
                   >
                     <option value="lyria-3-clip-preview">lyria-3-clip-preview</option>
                     <option value="lyria-3-pro-preview">lyria-3-pro-preview</option>
@@ -687,7 +687,7 @@ export const AILabView: React.FC = () => {
               <button
                 onClick={generateMusic}
                 disabled={loading || !musicPrompt.trim()}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] py-3 text-xs font-bold text-white shadow-[0_0_15px_rgba(229,9,20,0.3)] disabled:opacity-50 cursor-pointer hover:brightness-110 transition-all"
+                className="w-full flex items-center justify-center gap-2 rounded-xl neumorph-btn-primary py-3 text-xs font-bold disabled:opacity-50 cursor-pointer transition-all"
               >
                 {loading ? (
                   <>
@@ -704,12 +704,12 @@ export const AILabView: React.FC = () => {
             </div>
 
             {/* Playback & Lyrics Screen */}
-            <div className="rounded-2xl bg-[#0f0306]/90 border border-[#FF204E]/25 shadow-xl p-5 sm:p-6 flex flex-col justify-between min-h-[350px]">
+            <div className="rounded-2xl neumorph-card p-5 sm:p-6 flex flex-col justify-between min-h-[350px]">
               {generatedMusic ? (
                 <div className="space-y-5 flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono text-[#FF204E] bg-[#FF204E]/10 px-2.5 py-1 rounded-md border border-[#FF204E]/25">
+                      <span className="text-[10px] font-mono text-[#FF204E] neumorph-badge px-2.5 py-1 rounded-md">
                         Track Render Successful
                       </span>
                       <span className="text-[10px] font-mono text-slate-400">{generatedMusic.modelUsed}</span>
@@ -717,7 +717,7 @@ export const AILabView: React.FC = () => {
                     <h4 className="text-sm font-bold text-white mt-3 truncate">"{generatedMusic.prompt}"</h4>
                   </div>
 
-                  <div className="bg-[#070103] rounded-xl p-4 border border-white/5 space-y-3">
+                  <div className="neumorph-inset rounded-xl p-4 space-y-3">
                     {audioUrl && (
                       <audio
                         ref={audioRef}
@@ -730,7 +730,7 @@ export const AILabView: React.FC = () => {
                     <div className="flex items-center gap-4">
                       <button
                         onClick={toggleAudioPlayback}
-                        className="h-12 w-12 rounded-full bg-[#E50914] hover:bg-[#FF204E] flex items-center justify-center text-white shadow-lg transition-all cursor-pointer"
+                        className="h-12 w-12 rounded-full neumorph-btn-primary flex items-center justify-center cursor-pointer"
                       >
                         {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-1" />}
                       </button>
@@ -751,7 +751,7 @@ export const AILabView: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-[11px] text-[#94A3B8] border-t border-white/5 pt-3">
+                    <div className="flex items-center justify-between text-[11px] text-[#94A3B8] border-t border-[#E50914]/20 pt-3">
                       <div className="flex items-center gap-2">
                         <Volume2 className="h-3.5 w-3.5 text-slate-400" />
                         <input
@@ -778,14 +778,16 @@ export const AILabView: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="bg-[#070103] p-3 rounded-xl border border-[#FF204E]/15 max-h-40 overflow-y-auto">
+                  <div className="neumorph-inset p-3 rounded-xl max-h-40 overflow-y-auto">
                     <span className="block text-[10px] text-[#FF204E] font-extrabold uppercase tracking-wider mb-1.5">Lyrics / Orchestration:</span>
                     <pre className="text-[11px] text-white/80 font-mono whitespace-pre-wrap leading-relaxed">{generatedMusic.lyrics}</pre>
                   </div>
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-3">
-                  <Music className="h-10 w-10 text-[#FF204E]/40 animate-pulse" />
+                  <div className="h-14 w-14 rounded-full neumorph-circle flex items-center justify-center">
+                    <Music className="h-7 w-7 text-[#FF204E]/60 animate-pulse" />
+                  </div>
                   <div className="text-sm font-bold text-white/70">Audio Synthesis Idle</div>
                   <p className="text-xs text-[#94A3B8] max-w-xs">Formulate a music prompt on the left and click Generate to synthetically render audio waves.</p>
                 </div>
@@ -798,9 +800,9 @@ export const AILabView: React.FC = () => {
         {activeTab === 'image' && (
           <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             {/* Input Configs */}
-            <div className="rounded-2xl bg-[#0f0306]/90 p-5 sm:p-6 border border-[#FF204E]/25 shadow-xl space-y-4">
+            <div className="rounded-2xl neumorph-card p-5 sm:p-6 space-y-4">
               <div>
-                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider bg-[#FF204E]/10 px-2.5 py-1 rounded-md border border-[#FF204E]/25">
+                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider neumorph-badge px-2.5 py-1 rounded-md">
                   Nano Creative Engine
                 </span>
                 <h3 className="text-base font-bold text-[#F8FAFC] mt-3">Image Generation & Editing</h3>
@@ -813,7 +815,7 @@ export const AILabView: React.FC = () => {
                   rows={3}
                   value={imagePrompt}
                   onChange={(e) => setImagePrompt(e.target.value)}
-                  className="w-full rounded-xl bg-[#070103] p-3 text-xs text-[#F8FAFC] border border-[#FF204E]/25 focus:outline-none focus:border-[#FF204E] font-mono"
+                  className="w-full rounded-xl neumorph-inset p-3 text-xs text-[#F8FAFC] focus:outline-none font-mono"
                 />
               </div>
 
@@ -829,7 +831,7 @@ export const AILabView: React.FC = () => {
                   />
                   <label
                     htmlFor="image_reference_file"
-                    className="flex-1 text-center border-dashed border border-white/10 hover:border-[#FF204E] bg-[#070103] hover:bg-[#FF204E]/10 p-3 rounded-xl cursor-pointer text-xs text-[#94A3B8] flex items-center justify-center gap-1.5"
+                    className="flex-1 text-center border-dashed border border-[#E50914]/30 neumorph-inset hover:border-[#FF204E] p-3 rounded-xl cursor-pointer text-xs text-[#94A3B8] flex items-center justify-center gap-1.5"
                   >
                     <Plus className="h-4 w-4" />
                     <span>{referenceImage ? 'Image uploaded!' : 'Upload file for edits'}</span>
@@ -855,10 +857,10 @@ export const AILabView: React.FC = () => {
                     <button
                       key={aspect}
                       onClick={() => setImageAspect(aspect)}
-                      className={`py-1.5 text-xs font-bold rounded-lg border text-center transition-all cursor-pointer ${
+                      className={`py-2 text-xs font-bold rounded-xl text-center transition-all cursor-pointer ${
                         imageAspect === aspect
-                          ? 'bg-[#E50914]/20 border-[#FF204E] text-[#FF204E]'
-                          : 'bg-[#070103] border-white/5 text-[#94A3B8]'
+                          ? 'neumorph-btn-primary'
+                          : 'neumorph-btn-secondary text-[#94A3B8]'
                       }`}
                     >
                       {aspect}
@@ -870,7 +872,7 @@ export const AILabView: React.FC = () => {
               <button
                 onClick={generateImage}
                 disabled={loading || !imagePrompt.trim()}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] py-3 text-xs font-bold text-white shadow-[0_0_15px_rgba(229,9,20,0.3)] disabled:opacity-50 cursor-pointer hover:brightness-110 transition-all"
+                className="w-full flex items-center justify-center gap-2 rounded-xl neumorph-btn-primary py-3 text-xs font-bold disabled:opacity-50 cursor-pointer transition-all"
               >
                 {loading ? (
                   <>
@@ -887,25 +889,25 @@ export const AILabView: React.FC = () => {
             </div>
 
             {/* Display Canvas Output */}
-            <div className="rounded-2xl bg-[#0f0306]/90 border border-[#FF204E]/25 shadow-xl p-5 sm:p-6 flex flex-col justify-between min-h-[350px]">
+            <div className="rounded-2xl neumorph-card p-5 sm:p-6 flex flex-col justify-between min-h-[350px]">
               {generatedImage ? (
                 <div className="space-y-4 flex-1 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-[#FF204E] bg-[#FF204E]/10 px-2.5 py-1 rounded-md border border-[#FF204E]/25">
+                    <span className="text-[10px] font-mono text-[#FF204E] neumorph-badge px-2.5 py-1 rounded-md">
                       Visual Render Frame
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">{generatedImage.modelUsed}</span>
                   </div>
 
-                  <div className="flex-1 bg-[#070103] rounded-xl overflow-hidden border border-white/5 flex items-center justify-center min-h-[220px]">
+                  <div className="flex-1 neumorph-inset rounded-xl overflow-hidden flex items-center justify-center min-h-[220px] p-2">
                     <img
                       src={`data:image/png;base64,${generatedImage.imageBase64}`}
                       alt="Gemini Creative"
-                      className="max-h-60 object-contain shadow-2xl"
+                      className="max-h-60 object-contain rounded-lg"
                     />
                   </div>
 
-                  <div className="flex items-center justify-between text-xs pt-2 border-t border-white/5">
+                  <div className="flex items-center justify-between text-xs pt-2 border-t border-[#E50914]/20">
                     <span className="text-slate-400">Aspect Ratio: <span className="font-bold text-white">{generatedImage.aspectRatio}</span></span>
                     <a
                       href={`data:image/png;base64,${generatedImage.imageBase64}`}
@@ -919,7 +921,9 @@ export const AILabView: React.FC = () => {
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-3">
-                  <ImageIcon className="h-10 w-10 text-[#FF204E]/40 animate-pulse" />
+                  <div className="h-14 w-14 rounded-full neumorph-circle flex items-center justify-center">
+                    <ImageIcon className="h-7 w-7 text-[#FF204E]/60 animate-pulse" />
+                  </div>
                   <div className="text-sm font-bold text-white/70">Creative Canvas Frame Empty</div>
                   <p className="text-xs text-[#94A3B8] max-w-xs">Type your visual concepts or upload an image above to invoke the high-quality image generation model.</p>
                 </div>
@@ -932,9 +936,9 @@ export const AILabView: React.FC = () => {
         {activeTab === 'video' && (
           <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             {/* Input Configs */}
-            <div className="rounded-2xl bg-[#0f0306]/90 p-5 sm:p-6 border border-[#FF204E]/25 shadow-xl space-y-4">
+            <div className="rounded-2xl neumorph-card p-5 sm:p-6 space-y-4">
               <div>
-                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider bg-[#FF204E]/10 px-2.5 py-1 rounded-md border border-[#FF204E]/25">
+                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider neumorph-badge px-2.5 py-1 rounded-md">
                   Veo 3.1 Video Engine
                 </span>
                 <h3 className="text-base font-bold text-[#F8FAFC] mt-3">High-Definition Video Generation</h3>
@@ -947,7 +951,7 @@ export const AILabView: React.FC = () => {
                   rows={3}
                   value={videoPrompt}
                   onChange={(e) => setVideoPrompt(e.target.value)}
-                  className="w-full rounded-xl bg-[#070103] p-3 text-xs text-[#F8FAFC] border border-[#FF204E]/25 focus:outline-none focus:border-[#FF204E] font-mono"
+                  className="w-full rounded-xl neumorph-inset p-3 text-xs text-[#F8FAFC] focus:outline-none font-mono"
                   placeholder="Describe scene lighting, camera movement, subject action..."
                 />
               </div>
@@ -962,10 +966,10 @@ export const AILabView: React.FC = () => {
                     <button
                       key={aspect.id}
                       onClick={() => setVideoAspect(aspect.id as any)}
-                      className={`py-2 text-xs font-bold rounded-xl border text-center transition-all cursor-pointer ${
+                      className={`py-2.5 text-xs font-bold rounded-xl text-center transition-all cursor-pointer ${
                         videoAspect === aspect.id
-                          ? 'bg-[#E50914]/20 border-[#FF204E] text-[#FF204E]'
-                          : 'bg-[#070103] border-white/5 text-[#94A3B8]'
+                          ? 'neumorph-btn-primary'
+                          : 'neumorph-btn-secondary text-[#94A3B8]'
                       }`}
                     >
                       {aspect.label}
@@ -977,7 +981,7 @@ export const AILabView: React.FC = () => {
               <button
                 onClick={generateVideo}
                 disabled={loading || !videoPrompt.trim()}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] py-3 text-xs font-bold text-white shadow-[0_0_15px_rgba(229,9,20,0.3)] disabled:opacity-50 cursor-pointer hover:brightness-110 transition-all"
+                className="w-full flex items-center justify-center gap-2 rounded-xl neumorph-btn-primary py-3 text-xs font-bold disabled:opacity-50 cursor-pointer transition-all"
               >
                 {loading ? (
                   <>
@@ -994,17 +998,17 @@ export const AILabView: React.FC = () => {
             </div>
 
             {/* Video Player Display */}
-            <div className="rounded-2xl bg-[#0f0306]/90 border border-[#FF204E]/25 shadow-xl p-5 sm:p-6 flex flex-col justify-between min-h-[350px]">
+            <div className="rounded-2xl neumorph-card p-5 sm:p-6 flex flex-col justify-between min-h-[350px]">
               {generatedVideo ? (
                 <div className="space-y-4 flex-1 flex flex-col justify-between">
                   <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-[#FF204E] bg-[#FF204E]/10 px-2.5 py-1 rounded-md border border-[#FF204E]/25">
+                    <span className="text-[10px] font-mono text-[#FF204E] neumorph-badge px-2.5 py-1 rounded-md">
                       Veo Render Complete
                     </span>
                     <span className="text-[10px] font-mono text-slate-400">{generatedVideo.modelUsed}</span>
                   </div>
 
-                  <div className="flex-1 bg-[#070103] rounded-xl overflow-hidden border border-white/5 flex items-center justify-center min-h-[220px] p-2">
+                  <div className="flex-1 neumorph-inset rounded-xl overflow-hidden flex items-center justify-center min-h-[220px] p-2">
                     <video
                       src={generatedVideo.videoUrl}
                       controls
@@ -1014,7 +1018,7 @@ export const AILabView: React.FC = () => {
                     />
                   </div>
 
-                  <div className="flex items-center justify-between text-xs pt-2 border-t border-white/5">
+                  <div className="flex items-center justify-between text-xs pt-2 border-t border-[#E50914]/20">
                     <span className="text-slate-400">Ratio: <span className="font-bold text-white">{generatedVideo.aspectRatio}</span></span>
                     <a
                       href={generatedVideo.videoUrl}
@@ -1029,7 +1033,9 @@ export const AILabView: React.FC = () => {
                 </div>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-6 space-y-3">
-                  <Film className="h-10 w-10 text-slate-500 opacity-40 animate-pulse" />
+                  <div className="h-14 w-14 rounded-full neumorph-circle flex items-center justify-center">
+                    <Film className="h-7 w-7 text-slate-500 opacity-60 animate-pulse" />
+                  </div>
                   <div className="text-sm font-bold text-slate-400">Video Motion Canvas Empty</div>
                   <p className="text-xs text-[#94A3B8] max-w-xs">Enter your scene description and click Generate to initiate the Veo video synthesis engine.</p>
                 </div>
@@ -1041,9 +1047,9 @@ export const AILabView: React.FC = () => {
         {/* TAB 5: SEARCH GROUNDING */}
         {activeTab === 'search' && (
           <div className="max-w-4xl mx-auto space-y-6">
-            <div className="rounded-2xl bg-[#0f0306]/90 p-5 sm:p-6 border border-[#FF204E]/25 shadow-xl space-y-4">
+            <div className="rounded-2xl neumorph-card p-5 sm:p-6 space-y-4">
               <div>
-                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider bg-[#FF204E]/10 px-2.5 py-1 rounded-md border border-[#FF204E]/25">
+                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider neumorph-badge px-2.5 py-1 rounded-md">
                   Web Search Grounding Engine
                 </span>
                 <h3 className="text-base font-bold text-[#F8FAFC] mt-3">Fact-Checked Web Grounding</h3>
@@ -1055,13 +1061,13 @@ export const AILabView: React.FC = () => {
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 rounded-xl bg-[#070103] px-4 py-3 text-xs border border-[#FF204E]/25 focus:outline-none focus:border-[#FF204E] text-white"
+                  className="flex-1 rounded-xl neumorph-inset px-4 py-3 text-xs text-white focus:outline-none"
                   placeholder="Enter factual question or technical topic query..."
                 />
                 <button
                   onClick={runSearchGrounding}
                   disabled={loading || !searchQuery.trim()}
-                  className="rounded-xl bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] px-6 py-3 text-xs font-bold text-white shadow-lg shadow-[#E50914]/25 flex items-center justify-center gap-1.5 cursor-pointer hover:brightness-110"
+                  className="rounded-xl neumorph-btn-primary px-6 py-3 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   {loading ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
                   <span>{loading ? 'Searching...' : 'Ground Query'}</span>
@@ -1071,21 +1077,21 @@ export const AILabView: React.FC = () => {
 
             {searchResults && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-                <div className="md:col-span-2 rounded-2xl bg-[#0f0306]/90 p-5 sm:p-6 border border-[#FF204E]/25 shadow-xl flex flex-col justify-between space-y-4">
+                <div className="md:col-span-2 rounded-2xl neumorph-card p-5 sm:p-6 flex flex-col justify-between space-y-4">
                   <div>
-                    <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider bg-[#FF204E]/10 px-2.5 py-1 rounded-md border border-[#FF204E]/25">
+                    <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider neumorph-badge px-2.5 py-1 rounded-md">
                       Factual Grounded Answer
                     </span>
-                    <div className="prose prose-invert prose-sm max-w-none text-slate-300 font-sans text-xs mt-4 leading-relaxed whitespace-pre-wrap">
+                    <div className="prose prose-invert prose-sm max-w-none text-slate-300 font-sans text-xs mt-4 leading-relaxed whitespace-pre-wrap neumorph-inset p-4 rounded-xl">
                       {searchResults.summary}
                     </div>
                   </div>
-                  <div className="text-[10px] text-slate-400 font-mono border-t border-white/5 pt-3">
+                  <div className="text-[10px] text-slate-400 font-mono border-t border-[#E50914]/20 pt-3">
                     Verified Grounding Model: {searchResults.modelUsed}
                   </div>
                 </div>
 
-                <div className="md:col-span-1 rounded-2xl bg-[#0f0306]/90 p-5 border border-[#FF204E]/25 shadow-xl space-y-4">
+                <div className="md:col-span-1 rounded-2xl neumorph-card p-5 space-y-4">
                   <h4 className="text-xs font-black uppercase tracking-wider text-[#FF204E]">Google Search Citations</h4>
                   <div className="space-y-2.5 max-h-[300px] overflow-y-auto">
                     {searchResults.citations.map((cite) => (
@@ -1094,10 +1100,10 @@ export const AILabView: React.FC = () => {
                         href={cite.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="block bg-[#070103] p-3 rounded-xl border border-white/5 hover:border-[#FF204E]/30 hover:bg-[#FF204E]/10 transition-all space-y-1"
+                        className="block neumorph-inset p-3 rounded-xl hover:border-[#FF204E]/50 transition-all space-y-1"
                       >
                         <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-                          <span className="h-4 w-4 rounded-full bg-[#FF204E]/20 text-[#FF204E] text-[9px] flex items-center justify-center font-bold font-mono">
+                          <span className="h-5 w-5 rounded-full neumorph-circle text-[#FF204E] text-[10px] flex items-center justify-center font-bold font-mono">
                             {cite.index}
                           </span>
                           <span className="truncate flex-1 hover:underline">{cite.title}</span>
@@ -1116,9 +1122,9 @@ export const AILabView: React.FC = () => {
         {/* TAB 6: MAPS GROUNDING */}
         {activeTab === 'maps' && (
           <div className="max-w-4xl mx-auto space-y-6">
-            <div className="rounded-2xl bg-[#0f0306]/90 p-5 sm:p-6 border border-[#FF204E]/25 shadow-xl space-y-4">
+            <div className="rounded-2xl neumorph-card p-5 sm:p-6 space-y-4">
               <div>
-                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider bg-[#FF204E]/10 px-2.5 py-1 rounded-md border border-[#FF204E]/25">
+                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider neumorph-badge px-2.5 py-1 rounded-md">
                   Google Maps Spatial Grounding
                 </span>
                 <h3 className="text-base font-bold text-[#F8FAFC] mt-3">Geolocal Maps Grounding</h3>
@@ -1132,7 +1138,7 @@ export const AILabView: React.FC = () => {
                     type="text"
                     value={mapsLocation}
                     onChange={(e) => setMapsLocation(e.target.value)}
-                    className="w-full rounded-xl bg-[#070103] p-3 text-xs border border-white/5 text-white"
+                    className="w-full rounded-xl neumorph-inset p-3 text-xs text-white focus:outline-none"
                   />
                 </div>
 
@@ -1142,7 +1148,7 @@ export const AILabView: React.FC = () => {
                     type="text"
                     value={mapsQuery}
                     onChange={(e) => setMapsQuery(e.target.value)}
-                    className="w-full rounded-xl bg-[#070103] p-3 text-xs border border-white/5 text-white"
+                    className="w-full rounded-xl neumorph-inset p-3 text-xs text-white focus:outline-none"
                   />
                 </div>
               </div>
@@ -1150,7 +1156,7 @@ export const AILabView: React.FC = () => {
               <button
                 onClick={runMapsGrounding}
                 disabled={loading || !mapsLocation.trim()}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] py-3 text-xs font-bold text-white shadow-[0_0_15px_rgba(229,9,20,0.3)] disabled:opacity-50 cursor-pointer hover:brightness-110 transition-all"
+                className="w-full flex items-center justify-center gap-2 rounded-xl neumorph-btn-primary py-3 text-xs font-bold disabled:opacity-50 cursor-pointer transition-all"
               >
                 {loading ? (
                   <>
@@ -1168,21 +1174,21 @@ export const AILabView: React.FC = () => {
 
             {mapsResults && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
-                <div className="md:col-span-2 rounded-2xl bg-[#0f0306]/90 p-5 sm:p-6 border border-[#FF204E]/25 shadow-xl flex flex-col justify-between space-y-4">
+                <div className="md:col-span-2 rounded-2xl neumorph-card p-5 sm:p-6 flex flex-col justify-between space-y-4">
                   <div>
-                    <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider bg-[#FF204E]/10 px-2.5 py-1 rounded-md border border-[#FF204E]/25">
+                    <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider neumorph-badge px-2.5 py-1 rounded-md">
                       Spatial Analytical Report
                     </span>
-                    <div className="prose prose-invert prose-sm max-w-none text-slate-300 font-sans text-xs mt-4 leading-relaxed whitespace-pre-wrap">
+                    <div className="prose prose-invert prose-sm max-w-none text-slate-300 font-sans text-xs mt-4 leading-relaxed whitespace-pre-wrap neumorph-inset p-4 rounded-xl">
                       {mapsResults.summary}
                     </div>
                   </div>
-                  <div className="text-[10px] text-slate-400 font-mono border-t border-white/5 pt-3">
+                  <div className="text-[10px] text-slate-400 font-mono border-t border-[#E50914]/20 pt-3">
                     Grounding Engine: {mapsResults.modelUsed}
                   </div>
                 </div>
 
-                <div className="md:col-span-1 rounded-2xl bg-[#0f0306]/90 p-5 border border-[#FF204E]/25 shadow-xl space-y-4">
+                <div className="md:col-span-1 rounded-2xl neumorph-card p-5 space-y-4">
                   <h4 className="text-xs font-black uppercase tracking-wider text-[#FF204E]">Grounded Map Coordinates</h4>
                   <div className="space-y-2.5 max-h-[300px] overflow-y-auto">
                     {mapsResults.locations.map((loc) => (
@@ -1191,10 +1197,10 @@ export const AILabView: React.FC = () => {
                         href={loc.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="block bg-[#070103] p-3 rounded-xl border border-white/5 hover:border-[#FF204E]/30 hover:bg-[#FF204E]/10 transition-all space-y-1"
+                        className="block neumorph-inset p-3 rounded-xl hover:border-[#FF204E]/50 transition-all space-y-1"
                       >
                         <div className="flex items-center gap-1.5 text-xs font-bold text-white">
-                          <span className="h-4 w-4 rounded-full bg-[#FF204E]/20 text-[#FF204E] text-[9px] flex items-center justify-center font-bold font-mono">
+                          <span className="h-5 w-5 rounded-full neumorph-circle text-[#FF204E] text-[10px] flex items-center justify-center font-bold font-mono">
                             {loc.index}
                           </span>
                           <span className="truncate flex-1 hover:underline">{loc.placeName}</span>
@@ -1215,9 +1221,9 @@ export const AILabView: React.FC = () => {
           <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
             
             {/* Audio Transcription Studio */}
-            <div className="rounded-2xl bg-[#0f0306]/90 p-5 sm:p-6 border border-[#FF204E]/25 shadow-xl space-y-5 flex flex-col justify-between">
+            <div className="rounded-2xl neumorph-card p-5 sm:p-6 space-y-5 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider bg-[#FF204E]/10 px-2.5 py-1 rounded-md border border-[#FF204E]/25">
+                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider neumorph-badge px-2.5 py-1 rounded-md">
                   Microphone Transcription Studio
                 </span>
                 <h3 className="text-base font-bold text-[#F8FAFC] mt-3">High-Fidelity Speech to Text</h3>
@@ -1226,11 +1232,11 @@ export const AILabView: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex flex-col items-center justify-center bg-[#070103] rounded-2xl p-6 border border-white/5 space-y-4">
-                <div className={`relative flex h-20 w-20 items-center justify-center rounded-full transition-all ${
+              <div className="flex flex-col items-center justify-center neumorph-inset rounded-2xl p-6 space-y-4">
+                <div className={`relative flex h-20 w-20 items-center justify-center rounded-full transition-all neumorph-circle ${
                   isRecording 
-                    ? 'bg-rose-500/10 border border-rose-500/40 shadow-[0_0_30px_rgba(239,68,68,0.3)]' 
-                    : 'bg-[#FF204E]/10 border border-white/5'
+                    ? 'border-2 border-rose-500 shadow-[0_0_30px_rgba(239,68,68,0.3)]' 
+                    : ''
                 }`}>
                   {isRecording && (
                     <div className="absolute inset-0 rounded-full border border-rose-500/30 animate-ping" />
@@ -1254,10 +1260,10 @@ export const AILabView: React.FC = () => {
                 <button
                   onClick={isRecording ? stopRecording : startRecording}
                   disabled={transcribeLoading}
-                  className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer ${
+                  className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                     isRecording
-                      ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-950/40'
-                      : 'bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] hover:brightness-110 text-white shadow-[#E50914]/20'
+                      ? 'neumorph-btn-primary bg-rose-700 hover:bg-rose-600'
+                      : 'neumorph-btn-primary'
                   }`}
                 >
                   {isRecording ? (
@@ -1274,7 +1280,7 @@ export const AILabView: React.FC = () => {
                 </button>
               </div>
 
-              <div className="bg-[#070103] p-4 rounded-xl border border-[#FF204E]/15 min-h-[100px] flex flex-col justify-between">
+              <div className="neumorph-inset p-4 rounded-xl min-h-[100px] flex flex-col justify-between">
                 <div>
                   <span className="block text-[10px] text-[#FF204E] font-extrabold uppercase tracking-wider mb-1.5">
                     Real Transcribed Output:
@@ -1293,9 +1299,9 @@ export const AILabView: React.FC = () => {
             </div>
 
             {/* Real-time Live API Portal */}
-            <div className="rounded-2xl bg-[#0f0306]/90 p-5 sm:p-6 border border-[#FF204E]/25 shadow-xl space-y-5 flex flex-col justify-between">
+            <div className="rounded-2xl neumorph-card p-5 sm:p-6 space-y-5 flex flex-col justify-between">
               <div>
-                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider bg-[#FF204E]/10 px-2.5 py-1 rounded-md border border-[#FF204E]/25">
+                <span className="text-[10px] font-mono text-[#FF204E] uppercase tracking-wider neumorph-badge px-2.5 py-1 rounded-md">
                   Gemini Live API Hub
                 </span>
                 <h3 className="text-base font-bold text-[#F8FAFC] mt-3">Real-time Voice Conversation</h3>
@@ -1304,11 +1310,11 @@ export const AILabView: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex flex-col items-center justify-center bg-[#070103] rounded-2xl p-6 border border-white/5 space-y-4">
-                <div className={`relative flex h-20 w-20 items-center justify-center rounded-full transition-all ${
+              <div className="flex flex-col items-center justify-center neumorph-inset rounded-2xl p-6 space-y-4">
+                <div className={`relative flex h-20 w-20 items-center justify-center rounded-full transition-all neumorph-circle ${
                   isLiveSessionActive 
-                    ? 'bg-[#FF204E]/10 border border-[#FF204E]/40 shadow-[0_0_30px_rgba(255,32,78,0.3)]' 
-                    : 'bg-[#FF204E]/10 border border-white/5'
+                    ? 'border-2 border-[#FF204E] shadow-[0_0_30px_rgba(255,32,78,0.3)]' 
+                    : ''
                 }`}>
                   {isLiveSessionActive && (
                     <div className="absolute inset-0 rounded-full border border-[#FF204E]/30 animate-ping" />
@@ -1332,10 +1338,10 @@ export const AILabView: React.FC = () => {
                 <button
                   onClick={toggleLiveVoiceSession}
                   disabled={liveSessionLoading}
-                  className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer ${
+                  className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
                     isLiveSessionActive
-                      ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-950/40'
-                      : 'bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] hover:brightness-110 text-white shadow-[#E50914]/20'
+                      ? 'neumorph-btn-primary bg-rose-700 hover:bg-rose-600'
+                      : 'neumorph-btn-primary'
                   }`}
                 >
                   {liveSessionLoading ? (
@@ -1357,7 +1363,7 @@ export const AILabView: React.FC = () => {
                 </button>
               </div>
 
-              <div className="bg-[#070103] p-4 rounded-xl border border-[#FF204E]/15 min-h-[100px] flex flex-col justify-between">
+              <div className="neumorph-inset p-4 rounded-xl min-h-[100px] flex flex-col justify-between">
                 <div>
                   <span className="block text-[10px] text-[#FF204E] font-extrabold uppercase tracking-wider mb-1.5">
                     Real-time Voice Assistant Response:

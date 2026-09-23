@@ -50,6 +50,7 @@ interface AgentContextType {
   approvals: ApprovalRequest[];
   activities: ActivityItem[];
   messages: MessageItem[];
+  setMessages: React.Dispatch<React.SetStateAction<MessageItem[]>>;
   settings: SettingsState;
   isGenerating: boolean;
   activePlan: { title: string; status: 'completed' | 'running' | 'pending' }[] | null;
@@ -915,6 +916,7 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         approvals,
         activities,
         messages,
+        setMessages,
         settings,
         isGenerating,
         activePlan,

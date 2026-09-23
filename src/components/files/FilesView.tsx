@@ -132,10 +132,12 @@ export const FilesView: React.FC = () => {
   return (
     <div id="files_view" className="flex-1 overflow-y-auto p-3.5 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full text-[#F8FAFC] bg-[#080204]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E50914]/25 pb-4 sm:pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#E50914]/20 pb-4 sm:pb-5">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-[#F8FAFC] flex items-center gap-2.5">
-            <FolderOpen className="h-6 w-6 text-[#FF204E]" />
+            <div className="h-9 w-9 rounded-xl neumorph-circle flex items-center justify-center text-[#FF204E]">
+              <FolderOpen className="h-5 w-5 text-[#FF204E]" />
+            </div>
             <span>{currentLanguage.labels.filesTitle}</span>
           </h1>
           <p className="mt-1 text-xs text-[#94A3B8]">
@@ -147,7 +149,7 @@ export const FilesView: React.FC = () => {
           <button
             id="btn_create_file_modal"
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-1.5 rounded-2xl bg-[#0f0306] px-3.5 py-2.5 text-xs font-semibold text-[#F8FAFC] border border-[#E50914]/25 hover:bg-[#E50914]/15 transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 rounded-xl neumorph-btn-secondary px-3.5 py-2.5 text-xs font-semibold text-[#F8FAFC] hover:text-white cursor-pointer"
           >
             <Plus className="h-4 w-4 text-[#FF204E]" />
             <span>{t.newFile}</span>
@@ -156,7 +158,7 @@ export const FilesView: React.FC = () => {
           <button
             id="btn_upload_files"
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1.5 rounded-2xl bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] hover:brightness-110 px-4 py-2.5 text-xs font-bold text-white shadow-lg shadow-[#E50914]/20 transition-all cursor-pointer"
+            className="flex items-center gap-1.5 rounded-xl neumorph-btn-primary px-4 py-2.5 text-xs font-bold text-white cursor-pointer"
           >
             <UploadCloud className="h-4 w-4" />
             <span>{t.uploadFiles}</span>
@@ -180,7 +182,7 @@ export const FilesView: React.FC = () => {
         className={`cursor-pointer rounded-2xl border-2 border-dashed p-6 text-center transition-all ${
           isDragOver
             ? 'border-[#FF204E] bg-[#FF204E]/10 shadow-[0_0_20px_rgba(255,32,78,0.2)]'
-            : 'border-[#E50914]/25 bg-[#0f0306] hover:border-[#FF204E]/60 hover:bg-[#E50914]/10'
+            : 'border-[#E50914]/25 neumorph-inset hover:border-[#FF204E]/60'
         }`}
       >
         <UploadCloud className="mx-auto h-8 w-8 text-[#FF204E] mb-2" />
@@ -201,19 +203,19 @@ export const FilesView: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={t.searchFilesPlaceholder}
-            className="w-full rounded-2xl bg-[#0f0306] pl-10 pr-4 py-2.5 text-xs text-[#F8FAFC] placeholder:text-[#94A3B8]/60 border border-[#E50914]/25 focus:border-[#FF204E] focus:outline-none"
+            className="w-full rounded-xl neumorph-inset pl-10 pr-4 py-2.5 text-xs text-[#F8FAFC] placeholder:text-[#94A3B8]/60 focus:outline-none"
           />
         </div>
 
-        <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
+        <div className="flex items-center gap-1.5 overflow-x-auto text-xs pb-1">
           {['All', 'Document', 'Data', 'Code', 'Generated'].map((cat) => (
             <button
               key={cat}
               onClick={() => setCategoryFilter(cat)}
               className={`rounded-xl px-3 py-1.5 font-medium transition-all shrink-0 cursor-pointer ${
                 categoryFilter === cat
-                  ? 'bg-[#E50914] text-white border border-[#FF204E] shadow-[0_0_10px_rgba(229,9,20,0.35)]'
-                  : 'bg-[#0f0306] text-[#94A3B8] border border-[#E50914]/20 hover:bg-[#E50914]/15 hover:text-[#F8FAFC]'
+                  ? 'neumorph-btn-primary text-white font-bold'
+                  : 'neumorph-btn-secondary text-[#94A3B8] hover:text-[#F8FAFC]'
               }`}
             >
               {cat}
@@ -228,12 +230,12 @@ export const FilesView: React.FC = () => {
           <div
             key={file.id}
             id={`file_card_${file.id}`}
-            className="group flex flex-col justify-between rounded-2xl bg-[#0f0306] p-4 sm:p-5 border border-[#E50914]/25 hover:border-[#FF204E]/50 transition-all shadow-[0_0_20px_rgba(229,9,20,0.06)]"
+            className="group flex flex-col justify-between rounded-2xl neumorph-card p-4 sm:p-5 hover:border-[#FF204E]/50 transition-all"
           >
             <div>
               <div className="flex items-center justify-between gap-2 mb-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#070103] border border-[#E50914]/20">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl neumorph-circle">
                     {getFileIcon(file.category, file.extension)}
                   </div>
                   <div>
@@ -247,14 +249,14 @@ export const FilesView: React.FC = () => {
                 </div>
 
                 {file.isGenerated && (
-                  <span className="rounded-lg bg-[#FF204E]/15 px-2 py-0.5 text-[9px] font-mono font-medium text-[#FF204E] border border-[#FF204E]/30">
+                  <span className="rounded-lg neumorph-badge px-2 py-0.5 text-[9px] font-mono font-medium text-[#FF204E]">
                     Agent Created
                   </span>
                 )}
               </div>
 
               {/* Snippet Preview */}
-              <div className="mt-2.5 rounded-xl bg-[#070103] p-2.5 font-mono text-[10px] text-[#94A3B8] border border-[#E50914]/15 line-clamp-3 leading-relaxed">
+              <div className="mt-2.5 rounded-xl neumorph-inset p-2.5 font-mono text-[10px] text-[#94A3B8] line-clamp-3 leading-relaxed">
                 {file.content || '[File contents indexed for agent context]'}
               </div>
             </div>
@@ -266,7 +268,7 @@ export const FilesView: React.FC = () => {
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => setSelectedFile(file)}
-                  className="rounded-lg p-1.5 text-[#94A3B8] hover:bg-[#070103] hover:text-[#F8FAFC]"
+                  className="h-7 w-7 rounded-lg neumorph-circle flex items-center justify-center text-[#94A3B8] hover:text-[#F8FAFC] cursor-pointer"
                   title="Preview File"
                 >
                   <Eye className="h-3.5 w-3.5" />
@@ -274,7 +276,7 @@ export const FilesView: React.FC = () => {
 
                 <button
                   onClick={() => handleDownloadFile(file)}
-                  className="rounded-lg p-1.5 text-[#94A3B8] hover:bg-[#070103] hover:text-[#F8FAFC]"
+                  className="h-7 w-7 rounded-lg neumorph-circle flex items-center justify-center text-[#94A3B8] hover:text-[#F8FAFC] cursor-pointer"
                   title="Download File"
                 >
                   <Download className="h-3.5 w-3.5" />
@@ -282,7 +284,7 @@ export const FilesView: React.FC = () => {
 
                 <button
                   onClick={() => handleAnalyzeWithAgent(file)}
-                  className="flex items-center gap-1 rounded-xl bg-[#FF204E]/15 px-2.5 py-1 text-[11px] font-semibold text-[#FF204E] hover:bg-[#FF204E]/25 border border-[#FF204E]/30 shadow-sm"
+                  className="flex items-center gap-1 rounded-xl neumorph-btn-primary px-2.5 py-1 text-[11px] font-semibold text-white cursor-pointer"
                   title="Analyze with AI Agent"
                 >
                   <Sparkles className="h-3 w-3" />
@@ -291,7 +293,7 @@ export const FilesView: React.FC = () => {
 
                 <button
                   onClick={() => deleteFile(file.id)}
-                  className="rounded-lg p-1.5 text-[#94A3B8] hover:bg-[#E50914]/20 hover:text-[#FF204E] transition-colors"
+                  className="h-7 w-7 rounded-lg neumorph-circle flex items-center justify-center text-[#94A3B8] hover:text-rose-400 cursor-pointer"
                   title="Remove from Workspace"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
@@ -305,10 +307,12 @@ export const FilesView: React.FC = () => {
       {/* Preview Modal */}
       {selectedFile && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-2xl rounded-2xl bg-[#0f0306] p-6 border border-[#E50914]/30 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#E50914]/25 pb-3">
+          <div className="w-full max-w-2xl rounded-2xl neumorph-card p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#E50914]/20 pb-3">
               <div className="flex items-center gap-2">
-                {getFileIcon(selectedFile.category, selectedFile.extension)}
+                <div className="h-8 w-8 rounded-lg neumorph-circle flex items-center justify-center">
+                  {getFileIcon(selectedFile.category, selectedFile.extension)}
+                </div>
                 <div>
                   <h2 className="text-sm font-bold text-[#F8FAFC]">{selectedFile.name}</h2>
                   <span className="text-[10px] text-[#94A3B8] font-mono">
@@ -318,20 +322,20 @@ export const FilesView: React.FC = () => {
               </div>
               <button
                 onClick={() => setSelectedFile(null)}
-                className="rounded-lg p-1.5 text-[#94A3B8] hover:bg-[#070103] hover:text-white"
+                className="h-8 w-8 rounded-xl neumorph-circle flex items-center justify-center text-[#94A3B8] hover:text-white cursor-pointer"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="max-h-96 overflow-y-auto rounded-xl bg-[#070103] p-4 border border-[#E50914]/25 font-mono text-xs text-[#F8FAFC] whitespace-pre-wrap leading-relaxed">
+            <div className="max-h-96 overflow-y-auto rounded-xl neumorph-inset p-4 font-mono text-xs text-[#F8FAFC] whitespace-pre-wrap leading-relaxed">
               {selectedFile.content || 'Empty or binary content'}
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-[#E50914]/25">
+            <div className="flex items-center justify-between pt-3 border-t border-[#E50914]/20">
               <button
                 onClick={() => handleDownloadFile(selectedFile)}
-                className="flex items-center gap-1.5 rounded-xl bg-[#070103] px-3.5 py-2 text-xs font-semibold text-[#F8FAFC] border border-[#E50914]/25 hover:bg-[#E50914]/15"
+                className="flex items-center gap-1.5 rounded-xl neumorph-btn-secondary px-3.5 py-2 text-xs font-semibold text-[#F8FAFC] hover:text-white cursor-pointer"
               >
                 <Download className="h-3.5 w-3.5" />
                 <span>{t.downloadFile}</span>
@@ -340,7 +344,7 @@ export const FilesView: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setSelectedFile(null)}
-                  className="rounded-xl px-4 py-2 text-xs text-[#94A3B8] hover:bg-[#070103]"
+                  className="rounded-xl neumorph-btn-secondary px-4 py-2 text-xs text-[#94A3B8] hover:text-white cursor-pointer"
                 >
                   {t.closeModal}
                 </button>
@@ -349,7 +353,7 @@ export const FilesView: React.FC = () => {
                     handleAnalyzeWithAgent(selectedFile);
                     setSelectedFile(null);
                   }}
-                  className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] px-4 py-2 text-xs font-bold text-white shadow-[0_0_15px_rgba(229,9,20,0.3)]"
+                  className="flex items-center gap-1.5 rounded-xl neumorph-btn-primary px-4 py-2 text-xs font-bold text-white cursor-pointer"
                 >
                   <Sparkles className="h-3.5 w-3.5" />
                   <span>{t.analyzeWithAgent}</span>
@@ -363,14 +367,14 @@ export const FilesView: React.FC = () => {
       {/* Create File Modal */}
       {isCreateModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl bg-[#0f0306] p-6 border border-[#E50914]/30 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-[#E50914]/25 pb-3 mb-4">
+          <div className="w-full max-w-lg rounded-2xl neumorph-card p-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#E50914]/20 pb-3 mb-4">
               <h2 className="text-base font-bold text-[#F8FAFC]">Create Workspace File</h2>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
-                className="rounded-lg p-1.5 text-[#94A3B8] hover:bg-[#070103] hover:text-white"
+                className="h-8 w-8 rounded-xl neumorph-circle flex items-center justify-center text-[#94A3B8] hover:text-white cursor-pointer"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
             </div>
 
@@ -385,7 +389,7 @@ export const FilesView: React.FC = () => {
                   value={newFileName}
                   onChange={(e) => setNewFileName(e.target.value)}
                   placeholder="e.g. project-roadmap.md"
-                  className="w-full rounded-xl bg-[#070103] px-3.5 py-2.5 text-[#F8FAFC] border border-[#E50914]/25 focus:outline-none focus:border-[#FF204E]"
+                  className="w-full rounded-xl neumorph-inset px-3.5 py-2.5 text-[#F8FAFC] focus:outline-none"
                 />
               </div>
 
@@ -394,11 +398,11 @@ export const FilesView: React.FC = () => {
                 <select
                   value={newFileCategory}
                   onChange={(e) => setNewFileCategory(e.target.value as FileItem['category'])}
-                  className="w-full rounded-xl bg-[#070103] px-3 py-2 text-[#F8FAFC] border border-[#E50914]/25 focus:outline-none"
+                  className="w-full rounded-xl neumorph-inset px-3 py-2 text-[#F8FAFC] focus:outline-none"
                 >
-                  <option value="document">Document (TXT, MD)</option>
-                  <option value="code">Code (JS, TS, PY)</option>
-                  <option value="data">Data (CSV, JSON)</option>
+                  <option value="document" className="bg-[#0f0306]">Document (TXT, MD)</option>
+                  <option value="code" className="bg-[#0f0306]">Code (JS, TS, PY)</option>
+                  <option value="data" className="bg-[#0f0306]">Data (CSV, JSON)</option>
                 </select>
               </div>
 
@@ -409,21 +413,21 @@ export const FilesView: React.FC = () => {
                   value={newFileContent}
                   onChange={(e) => setNewFileContent(e.target.value)}
                   placeholder="Enter initial markdown, code or data content..."
-                  className="w-full rounded-xl bg-[#070103] p-3 text-[#F8FAFC] border border-[#E50914]/25 focus:outline-none font-mono text-xs"
+                  className="w-full rounded-xl neumorph-inset p-3 text-[#F8FAFC] focus:outline-none font-mono text-xs"
                 />
               </div>
 
-              <div className="flex justify-end gap-2 pt-3 border-t border-[#E50914]/25">
+              <div className="flex justify-end gap-2 pt-3 border-t border-[#E50914]/20">
                 <button
                   type="button"
                   onClick={() => setIsCreateModalOpen(false)}
-                  className="rounded-xl px-4 py-2 text-[#94A3B8] hover:bg-[#070103]"
+                  className="rounded-xl neumorph-btn-secondary px-4 py-2 text-[#94A3B8] hover:text-white cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="rounded-xl bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] px-4 py-2 font-bold text-white shadow-[0_0_15px_rgba(229,9,20,0.3)]"
+                  className="rounded-xl neumorph-btn-primary px-4 py-2 font-bold text-white cursor-pointer"
                 >
                   Save File
                 </button>

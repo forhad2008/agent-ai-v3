@@ -57,14 +57,14 @@ export const UserProfileView: React.FC = () => {
       className="flex-1 overflow-y-auto p-2.5 xs:p-3.5 sm:p-6 lg:p-8 space-y-4 sm:space-y-6 max-w-6xl mx-auto w-full animate-fadeIn bg-[#080204] text-[#F8FAFC]"
     >
       {/* Top Banner Header */}
-      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl border border-[#FF204E]/25 bg-gradient-to-r from-[#1f0206] via-[#3d040a] to-[#0f0204] p-5 sm:p-8 shadow-2xl">
-        <div className="pointer-events-none absolute -top-20 right-0 h-80 w-80 rounded-full bg-[#E50914]/20 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-20 left-10 h-64 w-64 rounded-full bg-[#FF204E]/15 blur-3xl" />
+      <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl neumorph-card p-5 sm:p-8">
+        <div className="pointer-events-none absolute -top-20 right-0 h-80 w-80 rounded-full bg-[#E50914]/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-20 left-10 h-64 w-64 rounded-full bg-[#FF204E]/10 blur-3xl" />
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-4 sm:gap-5">
-            {/* User Avatar with Crimson Red Gradient */}
-            <div className="relative group shrink-0 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full p-[3px] bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] shadow-[0_0_25px_rgba(229,9,20,0.4)] cursor-pointer overflow-hidden">
+            {/* User Avatar with Neumorphic Circle */}
+            <div className="relative group shrink-0 flex h-18 w-18 sm:h-20 sm:w-20 items-center justify-center rounded-full p-[3px] neumorph-circle cursor-pointer overflow-hidden">
               <div className="relative flex h-full w-full items-center justify-center rounded-full bg-[#0d0204] overflow-hidden">
                 {formData.profileImage ? (
                   <img
@@ -97,7 +97,7 @@ export const UserProfileView: React.FC = () => {
 
             <div>
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <span className="rounded-full bg-[#E50914]/20 px-2.5 py-0.5 text-[10px] sm:text-xs font-bold text-[#FF204E] border border-[#E50914]/40">
+                <span className="rounded-full neumorph-badge px-2.5 py-0.5 text-[10px] sm:text-xs font-bold text-[#FF204E]">
                   {isBangla ? 'ব্যবহারকারী প্রোফাইল ও প্রসঙ্গ' : 'User Profile & Context Memory'}
                 </span>
                 <span className="text-[10px] text-[#FF204E] font-semibold flex items-center gap-1">
@@ -115,8 +115,10 @@ export const UserProfileView: React.FC = () => {
           </div>
 
           {/* Quick Stats Pill */}
-          <div className="flex items-center gap-2 sm:gap-3 rounded-2xl bg-black/40 p-3 border border-[#FF204E]/20 backdrop-blur-md">
-            <Brain className="h-6 w-6 text-[#FF204E] animate-pulse shrink-0" />
+          <div className="flex items-center gap-2 sm:gap-3 rounded-2xl neumorph-inset p-3">
+            <div className="h-9 w-9 rounded-xl neumorph-circle flex items-center justify-center text-[#FF204E]">
+              <Brain className="h-5 w-5 text-[#FF204E] animate-pulse" />
+            </div>
             <div className="text-xs">
               <span className="block font-bold text-white">Agent Memory Active</span>
               <span className="text-[11px] text-[#FF204E] font-medium">100% Context Synced</span>
@@ -129,17 +131,19 @@ export const UserProfileView: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
         {/* Left 2 Cols: Editable Form */}
         <div className="lg:col-span-2 space-y-5">
-          <form onSubmit={handleSubmit} className="rounded-2xl sm:rounded-3xl border border-[#FF204E]/20 bg-[#0f0306]/95 p-5 sm:p-7 space-y-5 shadow-xl backdrop-blur-xl">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
+          <form onSubmit={handleSubmit} className="rounded-2xl sm:rounded-3xl neumorph-card p-5 sm:p-7 space-y-5">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E50914]/20">
               <div className="flex items-center gap-2">
-                <Sliders className="h-5 w-5 text-[#FF204E]" />
+                <div className="h-8 w-8 rounded-xl neumorph-circle flex items-center justify-center text-[#FF204E]">
+                  <Sliders className="h-4 w-4 text-[#FF204E]" />
+                </div>
                 <h2 className="text-base sm:text-lg font-bold text-white">
                   {isBangla ? 'ব্যক্তিগত তথ্য ও এআই নির্দেশাবলী' : 'Personal Information & Agent Rules'}
                 </h2>
               </div>
 
               {savedSuccess && (
-                <div className="flex items-center gap-1.5 text-xs font-bold text-white bg-[#E50914] px-3 py-1 rounded-full border border-[#FF204E] shadow-[0_0_15px_rgba(229,9,20,0.5)] animate-fadeIn">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-white neumorph-btn-primary px-3 py-1 rounded-full animate-fadeIn">
                   <CheckCircle2 className="h-4 w-4 text-white" />
                   <span>{isBangla ? 'সংরক্ষিত হয়েছে!' : 'Saved Successfully!'}</span>
                 </div>
@@ -158,7 +162,7 @@ export const UserProfileView: React.FC = () => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/30 focus:border-[#FF204E] focus:outline-none focus:ring-1 focus:ring-[#FF204E]"
+                  className="w-full rounded-xl neumorph-inset px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder:text-white/30 focus:outline-none"
                   placeholder="e.g. Abdullah"
                   required
                 />
@@ -174,7 +178,7 @@ export const UserProfileView: React.FC = () => {
                   name="role"
                   value={formData.role}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/30 focus:border-[#FF204E] focus:outline-none focus:ring-1 focus:ring-[#FF204E]"
+                  className="w-full rounded-xl neumorph-inset px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder:text-white/30 focus:outline-none"
                   placeholder="e.g. Senior Software Engineer"
                 />
               </div>
@@ -189,7 +193,7 @@ export const UserProfileView: React.FC = () => {
                   name="company"
                   value={formData.company}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/30 focus:border-[#FF204E] focus:outline-none focus:ring-1 focus:ring-[#FF204E]"
+                  className="w-full rounded-xl neumorph-inset px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder:text-white/30 focus:outline-none"
                   placeholder="e.g. Work Agent Systems"
                 />
               </div>
@@ -204,7 +208,7 @@ export const UserProfileView: React.FC = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/30 focus:border-[#FF204E] focus:outline-none focus:ring-1 focus:ring-[#FF204E]"
+                  className="w-full rounded-xl neumorph-inset px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder:text-white/30 focus:outline-none"
                   placeholder="e.g. pchamza2025@gmail.com"
                 />
               </div>
@@ -221,7 +225,7 @@ export const UserProfileView: React.FC = () => {
                 rows={2}
                 value={formData.bio}
                 onChange={handleChange}
-                className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/30 focus:border-[#FF204E] focus:outline-none focus:ring-1 focus:ring-[#FF204E]"
+                className="w-full rounded-xl neumorph-inset px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder:text-white/30 focus:outline-none"
                 placeholder="Describe what you work on day to day..."
               />
             </div>
@@ -238,7 +242,7 @@ export const UserProfileView: React.FC = () => {
                   rows={2}
                   value={formData.goals}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/30 focus:border-[#FF204E] focus:outline-none focus:ring-1 focus:ring-[#FF204E]"
+                  className="w-full rounded-xl neumorph-inset px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder:text-white/30 focus:outline-none"
                   placeholder="e.g. Optimize React app speed, automate customer email replies"
                 />
               </div>
@@ -253,14 +257,14 @@ export const UserProfileView: React.FC = () => {
                   rows={2}
                   value={formData.techStack}
                   onChange={handleChange}
-                  className="w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/30 focus:border-[#FF204E] focus:outline-none focus:ring-1 focus:ring-[#FF204E]"
+                  className="w-full rounded-xl neumorph-inset px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder:text-white/30 focus:outline-none"
                   placeholder="e.g. TypeScript, React, Tailwind, Node.js, Python"
                 />
               </div>
             </div>
 
             {/* Custom Agent Instructions */}
-            <div className="rounded-xl border border-[#FF204E]/30 bg-[#1f0308]/80 p-4 space-y-2">
+            <div className="rounded-xl neumorph-inset p-4 space-y-2">
               <label className="block text-xs font-bold text-[#FF204E] flex items-center gap-2">
                 <Bot className="h-4 w-4 text-[#FF204E]" />
                 {isBangla ? 'এআই এজেন্টের জন্য বিশেষ নির্দেশনা (Custom System Prompt)' : 'Custom Instructions for Your AI Agent'}
@@ -275,7 +279,7 @@ export const UserProfileView: React.FC = () => {
                 rows={3}
                 value={formData.customAgentInstructions}
                 onChange={handleChange}
-                className="w-full rounded-xl border border-white/20 bg-black/50 px-3.5 py-2.5 text-xs sm:text-sm text-white placeholder-white/30 focus:border-[#FF204E] focus:outline-none focus:ring-1 focus:ring-[#FF204E]"
+                className="w-full rounded-xl neumorph-card p-3 text-xs sm:text-sm text-white placeholder:text-white/30 focus:outline-none"
                 placeholder="e.g. Always address me as Abdullah. Give concise, step-by-step code in TypeScript with zero fluff."
               />
             </div>
@@ -284,7 +288,7 @@ export const UserProfileView: React.FC = () => {
             <div className="pt-2 flex justify-end">
               <button
                 type="submit"
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] px-6 py-3 text-xs sm:text-sm font-bold text-white shadow-[0_0_20px_rgba(229,9,20,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                className="flex items-center gap-2 rounded-xl neumorph-btn-primary px-6 py-3 text-xs sm:text-sm font-bold text-white cursor-pointer"
               >
                 <Save className="h-4 w-4" />
                 <span>{isBangla ? 'প্রোফাইল সংরক্ষণ করুন' : 'Save Profile & Update Context'}</span>
@@ -296,12 +300,12 @@ export const UserProfileView: React.FC = () => {
         {/* Right Col: What the AI Agent Knows About You */}
         <div className="space-y-5">
           {/* Profile Picture Showcase Card */}
-          <div className="rounded-2xl sm:rounded-3xl border border-[#FF204E]/20 bg-[#0f0306]/85 overflow-hidden shadow-xl animate-fadeIn">
+          <div className="rounded-2xl sm:rounded-3xl neumorph-card overflow-hidden animate-fadeIn">
             <div className="h-20 bg-gradient-to-r from-[#990000] to-[#E50914] relative">
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#FF204E]/30 via-transparent to-transparent" />
             </div>
             <div className="px-5 pb-5 relative flex flex-col items-center">
-              <div className="relative -mt-10 mb-3 shrink-0 flex h-20 w-20 items-center justify-center rounded-full p-[3px] bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] shadow-lg">
+              <div className="relative -mt-10 mb-3 shrink-0 flex h-20 w-20 items-center justify-center rounded-full p-[3px] neumorph-circle">
                 <div className="flex h-full w-full items-center justify-center rounded-full bg-[#080204] overflow-hidden">
                   {userProfile.profileImage ? (
                     <img
@@ -319,16 +323,16 @@ export const UserProfileView: React.FC = () => {
               <p className="text-[11px] text-[#94A3B8] text-center mt-2 px-2 line-clamp-2">
                 {userProfile.bio}
               </p>
-              <div className="mt-4 w-full flex items-center justify-center gap-1.5 rounded-xl bg-[#E50914]/15 p-2 border border-[#FF204E]/25 text-[#FF204E] text-[10px] font-bold">
+              <div className="mt-4 w-full flex items-center justify-center gap-1.5 rounded-xl neumorph-inset p-2.5 text-[#FF204E] text-[10px] font-bold">
                 <ShieldCheck className="h-4 w-4 shrink-0" />
                 <span>Primary Email: {userProfile.email}</span>
               </div>
             </div>
           </div>
 
-          <div className="rounded-2xl sm:rounded-3xl border border-[#FF204E]/30 bg-[#0f0306] p-5 space-y-4 shadow-xl">
-            <div className="flex items-center gap-2.5 pb-3 border-b border-white/10">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E50914]/20 border border-[#FF204E]/30 text-[#FF204E]">
+          <div className="rounded-2xl sm:rounded-3xl neumorph-card p-5 space-y-4">
+            <div className="flex items-center gap-2.5 pb-3 border-b border-[#E50914]/20">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl neumorph-circle text-[#FF204E]">
                 <Brain className="h-5 w-5" />
               </div>
               <div>
@@ -338,7 +342,7 @@ export const UserProfileView: React.FC = () => {
             </div>
 
             <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
+              <div className="p-3 rounded-xl neumorph-inset space-y-1">
                 <span className="text-[10px] uppercase font-mono text-[#FF204E] font-bold block">User Identity & Bio Context</span>
                 <p className="text-white font-semibold">{userProfile.name || 'User'}</p>
                 <p className="text-[#FF204E] text-[11px] font-medium">{userProfile.role}</p>
@@ -347,18 +351,18 @@ export const UserProfileView: React.FC = () => {
                 </p>
               </div>
 
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
+              <div className="p-3 rounded-xl neumorph-inset space-y-1">
                 <span className="text-[10px] uppercase font-mono text-[#FF204E] font-bold block">Organization & Contact</span>
                 <p className="text-white">{userProfile.company || 'Autonomous Work OS'}</p>
                 <p className="text-[#94A3B8] text-[11px]">{userProfile.email}</p>
               </div>
 
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
+              <div className="p-3 rounded-xl neumorph-inset space-y-1">
                 <span className="text-[10px] uppercase font-mono text-[#FF204E] font-bold block">Custom Directive</span>
                 <p className="text-[#E2E8F0] italic">{userProfile.customAgentInstructions || 'Default concise AI work OS mode.'}</p>
               </div>
 
-              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 space-y-1">
+              <div className="p-3 rounded-xl neumorph-inset space-y-1">
                 <span className="text-[10px] uppercase font-mono text-[#FF204E] font-bold block">Tech Stack</span>
                 <p className="text-[#CBD5E1]">{userProfile.techStack}</p>
               </div>

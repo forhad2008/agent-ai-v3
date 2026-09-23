@@ -35,10 +35,12 @@ export const ActivityView: React.FC = () => {
   return (
     <div id="activity_view" className="flex-1 overflow-y-auto p-3.5 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto w-full text-[#F8FAFC] bg-[#080204]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#FF204E]/25 pb-4 sm:pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#FF204E]/20 pb-4 sm:pb-5">
         <div>
           <h1 className="text-xl font-bold tracking-tight text-[#F8FAFC] flex items-center gap-2.5">
-            <Clock className="h-6 w-6 text-[#FF204E]" />
+            <div className="h-9 w-9 rounded-xl neumorph-circle flex items-center justify-center text-[#FF204E]">
+              <Clock className="h-5 w-5 text-[#FF204E]" />
+            </div>
             <span>{currentLanguage.labels.activityTitle}</span>
           </h1>
           <p className="mt-1 text-xs text-[#94A3B8]">
@@ -48,7 +50,7 @@ export const ActivityView: React.FC = () => {
 
         <button
           onClick={handleExportJSON}
-          className="flex items-center gap-1.5 rounded-2xl bg-[#0f0306] px-3.5 py-2.5 text-xs font-semibold text-[#F8FAFC] border border-[#FF204E]/25 hover:bg-[#FF204E]/15 transition-colors shadow-sm cursor-pointer"
+          className="flex items-center gap-1.5 rounded-xl neumorph-btn-secondary px-3.5 py-2.5 text-xs font-semibold text-[#F8FAFC] hover:text-white cursor-pointer"
         >
           <Download className="h-4 w-4 text-[#FF204E]" />
           <span>{t.exportAuditJsonBtn}</span>
@@ -64,7 +66,7 @@ export const ActivityView: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search action or tool..."
-            className="w-full rounded-2xl bg-[#0f0306] pl-10 pr-4 py-2.5 text-xs text-[#F8FAFC] placeholder:text-[#94A3B8]/60 border border-[#FF204E]/25 focus:outline-none focus:border-[#FF204E]"
+            className="w-full rounded-xl neumorph-inset pl-10 pr-4 py-2.5 text-xs text-[#F8FAFC] placeholder:text-[#94A3B8]/60 focus:outline-none"
           />
         </div>
 
@@ -75,8 +77,8 @@ export const ActivityView: React.FC = () => {
               onClick={() => setStatusFilter(st)}
               className={`rounded-xl px-3 py-1.5 font-medium transition-all cursor-pointer ${
                 statusFilter === st
-                  ? 'bg-[#E50914] text-white border border-[#FF204E] shadow-[0_0_10px_rgba(229,9,20,0.35)]'
-                  : 'bg-[#0f0306] text-[#94A3B8] border border-[#FF204E]/20 hover:bg-[#FF204E]/15 hover:text-white'
+                  ? 'neumorph-btn-primary text-white font-bold'
+                  : 'neumorph-btn-secondary text-[#94A3B8] hover:text-white'
               }`}
             >
               {st}
@@ -86,10 +88,10 @@ export const ActivityView: React.FC = () => {
       </div>
 
       {/* Activity Table */}
-      <div className="overflow-hidden rounded-2xl border border-[#FF204E]/25 bg-[#0f0306]/90 shadow-[0_0_25px_rgba(229,9,20,0.1)]">
+      <div className="overflow-hidden rounded-2xl neumorph-card">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-[#94A3B8]">
-            <thead className="bg-[#070103] text-[10px] uppercase font-semibold text-[#94A3B8] tracking-wider border-b border-[#FF204E]/25">
+            <thead className="bg-[#070103]/60 text-[10px] uppercase font-semibold text-[#94A3B8] tracking-wider border-b border-[#FF204E]/20">
               <tr>
                 <th className="px-4 py-3.5">Timestamp</th>
                 <th className="px-4 py-3.5">Action Taken</th>
@@ -98,7 +100,7 @@ export const ActivityView: React.FC = () => {
                 <th className="px-4 py-3.5">Execution Outcome</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#FF204E]/15">
+            <tbody className="divide-y divide-[#FF204E]/10">
               {filtered.map((item) => (
                 <tr key={item.id} className="hover:bg-[#FF204E]/10 transition-colors">
                   <td className="px-4 py-3 font-mono text-[11px] text-[#94A3B8] whitespace-nowrap">
@@ -108,7 +110,7 @@ export const ActivityView: React.FC = () => {
                     {item.action}
                   </td>
                   <td className="px-4 py-3">
-                    <span className="rounded-lg bg-[#070103] px-2 py-0.5 font-mono text-[10px] text-[#FF204E] border border-[#FF204E]/25">
+                    <span className="rounded-lg neumorph-badge px-2 py-0.5 font-mono text-[10px] text-[#FF204E]">
                       {item.tool}
                     </span>
                   </td>

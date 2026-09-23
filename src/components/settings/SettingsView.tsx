@@ -161,10 +161,12 @@ export const SettingsView: React.FC = () => {
   return (
     <div id="settings_view" className="flex-1 overflow-y-auto p-3.5 sm:p-6 lg:p-8 space-y-6 max-w-4xl mx-auto w-full text-[#F8FAFC] bg-[#080204]">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-[#FF204E]/25 pb-4 sm:pb-5">
+      <div className="flex items-center justify-between border-b border-[#FF204E]/20 pb-4 sm:pb-5">
         <div>
           <h1 className="text-lg sm:text-xl font-bold tracking-tight text-[#F8FAFC] flex items-center gap-2.5">
-            <SettingsIcon className="h-5 w-5 sm:h-6 sm:w-6 text-[#FF204E]" />
+            <div className="h-9 w-9 rounded-xl neumorph-circle flex items-center justify-center text-[#FF204E]">
+              <SettingsIcon className="h-5 w-5 text-[#FF204E]" />
+            </div>
             <span>{currentLanguage.labels.settingsTitle}</span>
           </h1>
           <p className="mt-1 text-xs text-[#94A3B8]">
@@ -173,7 +175,7 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {saveSuccess && (
-          <span className="flex items-center gap-1.5 rounded-xl bg-[#E50914] px-3.5 py-1.5 text-xs font-semibold text-white border border-[#FF204E] shadow-[0_0_12px_rgba(229,9,20,0.5)]">
+          <span className="flex items-center gap-1.5 rounded-xl neumorph-btn-primary px-3.5 py-1.5 text-xs font-semibold text-white animate-fadeIn">
             <Check className="h-3.5 w-3.5 text-white" />
             {t.savedSuccessBadge}
           </span>
@@ -184,10 +186,12 @@ export const SettingsView: React.FC = () => {
         {/* ======================================================== */}
         {/* 30 COUNTRY TECHNOLOGY LANGUAGE MODE SECTION              */}
         {/* ======================================================== */}
-        <div className="rounded-2xl bg-[#0f0306] p-4 sm:p-6 border border-[#FF204E]/25 space-y-4 shadow-xl">
+        <div className="rounded-2xl neumorph-card p-4 sm:p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-[#FF204E]/20">
             <h2 className="text-sm font-bold text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
-              <Globe className="h-4 w-4 text-[#FF204E]" />
+              <div className="h-7 w-7 rounded-lg neumorph-circle flex items-center justify-center text-[#FF204E]">
+                <Globe className="h-4 w-4 text-[#FF204E]" />
+              </div>
               <span>{t.langModeSectionTitle}</span>
             </h2>
 
@@ -195,7 +199,7 @@ export const SettingsView: React.FC = () => {
               type="button"
               id="btn_open_language_modal_from_settings"
               onClick={() => setIsLanguageModalOpen(true)}
-              className="flex items-center gap-1.5 rounded-xl bg-[#E50914] hover:bg-[#FF204E] px-3 py-1.5 text-xs font-semibold text-white border border-[#FF204E]/40 transition-all self-start sm:self-auto shadow-sm cursor-pointer"
+              className="flex items-center gap-1.5 rounded-xl neumorph-btn-primary px-3.5 py-1.5 text-xs font-semibold text-white self-start sm:self-auto cursor-pointer"
             >
               <Sparkles className="h-3.5 w-3.5" />
               <span>{t.openModalBtn}</span>
@@ -211,10 +215,10 @@ export const SettingsView: React.FC = () => {
                 id="select_settings_language"
                 value={formData.language}
                 onChange={(e) => handleLanguageSelect(e.target.value)}
-                className="w-full rounded-xl bg-[#070103] px-3.5 py-2.5 text-xs sm:text-sm text-[#F8FAFC] border border-[#FF204E]/25 focus:outline-none focus:border-[#FF204E]"
+                className="w-full rounded-xl neumorph-inset px-3.5 py-2.5 text-xs sm:text-sm text-[#F8FAFC] focus:outline-none"
               >
                 {TECH_LANGUAGES.map((lang, idx) => (
-                  <option key={lang.id} value={lang.id}>
+                  <option key={lang.id} value={lang.id} className="bg-[#0f0306] text-white">
                     {lang.flag} {lang.country} — {lang.name} ({lang.englishName}) {idx === 0 ? '★ #1 FIRST' : ''} {lang.id === 'en' ? '★ DEFAULT' : ''}
                   </option>
                 ))}
@@ -225,13 +229,13 @@ export const SettingsView: React.FC = () => {
             </div>
 
             {/* Live Country Card Preview */}
-            <div className="rounded-xl bg-[#070103] p-3.5 border border-[#FF204E]/20 flex flex-col justify-between">
+            <div className="rounded-xl neumorph-inset p-3.5 flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-[#94A3B8]">
                     Selected Tech Hub
                   </span>
-                  <span className="text-[10px] font-mono text-[#FF204E] bg-[#FF204E]/15 px-2 py-0.5 rounded-lg border border-[#FF204E]/30">
+                  <span className="text-[10px] font-mono text-[#FF204E] neumorph-badge px-2 py-0.5 rounded-lg">
                     {activeLangDetails.region}
                   </span>
                 </div>
@@ -260,9 +264,11 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {/* Agent Profile & Identity */}
-        <div className="rounded-2xl bg-[#0f0306] p-4 sm:p-6 border border-[#FF204E]/25 space-y-4 shadow-xl">
+        <div className="rounded-2xl neumorph-card p-4 sm:p-6 space-y-4">
           <h2 className="text-sm font-bold text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
-            <Cpu className="h-4 w-4 text-[#FF204E]" />
+            <div className="h-7 w-7 rounded-lg neumorph-circle flex items-center justify-center text-[#FF204E]">
+              <Cpu className="h-4 w-4 text-[#FF204E]" />
+            </div>
             <span>Agent Identity & Autonomous Profile</span>
           </h2>
 
@@ -273,7 +279,7 @@ export const SettingsView: React.FC = () => {
                 type="text"
                 value={formData.agentName}
                 onChange={(e) => setFormData({ ...formData, agentName: e.target.value })}
-                className="w-full rounded-xl bg-[#070103] px-3.5 py-2.5 text-[#F8FAFC] border border-[#FF204E]/25 focus:outline-none focus:border-[#FF204E]"
+                className="w-full rounded-xl neumorph-inset px-3.5 py-2.5 text-[#F8FAFC] focus:outline-none"
               />
             </div>
 
@@ -283,16 +289,18 @@ export const SettingsView: React.FC = () => {
                 type="text"
                 disabled
                 value="Abdullah (Owner & Principal)"
-                className="w-full rounded-xl bg-[#070103]/60 px-3.5 py-2.5 text-[#94A3B8] border border-[#FF204E]/20 cursor-not-allowed"
+                className="w-full rounded-xl neumorph-inset px-3.5 py-2.5 text-[#94A3B8] cursor-not-allowed opacity-80"
               />
             </div>
           </div>
         </div>
 
         {/* Permissions & Safety */}
-        <div className="rounded-2xl bg-[#0f0306] p-4 sm:p-6 border border-[#FF204E]/25 space-y-4 shadow-xl">
+        <div className="rounded-2xl neumorph-card p-4 sm:p-6 space-y-4">
           <h2 className="text-sm font-bold text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
-            <Shield className="h-4 w-4 text-[#FF204E]" />
+            <div className="h-7 w-7 rounded-lg neumorph-circle flex items-center justify-center text-[#FF204E]">
+              <Shield className="h-4 w-4 text-[#FF204E]" />
+            </div>
             <span>Safety & Security Guardrails</span>
           </h2>
 
@@ -304,11 +312,11 @@ export const SettingsView: React.FC = () => {
                 onChange={(e) =>
                   setFormData({ ...formData, permissionSensitivity: e.target.value as any })
                 }
-                className="w-full rounded-xl bg-[#070103] px-3.5 py-2.5 text-[#F8FAFC] border border-[#FF204E]/25 focus:outline-none"
+                className="w-full rounded-xl neumorph-inset px-3.5 py-2.5 text-[#F8FAFC] focus:outline-none"
               >
-                <option value="High">High (Strict Gate: All external actions require approval)</option>
-                <option value="Medium">Medium (Balanced: External communication & deletes gated)</option>
-                <option value="Low">Low (Permissive: Only sensitive deletions gated)</option>
+                <option value="High" className="bg-[#0f0306]">High (Strict Gate: All external actions require approval)</option>
+                <option value="Medium" className="bg-[#0f0306]">Medium (Balanced: External communication &amp; deletes gated)</option>
+                <option value="Low" className="bg-[#0f0306]">Low (Permissive: Only sensitive deletions gated)</option>
               </select>
             </div>
 
@@ -317,17 +325,17 @@ export const SettingsView: React.FC = () => {
               <select
                 value={formData.aiBehavior}
                 onChange={(e) => setFormData({ ...formData, aiBehavior: e.target.value as any })}
-                className="w-full rounded-xl bg-[#070103] px-3.5 py-2.5 text-[#F8FAFC] border border-[#FF204E]/25 focus:outline-none"
+                className="w-full rounded-xl neumorph-inset px-3.5 py-2.5 text-[#F8FAFC] focus:outline-none"
               >
-                <option value="semi-autonomous">Semi-Autonomous (Confirm before critical tools)</option>
-                <option value="autonomous">Fully Autonomous (Auto-approve non-destructive tasks)</option>
-                <option value="strict-approval">Strict Approval (Human in the loop on all actions)</option>
+                <option value="semi-autonomous" className="bg-[#0f0306]">Semi-Autonomous (Confirm before critical tools)</option>
+                <option value="autonomous" className="bg-[#0f0306]">Fully Autonomous (Auto-approve non-destructive tasks)</option>
+                <option value="strict-approval" className="bg-[#0f0306]">Strict Approval (Human in the loop on all actions)</option>
               </select>
             </div>
           </div>
 
           <div className="space-y-3 pt-2">
-            <label className="flex items-center justify-between p-3 rounded-xl bg-[#070103] border border-[#FF204E]/20 cursor-pointer">
+            <label className="flex items-center justify-between p-3 rounded-xl neumorph-inset cursor-pointer">
               <div>
                 <span className="font-semibold text-[#F8FAFC] block">Safe Execution Mode</span>
                 <span className="text-[11px] text-[#94A3B8]">
@@ -342,7 +350,7 @@ export const SettingsView: React.FC = () => {
               />
             </label>
 
-            <label className="flex items-center justify-between p-3 rounded-xl bg-[#070103] border border-[#FF204E]/20 cursor-pointer">
+            <label className="flex items-center justify-between p-3 rounded-xl neumorph-inset cursor-pointer">
               <div>
                 <span className="font-semibold text-[#F8FAFC] block">In-App Notifications</span>
                 <span className="text-[11px] text-[#94A3B8]">
@@ -362,7 +370,7 @@ export const SettingsView: React.FC = () => {
                 Delegated Authority & Autopilot Settings
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <label className="flex items-center justify-between p-3 rounded-xl bg-[#070103] border border-[#FF204E]/15 cursor-pointer">
+                <label className="flex items-center justify-between p-3 rounded-xl neumorph-inset cursor-pointer">
                   <div>
                     <span className="font-semibold text-[#F8FAFC] block text-xs">Auto-Dispatch Communications</span>
                     <span className="text-[10px] text-[#94A3B8] block mt-0.5">
@@ -377,7 +385,7 @@ export const SettingsView: React.FC = () => {
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-3 rounded-xl bg-[#070103] border border-[#FF204E]/15 cursor-pointer">
+                <label className="flex items-center justify-between p-3 rounded-xl neumorph-inset cursor-pointer">
                   <div>
                     <span className="font-semibold text-[#F8FAFC] block text-xs">Auto-Schedule Meetings</span>
                     <span className="text-[10px] text-[#94A3B8] block mt-0.5">
@@ -392,7 +400,7 @@ export const SettingsView: React.FC = () => {
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-3 rounded-xl bg-[#070103] border border-[#FF204E]/15 cursor-pointer">
+                <label className="flex items-center justify-between p-3 rounded-xl neumorph-inset cursor-pointer">
                   <div>
                     <span className="font-semibold text-[#F8FAFC] block text-xs">Autonomous File Syncing</span>
                     <span className="text-[10px] text-[#94A3B8] block mt-0.5">
@@ -407,7 +415,7 @@ export const SettingsView: React.FC = () => {
                   />
                 </label>
 
-                <label className="flex items-center justify-between p-3 rounded-xl bg-[#070103] border border-[#FF204E]/15 cursor-pointer">
+                <label className="flex items-center justify-between p-3 rounded-xl neumorph-inset cursor-pointer">
                   <div>
                     <span className="font-semibold text-[#F8FAFC] block text-xs">Automated Market Sourcing</span>
                     <span className="text-[10px] text-[#94A3B8] block mt-0.5">
@@ -424,15 +432,15 @@ export const SettingsView: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-3 rounded-xl bg-[#070103] border border-[#FF204E]/20 flex items-center justify-between">
+            <div className="p-3 rounded-xl neumorph-inset flex items-center justify-between">
               <div>
                 <span className="font-semibold text-[#F8FAFC] block">Server-Side Gemini 3.8 Integration</span>
                 <span className="text-[11px] text-[#94A3B8]">
                   API Key is securely isolated on the backend server (`server.ts`).
                 </span>
               </div>
-              <span className="rounded-lg bg-[#FF204E]/15 px-2.5 py-1 text-[10px] font-mono font-semibold text-[#FF204E] border border-[#FF204E]/30">
-                Connected & Armed
+              <span className="rounded-lg neumorph-badge px-2.5 py-1 text-[10px] font-mono font-semibold text-[#FF204E]">
+                Connected &amp; Armed
               </span>
             </div>
           </div>
@@ -441,13 +449,15 @@ export const SettingsView: React.FC = () => {
         {/* ======================================================== */}
         {/* INTERACTIVE WHATSAPP AUTO-RESPONDER PANEL WITH SIMULATOR */}
         {/* ======================================================== */}
-        <div className="rounded-2xl bg-[#0f0306] p-4 sm:p-6 border border-[#FF204E]/35 space-y-5 shadow-xl relative overflow-hidden">
+        <div className="rounded-2xl neumorph-card p-4 sm:p-6 space-y-5 relative overflow-hidden">
           {/* Natural Crimson Glow Accent */}
           <div className="pointer-events-none absolute -right-12 -bottom-12 h-44 w-44 rounded-full bg-[#E50914]/10 blur-[80px]" />
 
           <div className="flex items-center justify-between border-b border-[#FF204E]/20 pb-3">
             <h2 className="text-sm font-bold text-[#F8FAFC] uppercase tracking-wider flex items-center gap-2">
-              <Smartphone className="h-4 w-4 text-[#FF204E]" />
+              <div className="h-7 w-7 rounded-lg neumorph-circle flex items-center justify-center text-[#FF204E]">
+                <Smartphone className="h-4 w-4 text-[#FF204E]" />
+              </div>
               <span>WhatsApp Autonomous Auto-Responder</span>
             </h2>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -469,7 +479,7 @@ export const SettingsView: React.FC = () => {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
-            <div className="rounded-xl bg-[#070103]/80 p-3.5 border border-[#FF204E]/15">
+            <div className="rounded-xl neumorph-inset p-3.5">
               <span className="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2 flex items-center gap-1">
                 <Clock className="h-3.5 w-3.5 text-[#FF204E]" />
                 Response Threshold
@@ -479,7 +489,7 @@ export const SettingsView: React.FC = () => {
                   type="number" 
                   value={waDelay}
                   onChange={(e) => setWaDelay(Math.max(1, parseInt(e.target.value) || 1))}
-                  className="w-16 rounded-lg bg-[#070103] px-2.5 py-1.5 text-xs text-[#F8FAFC] border border-[#FF204E]/20 focus:outline-none focus:border-[#FF204E] font-mono text-center"
+                  className="w-16 rounded-lg neumorph-card px-2.5 py-1.5 text-xs text-[#F8FAFC] focus:outline-none font-mono text-center"
                 />
                 <span className="text-xs text-[#F8FAFC] font-semibold">Minutes</span>
               </div>
@@ -488,7 +498,7 @@ export const SettingsView: React.FC = () => {
               </span>
             </div>
 
-            <div className="rounded-xl bg-[#070103]/80 p-3.5 border border-[#FF204E]/15">
+            <div className="rounded-xl neumorph-inset p-3.5">
               <span className="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2 flex items-center gap-1">
                 <Globe className="h-3.5 w-3.5 text-[#FF204E]" />
                 Language Engine
@@ -507,7 +517,7 @@ export const SettingsView: React.FC = () => {
               </span>
             </div>
 
-            <div className="rounded-xl bg-[#070103]/80 p-3.5 border border-[#FF204E]/15">
+            <div className="rounded-xl neumorph-inset p-3.5">
               <span className="block text-[10px] font-bold text-[#94A3B8] uppercase tracking-wider mb-2 flex items-center gap-1">
                 <MessageSquare className="h-3.5 w-3.5 text-[#FF204E]" />
                 Brand Persona Tone
@@ -515,11 +525,11 @@ export const SettingsView: React.FC = () => {
               <select
                 value={waTone}
                 onChange={(e) => setWaTone(e.target.value as any)}
-                className="w-full rounded-lg bg-[#070103] px-2.5 py-1.5 text-xs text-[#F8FAFC] border border-[#FF204E]/20 focus:outline-none"
+                className="w-full rounded-lg neumorph-card px-2.5 py-1.5 text-xs text-[#F8FAFC] focus:outline-none"
               >
-                <option value="friendly">Friendly &amp; Helpful</option>
-                <option value="professional">Strictly Professional</option>
-                <option value="casual">Casual &amp; Fast</option>
+                <option value="friendly" className="bg-[#0f0306]">Friendly &amp; Helpful</option>
+                <option value="professional" className="bg-[#0f0306]">Strictly Professional</option>
+                <option value="casual" className="bg-[#0f0306]">Casual &amp; Fast</option>
               </select>
               <span className="text-[9px] text-[#94A3B8] block mt-1.5">
                 Adapts vocabulary to matched corporate standards.
@@ -528,8 +538,8 @@ export const SettingsView: React.FC = () => {
           </div>
 
           {/* REAL-TIME INTERACTIVE SIMULATOR */}
-          <div className="rounded-xl bg-[#070103]/50 p-4 border border-[#FF204E]/20 space-y-3.5">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#FF204E]/10 pb-2.5">
+          <div className="rounded-xl neumorph-inset p-4 space-y-3.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#FF204E]/15 pb-2.5">
               <div>
                 <span className="text-xs font-bold text-[#F8FAFC] block flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-[#FF204E] animate-pulse" />
@@ -545,18 +555,18 @@ export const SettingsView: React.FC = () => {
                   value={simScenario}
                   onChange={(e) => setSimScenario(e.target.value as any)}
                   disabled={simStatus === 'waiting' || simStatus === 'generating'}
-                  className="rounded-lg bg-[#070103] px-2.5 py-1 text-xs text-[#F8FAFC] border border-[#FF204E]/20 focus:outline-none font-medium"
+                  className="rounded-lg neumorph-card px-2.5 py-1 text-xs text-[#F8FAFC] focus:outline-none font-medium"
                 >
-                  <option value="inquiry_bn">🇧🇩 Bangla Pricing Inquiry</option>
-                  <option value="support_en">🇺🇸 English Support Ticket</option>
-                  <option value="deal_de">🇩🇪 German Call Request</option>
+                  <option value="inquiry_bn" className="bg-[#0f0306]">🇧🇩 Bangla Pricing Inquiry</option>
+                  <option value="support_en" className="bg-[#0f0306]">🇺🇸 English Support Ticket</option>
+                  <option value="deal_de" className="bg-[#0f0306]">🇩🇪 German Call Request</option>
                 </select>
 
                 <button
                   type="button"
                   onClick={runSimulation}
                   disabled={simStatus === 'waiting' || simStatus === 'generating' || !waEnabled}
-                  className="flex items-center gap-1 rounded-lg bg-[#E50914] hover:bg-[#FF204E] disabled:opacity-50 px-3 py-1 text-xs font-bold text-white cursor-pointer transition-colors shadow-md shadow-[#E50914]/30"
+                  className="flex items-center gap-1 rounded-xl neumorph-btn-primary disabled:opacity-50 px-3.5 py-1.5 text-xs font-bold text-white cursor-pointer"
                 >
                   <Play className="h-3.5 w-3.5" />
                   <span>Simulate</span>
@@ -568,7 +578,7 @@ export const SettingsView: React.FC = () => {
             {simStatus !== 'idle' && (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
                 {/* Left: Progression log */}
-                <div className="rounded-lg bg-[#070103] p-3 border border-[#FF204E]/15 font-mono text-[10px] space-y-1.5 max-h-48 overflow-y-auto">
+                <div className="rounded-lg neumorph-card p-3 font-mono text-[10px] space-y-1.5 max-h-48 overflow-y-auto">
                   <div className="flex items-center justify-between text-[#94A3B8] border-b border-[#FF204E]/10 pb-1 mb-1.5 font-sans">
                     <span>TIMELINE LOGS</span>
                     <span className="text-[9px] font-mono text-[#FF204E]">SPEEDED x100</span>
@@ -600,13 +610,13 @@ export const SettingsView: React.FC = () => {
                 </div>
 
                 {/* Right: Output message bubble */}
-                <div className="rounded-lg bg-[#070103] p-3 border border-[#FF204E]/15 flex flex-col justify-between">
+                <div className="rounded-lg neumorph-card p-3 flex flex-col justify-between">
                   <div>
                     <div className="text-[9px] font-bold text-[#94A3B8] tracking-wider uppercase mb-1.5">
                       DISPATCHED OUTBOX RESPONSE
                     </div>
                     {simDraft ? (
-                      <p className="text-xs text-[#F8FAFC] leading-relaxed bg-[#E50914]/20 p-2.5 rounded-xl border border-[#FF204E]/20 whitespace-pre-wrap">
+                      <p className="text-xs text-[#F8FAFC] leading-relaxed neumorph-inset p-2.5 rounded-xl whitespace-pre-wrap">
                         {simDraft}
                       </p>
                     ) : (
@@ -617,7 +627,7 @@ export const SettingsView: React.FC = () => {
                   </div>
 
                   {simStatus === 'dispatched' && (
-                    <div className="mt-2 text-[10px] font-sans font-bold text-white bg-[#E50914]/20 border border-[#FF204E]/40 rounded-lg p-1.5 text-center flex items-center justify-center gap-1 shadow-[0_0_10px_rgba(229,9,20,0.3)]">
+                    <div className="mt-2 text-[10px] font-sans font-bold text-white neumorph-badge rounded-lg p-1.5 text-center flex items-center justify-center gap-1">
                       <Check className="h-3.5 w-3.5 text-[#FF204E]" />
                       Auto-responder safely completed and message pushed to client device!
                     </div>
@@ -633,7 +643,7 @@ export const SettingsView: React.FC = () => {
           <button
             type="submit"
             id="btn_save_settings"
-            className="flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#990000] via-[#E50914] to-[#FF204E] hover:brightness-110 px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-[#E50914]/30 transition-all cursor-pointer"
+            className="flex items-center gap-2 rounded-xl neumorph-btn-primary px-6 py-2.5 text-xs font-bold text-white cursor-pointer"
           >
             <Save className="h-4 w-4" />
             <span>{t.saveSettingsBtn}</span>
@@ -641,9 +651,11 @@ export const SettingsView: React.FC = () => {
         </div>
 
         {/* Data & Memory Management */}
-        <div className="rounded-2xl bg-[#0f0306] p-4 sm:p-6 border border-[#FF204E]/30 space-y-4 shadow-xl">
+        <div className="rounded-2xl neumorph-card p-4 sm:p-6 space-y-4">
           <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-[#FF204E]" />
+            <div className="h-7 w-7 rounded-lg neumorph-circle flex items-center justify-center text-[#FF204E]">
+              <AlertTriangle className="h-4 w-4 text-[#FF204E]" />
+            </div>
             <span>{t.workspaceDataSectionTitle}</span>
           </h2>
 
@@ -651,7 +663,7 @@ export const SettingsView: React.FC = () => {
             <button
               type="button"
               onClick={handleExportWorkspace}
-              className="flex items-center justify-center gap-1.5 rounded-xl bg-[#070103] px-4 py-2.5 text-xs font-semibold text-[#F8FAFC] border border-[#FF204E]/25 hover:bg-[#FF204E]/15 transition-colors cursor-pointer"
+              className="flex items-center justify-center gap-1.5 rounded-xl neumorph-btn-secondary px-4 py-2.5 text-xs font-semibold text-[#F8FAFC] hover:text-white cursor-pointer"
             >
               <Download className="h-4 w-4 text-[#FF204E]" />
               <span>{t.exportBackupBtn}</span>
@@ -660,7 +672,7 @@ export const SettingsView: React.FC = () => {
             <button
               type="button"
               onClick={handleResetMemory}
-              className="flex items-center justify-center gap-1.5 rounded-xl bg-[#E50914]/20 px-4 py-2.5 text-xs font-semibold text-white border border-[#FF204E]/40 hover:bg-[#E50914]/35 transition-colors cursor-pointer"
+              className="flex items-center justify-center gap-1.5 rounded-xl neumorph-btn-secondary px-4 py-2.5 text-xs font-semibold text-rose-400 hover:text-rose-300 cursor-pointer"
             >
               <RefreshCw className="h-4 w-4 text-[#FF204E]" />
               <span>{t.resetMemoryBtn}</span>

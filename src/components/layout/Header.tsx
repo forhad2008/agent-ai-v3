@@ -25,24 +25,20 @@ export const Header: React.FC = () => {
         items-center
         justify-between
         rounded-2xl
-        border
-        border-[#E50914]/30
-        bg-[#0f0408]/80
+        neumorph-raised
         px-3
         sm:px-6
-        backdrop-blur-[24px]
-        shadow-[0_8px_32px_rgba(229,9,20,0.2)]
         transition-all
       "
     >
       {/* Specular light lines */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#E50914]/40 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#FF204E]/30 to-transparent" />
 
-      {/* LEFT / CENTER: Search bar (matching screenshot: "Search anything... ⌘ K") */}
+      {/* LEFT / CENTER: Search bar with neumorphic sunken well */}
       <div className="flex flex-1 items-center max-w-md mr-3">
         <div className="relative w-full">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#94A3B8]" />
           <input
             type="text"
             value={searchQuery}
@@ -51,22 +47,17 @@ export const Header: React.FC = () => {
             className="
               w-full
               rounded-xl
-              border
-              border-white/10
-              bg-white/[0.05]
+              neumorph-input
               py-2
               pl-10
               pr-12
               text-xs
-              text-white
-              placeholder-white/40
-              focus:border-[#FF204E]/60
-              focus:bg-black/60
-              focus:outline-none
+              text-[#F8FAFC]
+              placeholder-[#94A3B8]/60
               transition-all
             "
           />
-          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] font-mono text-white/60">
+          <kbd className="absolute right-3 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 rounded-md border border-[#E50914]/30 bg-[#080204] px-1.5 py-0.5 text-[10px] font-mono text-[#94A3B8]">
             ⌘ K
           </kbd>
         </div>
@@ -75,7 +66,7 @@ export const Header: React.FC = () => {
       {/* RIGHT: Global Selector, Notification Bell with red badge 3, Profile Avatar */}
       <div className="flex items-center gap-2 sm:gap-3">
         
-        {/* Global Dropdown (Matches Screenshot: Global ∨) */}
+        {/* Global Dropdown Button - Neumorphic Tactile Pill */}
         <button
           id="btn_language_mode_header"
           onClick={() => setIsLanguageModalOpen(true)}
@@ -84,25 +75,21 @@ export const Header: React.FC = () => {
             items-center
             gap-1.5
             rounded-full
-            border
-            border-white/10
-            bg-white/[0.06]
-            px-3
+            neumorph-btn-secondary
+            px-3.5
             py-1.5
             text-xs
-            font-medium
+            font-semibold
             text-white/90
-            transition-all
-            hover:border-[#FF204E]/50
-            hover:bg-[#E50914]/20
+            cursor-pointer
           "
         >
-          <Globe className="h-3.5 w-3.5 text-white/70" />
+          <Globe className="h-3.5 w-3.5 text-[#FF204E]" />
           <span className="font-semibold text-xs text-white">Global</span>
-          <ChevronDown className="h-3.5 w-3.5 text-white/50" />
+          <ChevronDown className="h-3.5 w-3.5 text-[#94A3B8]" />
         </button>
 
-        {/* Notification Bell (Matches Screenshot: Bell icon with red circle 3 badge) */}
+        {/* Notification Bell - Neumorphic Raised Circle Button */}
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
@@ -113,49 +100,44 @@ export const Header: React.FC = () => {
               w-9
               items-center
               justify-center
-              rounded-full
-              border
-              border-white/10
-              bg-white/[0.06]
-              text-white/80
-              hover:border-[#FF204E]/40
-              hover:text-white
-              transition-all
+              neumorph-circle
+              text-white/90
+              cursor-pointer
             "
             title="Notifications"
           >
-            <Bell className="h-4.5 w-4.5 text-white/90" />
-            <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-[#E50914] text-[10px] font-black text-white shadow-[0_0_10px_#E50914]">
+            <Bell className="h-4.5 w-4.5 text-[#FF204E]" />
+            <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full neumorph-badge-primary text-[10px] font-black text-white">
               3
             </span>
           </button>
 
-          {/* Notifications Dropdown */}
+          {/* Notifications Dropdown Panel */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-72 rounded-2xl border border-[#E50914]/30 bg-[#0f0408]/95 p-4 shadow-[0_10px_30px_rgba(229,9,20,0.3)] backdrop-blur-xl z-50 text-xs space-y-3 animate-fadeIn">
-              <div className="flex items-center justify-between border-b border-white/10 pb-2">
+            <div className="absolute right-0 mt-2 w-72 rounded-2xl neumorph-card p-4 shadow-2xl z-50 text-xs space-y-3 animate-fadeIn">
+              <div className="flex items-center justify-between border-b border-[#E50914]/25 pb-2">
                 <span className="font-bold text-white">System Notifications</span>
-                <span className="text-[10px] text-[#FF204E] font-bold">3 New</span>
+                <span className="text-[10px] text-[#FF204E] font-bold neumorph-badge px-2 py-0.5 rounded-full">3 New</span>
               </div>
               <div className="space-y-2">
-                <div className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+                <div className="p-2.5 rounded-xl neumorph-inset hover:border-[#FF204E]/50 transition-all cursor-pointer">
                   <div className="font-semibold text-white">Research Agent</div>
-                  <div className="text-[10px] text-white/60">Completed web research task • 2m ago</div>
+                  <div className="text-[10px] text-[#94A3B8]">Completed web research task • 2m ago</div>
                 </div>
-                <div className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+                <div className="p-2.5 rounded-xl neumorph-inset hover:border-[#FF204E]/50 transition-all cursor-pointer">
                   <div className="font-semibold text-white">Task Flow Pipeline</div>
-                  <div className="text-[10px] text-white/60">Automated workflow executed • 34m ago</div>
+                  <div className="text-[10px] text-[#94A3B8]">Automated workflow executed • 34m ago</div>
                 </div>
-                <div className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+                <div className="p-2.5 rounded-xl neumorph-inset hover:border-[#FF204E]/50 transition-all cursor-pointer">
                   <div className="font-semibold text-white">Agent-sigma08 Ready</div>
-                  <div className="text-[10px] text-white/60">System running smoothly v3.8.0</div>
+                  <div className="text-[10px] text-[#94A3B8]">System running smoothly v3.8.0</div>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* User profile picture with Red Circular Neon Glow Ring (Matches Screenshot) */}
+        {/* User profile picture with Neumorphic circular bezel */}
         <div
           id="header_user_avatar"
           onClick={() => setActiveView('profile')}
@@ -167,18 +149,14 @@ export const Header: React.FC = () => {
             items-center
             justify-center
             cursor-pointer
-            rounded-full
+            neumorph-circle
             p-[2px]
-            bg-gradient-to-tr
-            from-[#E50914]
-            to-[#FF204E]
-            shadow-[0_0_15px_rgba(229,9,20,0.7)]
             hover:scale-105
-            transition-transform
+            transition-all
           "
           title="User Profile & Settings"
         >
-          <div className="flex h-full w-full items-center justify-center rounded-full overflow-hidden bg-black">
+          <div className="flex h-full w-full items-center justify-center rounded-full overflow-hidden bg-black/60">
             {userProfile.profileImage ? (
               <img src={userProfile.profileImage} alt={userProfile.name} className="h-full w-full object-cover rounded-full" />
             ) : (
