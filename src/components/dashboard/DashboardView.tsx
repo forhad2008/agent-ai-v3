@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
 import { sound } from '../../services/sound';
+import { SystemHealthWidget } from './SystemHealthWidget';
 
 export const DashboardView: React.FC = () => {
   const {
@@ -384,6 +385,11 @@ export const DashboardView: React.FC = () => {
 
         </div>
       </div>
+
+      {/* ======================================================== */}
+      {/* 2.5 SYSTEM HEALTH & GEMINI METRICS WIDGET                */}
+      {/* ======================================================== */}
+      <SystemHealthWidget />
 
       {/* ======================================================== */}
       {/* 3. METRICS GRID (4 Neumorphic Cards)                     */}

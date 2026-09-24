@@ -147,6 +147,22 @@ export interface TaskAiAnalysisResult {
   smartReminder?: SmartReminderConfig;
 }
 
+export type CollaboratorRole = 'Owner' | 'Editor' | 'Viewer' | 'Assignee';
+
+export type CollaboratorPresence = 'online' | 'active' | 'busy' | 'offline';
+
+export interface TaskCollaborator {
+  id: string;
+  name: string;
+  email: string;
+  role: CollaboratorRole;
+  avatar?: string;
+  status: CollaboratorPresence;
+  invitedAt?: string;
+  lastActive?: string;
+  isCurrentUser?: boolean;
+}
+
 export interface TaskItem {
   id: string;
   title: string;
@@ -162,6 +178,7 @@ export interface TaskItem {
   reminderTimeStamp?: number;
   reminderTriggered?: boolean;
   smartReminderConfig?: SmartReminderConfig;
+  collaborators?: TaskCollaborator[];
   completedAt?: string;
   completedTimeStamp?: number;
   actualDurationMinutes?: number;

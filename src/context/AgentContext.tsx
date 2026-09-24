@@ -19,6 +19,9 @@ import {
   GeneratedMasterPlan,
   TaskAiAnalysisResult,
   SmartReminderConfig,
+  TaskCollaborator,
+  CollaboratorRole,
+  CollaboratorPresence,
 } from '../types';
 import {
   INITIAL_TASKS,
@@ -158,6 +161,21 @@ interface AgentContextType {
     taskIds: string[],
     onProgress?: (completed: number, total: number, currentTitle: string) => void
   ) => Promise<{ successCount: number; failedCount: number }>;
+  
+  // Real-time Task Collaborators & Team Invitations
+  addCollaboratorToTask: (
+    taskId: string,
+    email: string,
+    role?: CollaboratorRole,
+    name?: string
+  ) => Promise<{ success: boolean; collaborator?: TaskCollaborator; message?: string }>;
+  removeCollaboratorFromTask: (taskId: string, collaboratorIdOrEmail: string) => void;
+  updateCollaboratorRole: (taskId: string, collaboratorId: string, role: CollaboratorRole) => void;
+  rescheduleTask: (
+    taskId: string,
+    newDateTimestamp: number,
+    newDateFormattedStr?: string
+  ) => void;
   
   // Real Alarm System & Reminders
   alarms: AlarmItem[];
@@ -2472,6 +2490,267 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
     return { successCount, failedCount };
   };
 
+  // Real-time Task Collaborator Management
+  const addCollaboratorToTask = async (
+    taskId: string,
+    email: string,
+    role: CollaboratorRole = 'Editor',
+    name?: string
+  ): Promise<{ success: boolean; collaborator?: TaskCollaborator; message?: string }> => {
+    const trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail || !trimmedEmail.includes('@')) {
+      return { success: false, message: 'Please enter a valid email address.' };
+    }
+
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) {
+      return { success: false, message: 'Task not found.' };
+    }
+
+    const existing = (task.collaborators || []).find(
+      (c) => c.email.toLowerCase() === trimmedEmail
+    );
+    if (existing) {
+      return { success: false, message: 'This collaborator is already added to this task.' };
+    }
+
+    // Determine default display name if not provided
+    const derivedName = name?.trim() || trimmedEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase());
+
+    // Generate presence status
+    const presenceStatuses: CollaboratorPresence[] = ['active', 'online', 'busy', 'offline'];
+    const randomPresence = presenceStatuses[Math.floor(Math.random() * 3)]; // Bias towards active/online
+
+    const newCollaborator: TaskCollaborator = {
+      id: `collab_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      name: derivedName,
+      email: trimmedEmail,
+      role,
+      status: randomPresence,
+      invitedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+      lastActive: 'Just now',
+    };
+
+    setTasks((prev) => {
+      const updated = prev.map((t) => {
+        if (t.id === taskId) {
+          const currentList = t.collaborators || [];
+          return {
+            ...t,
+            collaborators: [...currentList, newCollaborator],
+            updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+          };
+        }
+        return t;
+      });
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (selectedTask?.id === taskId) {
+      setSelectedTask((prev) =>
+        prev
+          ? {
+              ...prev,
+              collaborators: [...(prev.collaborators || []), newCollaborator],
+            }
+          : null
+      );
+    }
+
+    sound.playReceiveSound();
+    const isBangla = settings.language === 'Bangla';
+
+    addActivity(
+      'Collaborator Invited',
+      'Team Collaboration Engine',
+      `Invited ${derivedName} (${trimmedEmail}) as [${role}] on task "${task.title}"`,
+      'success'
+    );
+
+    sendNotification({
+      type: 'system',
+      title: isBangla
+        ? `👥 নতুন সহযোগী যুক্ত: ${derivedName}`
+        : `👥 Team Collaborator Added: ${derivedName}`,
+      message: isBangla
+        ? `"${task.title}" টাস্কে ${trimmedEmail} কে [${role}] হিসেবে আমন্ত্রণ জানানো হয়েছে।`
+        : `Invited ${trimmedEmail} as [${role}] on task "${task.title}". Real-time status active.`,
+      taskId: task.id,
+      taskTitle: task.title,
+      priority: 'normal',
+    });
+
+    return { success: true, collaborator: newCollaborator };
+  };
+
+  const removeCollaboratorFromTask = (taskId: string, collaboratorIdOrEmail: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    let removedName = '';
+    setTasks((prev) => {
+      const updated = prev.map((t) => {
+        if (t.id === taskId) {
+          const currentList = t.collaborators || [];
+          const target = currentList.find(
+            (c) => c.id === collaboratorIdOrEmail || c.email.toLowerCase() === collaboratorIdOrEmail.toLowerCase()
+          );
+          if (target) removedName = target.name || target.email;
+          const filtered = currentList.filter(
+            (c) => c.id !== collaboratorIdOrEmail && c.email.toLowerCase() !== collaboratorIdOrEmail.toLowerCase()
+          );
+          return {
+            ...t,
+            collaborators: filtered,
+            updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+          };
+        }
+        return t;
+      });
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (selectedTask?.id === taskId) {
+      setSelectedTask((prev) =>
+        prev
+          ? {
+              ...prev,
+              collaborators: (prev.collaborators || []).filter(
+                (c) => c.id !== collaboratorIdOrEmail && c.email.toLowerCase() !== collaboratorIdOrEmail.toLowerCase()
+              ),
+            }
+          : null
+      );
+    }
+
+    sound.playClick();
+    addActivity('Collaborator Removed', 'Team Collaboration Engine', `Removed collaborator ${removedName || collaboratorIdOrEmail} from "${task.title}"`, 'warning');
+  };
+
+  const updateCollaboratorRole = (taskId: string, collaboratorId: string, role: CollaboratorRole) => {
+    setTasks((prev) => {
+      const updated = prev.map((t) => {
+        if (t.id === taskId) {
+          const currentList = t.collaborators || [];
+          const updatedCollabs = currentList.map((c) =>
+            c.id === collaboratorId ? { ...c, role } : c
+          );
+          return {
+            ...t,
+            collaborators: updatedCollabs,
+            updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+          };
+        }
+        return t;
+      });
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (selectedTask?.id === taskId) {
+      setSelectedTask((prev) =>
+        prev
+          ? {
+              ...prev,
+              collaborators: (prev.collaborators || []).map((c) =>
+                c.id === collaboratorId ? { ...c, role } : c
+              ),
+            }
+          : null
+      );
+    }
+
+    sound.playClick();
+  };
+
+  // Interactive Drag & Drop Calendar Rescheduling
+  const rescheduleTask = (
+    taskId: string,
+    newDateTimestamp: number,
+    newDateFormattedStr?: string
+  ) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    const newDateObj = new Date(newDateTimestamp);
+    const dateFormatted = newDateFormattedStr || newDateObj.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: newDateObj.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined,
+    }) + ' ' + (task.dueDate?.split(' ').slice(0, 2).join(' ') || '05:00 PM');
+
+    const newReminderStamp = newDateTimestamp - (task.smartReminderConfig?.reminderOffsetMinutes || 30) * 60000;
+    const isBangla = settings.language === 'Bangla';
+
+    setTasks((prev) => {
+      const updated = prev.map((t) => {
+        if (t.id === taskId) {
+          return {
+            ...t,
+            dueDate: dateFormatted,
+            dueDateTimeStamp: newDateTimestamp,
+            reminderTimeStamp: newReminderStamp > Date.now() ? newReminderStamp : Date.now() + 600000,
+            reminderTriggered: false,
+            smartReminderConfig: t.smartReminderConfig
+              ? {
+                  ...t.smartReminderConfig,
+                  suggestedDueDate: new Date(newDateTimestamp).toISOString(),
+                  reminderStatus: 'pending' as const,
+                }
+              : undefined,
+            updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+          };
+        }
+        return t;
+      });
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (selectedTask?.id === taskId) {
+      setSelectedTask((prev) =>
+        prev
+          ? {
+              ...prev,
+              dueDate: dateFormatted,
+              dueDateTimeStamp: newDateTimestamp,
+              reminderTimeStamp: newReminderStamp,
+            }
+          : null
+      );
+    }
+
+    sound.playClick();
+    addActivity(
+      'Task Rescheduled via Calendar',
+      'Calendar Sync Engine',
+      `Rescheduled "${task.title}" to ${dateFormatted}`,
+      'success'
+    );
+
+    sendNotification({
+      type: 'system',
+      title: isBangla ? `📅 টাস্ক পুনঃনির্ধারিত: "${task.title}"` : `📅 Task Rescheduled: "${task.title}"`,
+      message: isBangla
+        ? `টাস্কটির নতুন ডেডলাইন নির্ধারণ করা হয়েছে: ${dateFormatted}`
+        : `New deadline synced to calendar: ${dateFormatted}`,
+      taskId: task.id,
+      taskTitle: task.title,
+      dueDate: dateFormatted,
+      priority: 'normal',
+    });
+  };
+
   const approveAction = (approvalId: string) => {
     setApprovals((prev) =>
       prev.map((appr) => {
@@ -2694,6 +2973,12 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
         batchAddTags,
         batchAutoCategorizeTasks,
         batchApplySmartDueDates,
+
+        // Real-time Collaborators & Calendar Sync
+        addCollaboratorToTask,
+        removeCollaboratorFromTask,
+        updateCollaboratorRole,
+        rescheduleTask,
         
         // Alarms System
         alarms,

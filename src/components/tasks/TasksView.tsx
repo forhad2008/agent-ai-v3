@@ -34,9 +34,14 @@ import {
   AlertCircle,
   CheckCircle2,
   SlidersHorizontal,
+  Calendar,
+  CalendarDays,
+  Users,
+  UserPlus,
+  LayoutGrid,
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
-import { SubTaskItem, TaskItem, TaskPriority, TaskStatus, TaskAiAnalysisResult, SmartReminderConfig } from '../../types';
+import { SubTaskItem, TaskItem, TaskPriority, TaskStatus, TaskAiAnalysisResult, SmartReminderConfig, CollaboratorRole } from '../../types';
 import { TasksPerformanceDashboard } from './TasksPerformanceDashboard';
 import { BatchActionsBar } from './BatchActionsBar';
 import { BatchTagModal } from './BatchTagModal';
@@ -44,6 +49,9 @@ import { BatchPriorityModal } from './BatchPriorityModal';
 import { BatchStatusModal } from './BatchStatusModal';
 import { BatchDeleteModal } from './BatchDeleteModal';
 import { BatchAiProgressModal } from './BatchAiProgressModal';
+import { CollaboratorAvatarStack } from './CollaboratorAvatarStack';
+import { TaskCollaboratorsModal } from './TaskCollaboratorsModal';
+import { TasksCalendarView } from './TasksCalendarView';
 
 export const TasksView: React.FC = () => {
   const {
@@ -77,9 +85,24 @@ export const TasksView: React.FC = () => {
     batchAddTags,
     batchAutoCategorizeTasks,
     batchApplySmartDueDates,
+    addCollaboratorToTask,
+    removeCollaboratorFromTask,
+    updateCollaboratorRole,
+    rescheduleTask,
   } = useAgent();
 
   const isBangla = settings.language === 'Bangla' || currentLanguage?.id === 'bn';
+
+  // Primary View Mode (Grid Cards vs Interactive Calendar)
+  const [mainViewMode, setMainViewMode] = useState<'grid' | 'calendar'>('grid');
+
+  // Collaborator Modal & Inline Invite States
+  const [collaboratorModalTask, setCollaboratorModalTask] = useState<TaskItem | null>(null);
+  const [detailCollabEmail, setDetailCollabEmail] = useState('');
+  const [detailCollabRole, setDetailCollabRole] = useState<CollaboratorRole>('Editor');
+  const [detailCollabName, setDetailCollabName] = useState('');
+  const [isInvitingDetailCollab, setIsInvitingDetailCollab] = useState(false);
+  const [detailCollabError, setDetailCollabError] = useState<string | null>(null);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('All');
@@ -568,7 +591,35 @@ export const TasksView: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* View Switcher: Grid vs Calendar */}
+          <div className="flex items-center rounded-xl bg-black/50 p-1 border border-white/10 text-xs">
+            <button
+              onClick={() => setMainViewMode('grid')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                mainViewMode === 'grid'
+                  ? 'bg-[#FF204E] text-white shadow-[0_0_10px_rgba(255,32,78,0.4)]'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Card Grid View"
+            >
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span>{isBangla ? 'গ্রিড ভিউ' : 'Grid View'}</span>
+            </button>
+            <button
+              onClick={() => setMainViewMode('calendar')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-bold transition-all cursor-pointer ${
+                mainViewMode === 'calendar'
+                  ? 'bg-[#FF204E] text-white shadow-[0_0_10px_rgba(255,32,78,0.4)]'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+              title="Interactive Drag & Drop Calendar"
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              <span>{isBangla ? 'ক্যালেন্ডার ভিউ' : 'Calendar View'}</span>
+            </button>
+          </div>
+
           <button
             onClick={() => setShowPerformanceDashboard(!showPerformanceDashboard)}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
@@ -623,8 +674,23 @@ export const TasksView: React.FC = () => {
         <TasksPerformanceDashboard tasks={tasks} />
       )}
 
-      {/* Filter and Search Bar */}
-      <div className="space-y-3">
+      {/* Main View: Interactive Calendar View vs Card Grid View */}
+      {mainViewMode === 'calendar' ? (
+        <TasksCalendarView
+          tasks={tasks}
+          onSelectTask={(task) => setSelectedTask(task)}
+          onOpenCreateTaskWithDate={(dateTs) => {
+            setDraftSubTasks([]);
+            setDraftSubTitle('');
+            setModalAiAnalysis(null);
+            setIsCreateOpen(true);
+          }}
+          onOpenInviteModal={(task) => setCollaboratorModalTask(task)}
+        />
+      ) : (
+        <>
+          {/* Filter and Search Bar */}
+          <div className="space-y-3">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           {/* Search */}
           <div className="relative flex-1 max-w-md">
@@ -1229,8 +1295,10 @@ export const TasksView: React.FC = () => {
           );
         })}
       </div>
+    </>
+  )}
 
-      {/* Task Details Modal Drawer with Category & Tags & AI Scope Breakdown */}
+  {/* Task Details Modal Drawer with Category & Tags & AI Scope Breakdown */}
       {selectedTask && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 p-4 backdrop-blur-md overflow-y-auto">
           <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl neumorph-card p-6 text-xs space-y-5 shadow-2xl">
