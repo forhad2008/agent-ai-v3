@@ -26,6 +26,7 @@ import {
   ArrowDown,
   Globe,
   ExternalLink,
+  Brain,
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
 import { PlanProgressCard } from './PlanProgressCard';
@@ -37,26 +38,38 @@ const EMOJI_OPTIONS = ['👍', '❤️', '🔥', '🚀', '💡', '👏'];
 
 const ThinkingTraceSection: React.FC<{ thinkingText: string }> = ({ thinkingText }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { setActiveView } = useAgent();
 
   return (
     <div className="my-2.5 overflow-hidden rounded-xl bg-[#0f0306]/70 border border-[#FF204E]/25 shadow-sm transition-all">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex w-full items-center justify-between px-3.5 py-2 text-left text-[11px] font-bold uppercase tracking-wider text-[#FF204E] hover:bg-[#E50914]/15 transition-colors focus:outline-none"
-      >
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between px-3.5 py-2 bg-[#140407]/60">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-2 text-left text-[11px] font-bold uppercase tracking-wider text-[#FF204E] hover:text-[#ff4d73] transition-colors focus:outline-none cursor-pointer"
+        >
           <div className="relative flex h-3.5 w-3.5 items-center justify-center">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E50914] opacity-35"></span>
             <span className="relative inline-flex h-2 w-2 rounded-full bg-[#FF204E]"></span>
           </div>
           <span className="font-semibold tracking-wider text-[#FF204E]">Agent Cognitive Thoughts</span>
-        </div>
-        <span className="text-[10px] text-[#94A3B8] font-mono tracking-wide">{isOpen ? 'COLLAPSE' : 'EXPAND TRACE'}</span>
-      </button>
+          <span className="text-[10px] text-[#94A3B8] font-mono tracking-wide">({isOpen ? 'COLLAPSE' : 'EXPAND'})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveView('thought-process')}
+          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FF204E]/15 hover:bg-[#FF204E]/30 text-[#FF4D4D] text-[10px] font-bold font-mono transition-all cursor-pointer border border-[#FF204E]/30"
+          title="Open real-time Thought Process View"
+        >
+          <Brain className="h-3 w-3" />
+          <span>Open Thought Process View ↗</span>
+        </button>
+      </div>
+
       {isOpen && (
         <div className="border-t border-[#E50914]/15 bg-[#080204]/90 p-3 font-mono text-[11px] leading-relaxed text-[#94A3B8] whitespace-pre-wrap select-all">
           <div className="flex items-start gap-1 text-[#FF204E] mb-1.5 font-bold tracking-tight">
-            <span>&gt;_ [system_cognitive_loop] analyzing risk & delegation rules...</span>
+            <span>&gt;_ [system_cognitive_loop] unconstrained reasoning & sub-goals active...</span>
           </div>
           {thinkingText}
         </div>
@@ -711,7 +724,17 @@ export const ChatView: React.FC = () => {
 
                       {/* Plan Steps Card if embedded */}
                       {msg.planSteps && msg.planSteps.length > 0 && (
-                        <PlanProgressCard steps={msg.planSteps} isGenerating={false} />
+                        <PlanProgressCard
+                          steps={msg.planSteps}
+                          isGenerating={false}
+                          groundingMetadata={msg.groundingMetadata}
+                          onGatherWebInfo={(topic) => {
+                            const promptText = settings.language === 'Bangla'
+                              ? `এই প্ল্যানের জন্য লাইভ ওয়েব তথ্য ও মার্কেট ইন্টেলিজেন্স সংগ্রহ করো: "${topic}"`
+                              : `Gather real-time web intelligence, industry benchmarks, and authoritative sources for this plan: "${topic}"`;
+                            handleSendMessage(promptText);
+                          }}
+                        />
                       )}
 
                       {/* Tool Executions Cards */}

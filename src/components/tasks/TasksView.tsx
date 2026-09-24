@@ -7,6 +7,10 @@ import {
   Play,
   Sparkles,
   Trash2,
+  Globe,
+  ExternalLink,
+  Loader2,
+  Compass,
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
 import { TaskItem, TaskPriority, TaskStatus } from '../../types';
@@ -15,6 +19,7 @@ export const TasksView: React.FC = () => {
   const {
     tasks,
     createTask,
+    gatherWebInfoForTask,
     selectedTask,
     setSelectedTask,
     handleSendMessage,
@@ -31,7 +36,9 @@ export const TasksView: React.FC = () => {
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
   const [newPriority, setNewPriority] = useState<TaskPriority>('Medium');
+  const [gatherWebInfoForNewTask, setGatherWebInfoForNewTask] = useState(true);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [isGatheringWebId, setIsGatheringWebId] = useState<string | null>(null);
 
   const handleDeleteTask = (taskId: string) => {
     deleteTaskWithSync(taskId);
@@ -39,6 +46,15 @@ export const TasksView: React.FC = () => {
       setSelectedTask(null);
     }
     setConfirmDeleteId(null);
+  };
+
+  const handleGatherWebForTask = async (taskId: string) => {
+    setIsGatheringWebId(taskId);
+    try {
+      await gatherWebInfoForTask(taskId);
+    } finally {
+      setIsGatheringWebId(null);
+    }
   };
 
   const filteredTasks = tasks.filter((t) => {
@@ -52,7 +68,7 @@ export const TasksView: React.FC = () => {
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
-    const task = createTask(newTitle.trim(), newDesc.trim(), newPriority);
+    const task = createTask(newTitle.trim(), newDesc.trim(), newPriority, gatherWebInfoForNewTask);
     setIsCreateOpen(false);
     setNewTitle('');
     setNewDesc('');
@@ -194,6 +210,19 @@ export const TasksView: React.FC = () => {
                   ))}
                 </div>
               )}
+
+              {/* Web Intelligence Gathered Badge on Task Card */}
+              {task.groundingMetadata && (
+                <div className="mt-2.5 flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded-md bg-sky-500/10 border border-sky-500/30 text-sky-400">
+                    <Globe className="h-3 w-3 animate-pulse" />
+                    <span>{settings.language === 'Bangla' ? 'ওয়েব তথ্য সংযুক্ত' : 'Web Intel Gathered'}</span>
+                    {task.groundingMetadata.sources && (
+                      <span className="opacity-75">({task.groundingMetadata.sources.length})</span>
+                    )}
+                  </span>
+                </div>
+              )}
             </div>
 
             {/* Footer with Progress & Execution CTA */}
@@ -325,9 +354,28 @@ export const TasksView: React.FC = () => {
 
               {selectedTask.planSteps && selectedTask.planSteps.length > 0 && (
                 <div>
-                  <span className="text-[#94A3B8] font-semibold uppercase text-[10px] tracking-wider block mb-1">
-                    {t.taskExecutionStages}
-                  </span>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[#94A3B8] font-semibold uppercase text-[10px] tracking-wider block">
+                      {t.taskExecutionStages}
+                    </span>
+                    <button
+                      onClick={() => handleGatherWebForTask(selectedTask.id)}
+                      disabled={isGatheringWebId === selectedTask.id}
+                      className="inline-flex items-center gap-1 text-[11px] text-sky-400 hover:text-sky-300 font-medium px-2 py-0.5 rounded-lg bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {isGatheringWebId === selectedTask.id ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin text-sky-400" />
+                          <span>{settings.language === 'Bangla' ? 'ওয়েব তথ্য সংগ্রহ হচ্ছে...' : 'Gathering web info...'}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Globe className="h-3 w-3 text-sky-400" />
+                          <span>{settings.language === 'Bangla' ? '🌐 প্ল্যানের জন্য লাইভ ওয়েব তথ্য খুঁজুন' : '🌐 Gather Web Intel for Plan'}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                   <div className="space-y-1.5 neumorph-inset p-3 rounded-xl">
                     {selectedTask.planSteps.map((step, idx) => (
                       <div key={idx} className="flex items-center gap-2 text-[#F8FAFC]">
@@ -336,6 +384,60 @@ export const TasksView: React.FC = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+
+              {/* Gathered Web Intelligence for Task Plan */}
+              {selectedTask.groundingMetadata && (
+                <div className="rounded-xl border border-sky-500/25 bg-sky-950/20 p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-sky-300 flex items-center gap-1.5">
+                      <Globe className="h-3.5 w-3.5 text-sky-400 animate-pulse" />
+                      {settings.language === 'Bangla' ? '🌐 সংগৃহীত লাইভ ওয়েব তথ্য ও সোর্সসমূহ' : '🌐 Gathered Web Intelligence & Sources'}
+                    </span>
+                    <span className="text-[10px] font-mono text-sky-400/80 bg-sky-500/15 px-2 py-0.5 rounded border border-sky-500/30">
+                      Google Search Grounding
+                    </span>
+                  </div>
+
+                  {selectedTask.groundingMetadata.searchQueries && selectedTask.groundingMetadata.searchQueries.length > 0 && (
+                    <div>
+                      <span className="text-[10px] text-sky-400/80 font-mono block mb-1">
+                        {settings.language === 'Bangla' ? 'অনুসন্ধানকৃত কুয়েরি:' : 'Executed Queries:'}
+                      </span>
+                      <div className="flex flex-wrap gap-1">
+                        {selectedTask.groundingMetadata.searchQueries.map((q, qIdx) => (
+                          <span key={qIdx} className="px-2 py-0.5 rounded bg-sky-900/40 border border-sky-500/30 text-sky-200 text-[10px] font-mono">
+                            "{q}"
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedTask.groundingMetadata.sources && selectedTask.groundingMetadata.sources.length > 0 && (
+                    <div className="pt-1">
+                      <span className="text-[10px] text-sky-400/80 font-mono block mb-1">
+                        {settings.language === 'Bangla' ? 'রেফারেন্স লিঙ্কসমূহ:' : 'Retrieved Sources:'}
+                      </span>
+                      <div className="grid grid-cols-1 gap-1">
+                        {selectedTask.groundingMetadata.sources.map((src, sIdx) => (
+                          <a
+                            key={sIdx}
+                            href={src.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between gap-2 px-2 py-1 rounded bg-white/[0.03] hover:bg-sky-500/15 border border-white/10 hover:border-sky-400/40 text-slate-200 transition-all group"
+                          >
+                            <span className="truncate text-[10px] group-hover:text-sky-300">
+                              {src.title || src.domain}
+                            </span>
+                            <ExternalLink className="h-3 w-3 text-slate-400 group-hover:text-sky-300 shrink-0" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

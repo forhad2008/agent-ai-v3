@@ -54,21 +54,31 @@ function getLanguageName(code: string): string {
     bengali: "Bangla",
     en: "English",
     english: "English",
+    "en-us": "English (US)",
+    "en-gb": "English (UK)",
+    "en-ca": "English (Canada)",
+    "en-au": "English (Australia)",
+    "en-sg": "English (Singapore)",
+    "en-ie": "English (Ireland)",
     ja: "Japanese",
     japanese: "Japanese",
     de: "German",
     german: "German",
+    "de-ch": "Swiss German",
     fr: "French",
     french: "French",
     es: "Spanish",
     spanish: "Spanish",
-    zh: "Chinese",
-    cn: "Chinese",
-    chinese: "Chinese",
-    "zh-tw": "Traditional Chinese",
-    tw: "Traditional Chinese",
+    zh: "Chinese (Simplified)",
+    cn: "Chinese (Simplified)",
+    chinese: "Chinese (Simplified)",
+    "zh-tw": "Chinese (Traditional)",
+    tw: "Chinese (Traditional)",
+    "zh-hk": "Chinese (Hong Kong)",
     ar: "Arabic",
     arabic: "Arabic",
+    "ar-sa": "Arabic (Saudi Arabia)",
+    "ar-ae": "Arabic (UAE)",
     hi: "Hindi",
     hindi: "Hindi",
     ko: "Korean",
@@ -79,6 +89,7 @@ function getLanguageName(code: string): string {
     russian: "Russian",
     pt: "Portuguese",
     portuguese: "Portuguese",
+    "pt-br": "Portuguese (Brazil)",
     vi: "Vietnamese",
     vietnamese: "Vietnamese",
     id: "Indonesian",
@@ -93,9 +104,42 @@ function getLanguageName(code: string): string {
     dutch: "Dutch",
     he: "Hebrew",
     hebrew: "Hebrew",
+    fi: "Finnish",
+    finnish: "Finnish",
+    da: "Danish",
+    danish: "Danish",
+    no: "Norwegian",
+    norwegian: "Norwegian",
+    el: "Greek",
+    greek: "Greek",
+    cs: "Czech",
+    czech: "Czech",
+    ro: "Romanian",
+    romanian: "Romanian",
+    hu: "Hungarian",
+    hungarian: "Hungarian",
+    th: "Thai",
+    thai: "Thai",
+    uk: "Ukrainian",
+    ukrainian: "Ukrainian",
+    ms: "Malay",
+    malay: "Malay",
+    fa: "Persian",
+    persian: "Persian",
+    ur: "Urdu",
+    urdu: "Urdu",
+    tl: "Tagalog",
+    tagalog: "Tagalog",
+    fil: "Filipino",
+    sw: "Swahili",
+    swahili: "Swahili",
   };
   const norm = (code || "").toLowerCase().trim();
-  return mapping[norm] || code || "English";
+  if (mapping[norm]) return mapping[norm];
+  if (code && code.length > 0) {
+    return code.charAt(0).toUpperCase() + code.slice(1);
+  }
+  return "English";
 }
 
 // Detect Banglish (Bengali typed in English letters)
@@ -116,56 +160,70 @@ function detectRequestedLanguageInPrompt(prompt: string): string | null {
   const p = prompt.toLowerCase();
   
   if (isBanglishPrompt(p) || p.includes('in bangla') || p.includes('in bengali') || p.includes('বাংলায়') || p.includes('বাংলা ভাষায়') || p.includes('banglay') || p.includes('bangla')) return 'Bangla';
-  if (p.includes('in spanish') || p.includes('en español') || p.includes('in espanyol') || p.includes('স্প্যানিশ')) return 'Spanish';
-  if (p.includes('in french') || p.includes('en français') || p.includes('ফ্রেঞ্চ')) return 'French';
-  if (p.includes('in german') || p.includes('auf deutsch') || p.includes('জার্মান')) return 'German';
+  if (p.includes('in spanish') || p.includes('en español') || p.includes('in espanyol') || p.includes('স্প্যানিশ') || p.includes('en espanol')) return 'Spanish';
+  if (p.includes('in french') || p.includes('en français') || p.includes('en francais') || p.includes('ফ্রেঞ্চ')) return 'French';
+  if (p.includes('in german') || p.includes('auf deutsch') || p.includes('in deutsch') || p.includes('জার্মান')) return 'German';
   if (p.includes('in hindi') || p.includes('हिंदी में') || p.includes('হিন্দিতে')) return 'Hindi';
-  if (p.includes('in arabic') || p.includes('بالعربية') || p.includes('আরবিতে')) return 'Arabic';
+  if (p.includes('in arabic') || p.includes('بالعربية') || p.includes('আরবিতে') || p.includes('in arabic please')) return 'Arabic';
   if (p.includes('in japanese') || p.includes('日本語で') || p.includes('জাপানিজ')) return 'Japanese';
-  if (p.includes('in chinese') || p.includes('中文') || p.includes('চাইনিজ')) return 'Chinese';
+  if (p.includes('in chinese') || p.includes('中文') || p.includes('用中文') || p.includes('চাইনিজ')) return 'Chinese (Simplified)';
+  if (p.includes('in traditional chinese') || p.includes('繁體中文')) return 'Chinese (Traditional)';
   if (p.includes('in italian') || p.includes('in italiano') || p.includes('ইতালিয়ান')) return 'Italian';
   if (p.includes('in russian') || p.includes('по-русски') || p.includes('রাশিয়ান')) return 'Russian';
-  if (p.includes('in portuguese') || p.includes('em português') || p.includes('পর্তুগিজ')) return 'Portuguese';
+  if (p.includes('in portuguese') || p.includes('em português') || p.includes('em portugues') || p.includes('পর্তুগিজ')) return 'Portuguese';
   if (p.includes('in korean') || p.includes('한국어로') || p.includes('কোরিয়ান')) return 'Korean';
-  if (p.includes('in turkish') || p.includes('türkçe') || p.includes('তুর্কি')) return 'Turkish';
+  if (p.includes('in turkish') || p.includes('türkçe') || p.includes('turkce') || p.includes('তুর্কি')) return 'Turkish';
+  if (p.includes('in swedish') || p.includes('på svenska') || p.includes('pa svenska')) return 'Swedish';
+  if (p.includes('in dutch') || p.includes('in het nederlands')) return 'Dutch';
+  if (p.includes('in hebrew') || p.includes('בעברית')) return 'Hebrew';
+  if (p.includes('in vietnamese') || p.includes('bằng tiếng việt')) return 'Vietnamese';
+  if (p.includes('in indonesian') || p.includes('dalam bahasa indonesia')) return 'Indonesian';
+  if (p.includes('in polish') || p.includes('po polsku')) return 'Polish';
+  if (p.includes('in finnish') || p.includes('suomeksi')) return 'Finnish';
+  if (p.includes('in danish') || p.includes('på dansk')) return 'Danish';
   if (p.includes('in english') || p.includes('in english please') || p.includes('ইংরেজিতে')) return 'English';
 
   return null;
 }
 
-// Detect active language considering prompt, conversation history, and configured preference
+// Detect active language considering prompt, configured header setting, and conversation context
 function detectActiveLanguage(prompt: string, conversationHistory: any[] = [], configuredLanguage: string = "en"): string {
-  // 1. Explicit prompt check
+  // 1. Explicit language command in the prompt takes first priority
   const promptLang = detectRequestedLanguageInPrompt(prompt);
   if (promptLang) return promptLang;
 
-  // 2. Bengali script detection in prompt
-  if (/[\u0980-\u09FF]/.test(prompt) || isBanglishPrompt(prompt)) {
-    return 'Bangla';
-  }
-
-  // 3. Inspect recent conversation history for language commands
-  if (Array.isArray(conversationHistory)) {
-    for (let i = conversationHistory.length - 1; i >= 0; i--) {
-      const msg = conversationHistory[i];
-      const text = (msg.content || msg.text || (msg.parts && msg.parts[0]?.text) || '').toLowerCase();
-      if (
-        text.includes('speak in bangla') ||
-        text.includes('বাংলায় কথা বলুন') ||
-        text.includes('বাংলায় কথা বলো') ||
-        text.includes('বাংলায় কথা বলো') ||
-        text.includes('বাংলায় বলো') ||
-        text.includes('speak in bengali') ||
-        text.includes('banglay kotha bolo')
-      ) {
-        return 'Bangla';
-      }
-      if (text.includes('speak in english') || text.includes('ইংরেজিতে কথা বলো')) {
-        return 'English';
-      }
+  // 2. The active language configured in the Header/Settings section is the primary directive!
+  if (configuredLanguage) {
+    const configuredName = getLanguageName(configuredLanguage);
+    if (configuredName && configuredName !== 'English' && configuredLanguage !== 'en') {
+      return configuredName;
     }
   }
 
+  // 3. Script detection if configured language is default/English
+  if (/[\u0980-\u09FF]/.test(prompt) || isBanglishPrompt(prompt)) {
+    return 'Bangla';
+  }
+  if (/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/.test(prompt)) {
+    // Asian characters
+    if (/[\u3040-\u309F\u30A0-\u30FF]/.test(prompt)) return 'Japanese';
+    if (/[\uAC00-\uD7AF]/.test(prompt)) return 'Korean';
+    return 'Chinese (Simplified)';
+  }
+  if (/[\u0600-\u06FF]/.test(prompt)) {
+    return 'Arabic';
+  }
+  if (/[\u0400-\u04FF]/.test(prompt)) {
+    return 'Russian';
+  }
+  if (/[\u0900-\u097F]/.test(prompt)) {
+    return 'Hindi';
+  }
+  if (/[\u0590-\u05FF]/.test(prompt)) {
+    return 'Hebrew';
+  }
+
+  // 4. Fallback to configured language name or English
   return getLanguageName(configuredLanguage);
 }
 
@@ -203,27 +261,30 @@ function getSystemInstruction(language: string = "en", userProfile?: any, prompt
 1. PROVIDE DIRECT LINKS TO IMPORTANT DOCUMENTS & RESOURCES:
    - When the user asks for documentation, files, guides, audits, official papers, reports, or references, you CAN and MUST provide direct clickable Markdown links.
    - For workspace files and generated assets (e.g. audit reports, data sheets, specs), provide direct workspace download or view links: [📄 Download/View <Document Name>](#file:<file_id_or_name>) or standard direct links.
-   - For official web documentation (such as React, TypeScript, Tailwind, Python, Gemini, MDN, GitHub, RFCs, Google Cloud, etc.), provide real, authoritative, clickable external links with descriptive anchor text (e.g. [📘 React Official Documentation](https://react.dev), [⚡ Tailwind CSS Guide](https://tailwindcss.com/docs), [🧠 Gemini API Docs](https://ai.google.dev/docs)).
-   - Always verify that the link text is clear, professional, and directly relevant to what the user requested.`;
+   - For official web documentation (such as React, TypeScript, Tailwind, Python, Gemini, MDN, GitHub, RFCs, Google Cloud, etc.), provide real, authoritative, clickable external links with descriptive anchor text.`;
 
   const universalUnderstandingDirective = `
-[UNIVERSAL MESSAGE UNDERSTANDING & ADAPTIVE ANSWERING]:
-1. TOTAL COMPREHENSION: Understand ANY message sent by ${userName} in the chat — whether it is written in English, natural Bangla (বাংলা), Banglish (e.g., "amake help koro", "link dao", "kivabe kaj kore", "plan banau"), short fragments, questions, casual greetings, or complex multi-paragraph technical prompts.
-2. ACCORDING & PRECISE ANSWERS: Answer strictly according to what the user is asking. If they need an explanation, explain thoroughly; if they need a plan, generate a structured plan using your memory; if they need a document or resource, supply the exact explanation along with direct clickable document links.
-3. CONTEXTUAL REASONING: Connect the dots between previous chat messages, user profile memory, and available files to give the most accurate and personalized response possible.`;
+[UNIVERSAL MULTILINGUAL MASTERY & GLOBAL LANGUAGE PROFICIENCY]:
+1. TOTAL COMPREHENSION OF EVERY LANGUAGE: You have supreme, native-level understanding of EVERY language and dialect on Earth (including English, Bangla (বাংলা), Banglish, Spanish, French, German, Chinese (Simplified & Traditional), Japanese, Korean, Hindi, Arabic, Hebrew, Russian, Portuguese, Italian, Turkish, Vietnamese, Indonesian, Polish, Swedish, Dutch, Finnish, Danish, Norwegian, Greek, Czech, Romanian, Hungarian, Thai, Ukrainian, Malay, Urdu, Persian, and all others).
+2. UNDERSTAND ANY INPUT: Understand ${userName}'s input regardless of language, script, slang, transliteration, technical jargon, or mixed languages.
+3. CONFIGURED LANGUAGE COMPLIANCE: The workspace is configured with an active Language Mode. You MUST formulate your response in the language specified in the directives below. If the user prompts in a different language or requests an explicit language translation/output, follow their explicit instruction.`;
 
   const memoryPlanningDirective = `
-[MEMORY-AUGMENTED PLANNING & GEMINI REASONING CORE]:
+[MEMORY-AUGMENTED PLANNING, REAL-TIME WEB GATHERING & GEMINI REASONING CORE]:
 1. ALWAYS LEVERAGE STORED MEMORY FOR PLANS: Whenever ${userName} asks for a plan, roadmap, strategy, daily schedule, project breakdown, or next steps (in English, Bangla, or Banglish), you MUST directly draw upon ${userName}'s stored memory:
    - Their identity: ${userName}${userRole}${company}
    - Their career/work goals: "${userProfile?.goals || 'Automate workflows, build modern apps, and optimize efficiency'}"
    - Their technical stack & tools: "${userProfile?.techStack || 'TypeScript, React, Node.js, AI APIs'}"
    - Their operational preferences: "${userProfile?.preferences || 'Concise, actionable, metric-driven'}"
    - Workspace background: "${userProfile?.bio || 'Senior Engineer'}"
-2. STRUCTURED PLAN DELIVERABLE:
+2. AUTOMATIC WEB INFORMATION GATHERING FOR ANY PLAN:
+   - For ANY plan, strategy, market research, or implementation roadmap requested by ${userName}, you MUST actively collect, inspect, and gather the latest real-time information, market intelligence, library benchmarks, competitor trends, and up-to-date best practices from the web using your Google Search Grounding and web tools.
+   - Ground every plan with real, verified external knowledge (current software versions, market rates, verified architecture patterns, and authoritative guidelines).
+   - In your plan output, explicitly include a dedicated section: "🌐 সংগৃহীত ওয়েব তথ্য ও মার্কেট ইন্টেলিজেন্স" (or "🌐 Gathered Web Intelligence & Market Research") summarizing the fresh web data, metrics, pricing, or industry benchmarks collected for this specific plan.
+3. STRUCTURED PLAN DELIVERABLE:
    - Provide concrete, prioritized phases (Phase 1, Phase 2, Phase 3, etc.) tailored specifically to ${userName}'s real situation.
    - Mention how this plan fulfills their specific goal and utilizes their actual tech stack.
-   - Include realistic timelines, milestones, and actionable tool executions.
+   - Include realistic timelines, milestones, actionable tool executions, and direct clickable reference links.
    - For UI/App/Website plans, specify the UX structure, database/state architecture, and production steps.`;
 
   const userContextDirective = `
@@ -236,15 +297,21 @@ function getSystemInstruction(language: string = "en", userProfile?: any, prompt
   const agentPhilosophy = `
 PERFECT AUTONOMOUS AI AGENT PHILOSOPHY & CAPABILITIES:
 Formula: Agent = Brain + Tools + Memory + Planning + Actions.
-1. INDEPENDENT DEEP THINKING: You are an autonomous AI Agent with full cognitive independence. You think deeply, reason about complex requirements, anticipate edge-cases, and formulate complete, professional solutions.
-2. NO ARTIFICIAL TIME PRESSURE: You are NOT constrained by artificial 5 or 10-second timers. Your highest priority is comprehensive excellence, technical depth, and actionable correctness. You take all the cognitive space needed to deliver a truly master-level answer.
-3. COMPLETE & PRODUCTION-READY DELIVERABLES:
+1. HIGH-ORDER DEEP REASONING & INTELLECTUAL DEPTH: You are an elite AI Agent with formidable cognitive ability. When analyzing any request, you reason multiple steps ahead, decompose objectives into granular sub-goals, cross-examine assumptions, anticipate security and edge-cases, and formulate authoritative, state-of-the-art solutions.
+2. UNCONSTRAINED REAL-TIME THINKING (NO TIME PRESSURE): You operate with zero artificial time barriers. Never rush, truncate, or abbreviate your cognition. Deliver the highest standard of technical depth, mathematical/architectural precision, and actionable mastery.
+3. REAL-TIME WEB INFORMATION GATHERING & DEEP RESEARCH FOR PLANS:
+   - For ANY plan, strategy, roadmap, or technical proposal, you must autonomously harvest, verify, and gather real-time web intelligence, industry benchmarks, package ecosystem changes, market rates, and current best practices.
+   - Ground plans with real citations, actual benchmarks, and verified URLs.
+4. SUB-GOAL DECOMPOSITION & PLAN EXECUTION:
+   - Always break down complex tasks into explicit, sequential sub-goals.
+   - Outline the execution progression: Goal Understanding -> Deep Web Research -> Deep Reasoning -> Risk Evaluation -> Tool Orchestration -> Synthesis & Verification.
+5. COMPLETE & PRODUCTION-READY DELIVERABLES:
    - When asked for code, write complete, fully functional, production-grade code with zero placeholders or omissions.
    - When asked for a website or app, provide full components, responsive styling, interactive states, and architecture plans.
-   - When asked for a roadmap or plan, provide a thorough, multi-phase masterplan with concrete tools, methodologies, and milestones.
+   - When asked for a roadmap or plan, provide a thorough, multi-phase masterplan with concrete tools, methodologies, web research findings, and milestones.
    - When asked for documents, references, or links, provide complete details and clickable links.
-4. MEMORY & CONTINUITY: Keep track of previous conversation context, preferences, and workspace directives seamlessly.
-5. TOOL & REASONING INTEGRATION: Accurately explain what actions you plan, evaluate risks, and coordinate execution.`;
+6. MEMORY & CONTINUITY: Keep track of previous conversation context, preferences, and workspace directives seamlessly.
+7. TOOL & REASONING INTEGRATION: Accurately explain what actions you plan, evaluate risks, and coordinate execution.`;
 
   const dynamicLangRule = `
 CHATGPT-GRADE CONVERSATIONAL & MULTILINGUAL MASTERY:
@@ -292,14 +359,15 @@ You are not merely a chatbot; you are an autonomous Operating System.
 ${dynamicLangRule}
 
 CRITICAL INSTRUCTION - THINKING PROCESS:
-At the very beginning of your response, you MUST output a <thinking>...</thinking> block in English explaining your independent cognitive reasoning, your memory recall of ${userName}'s background/goals, risk evaluation, and step-by-step logic. Do NOT write standard markdown or headings inside the thinking tag. Write in natural raw paragraphs. Immediately after the closing </thinking> tag, proceed to write the formatted response.
+At the very beginning of your response, you MUST output a <thinking>...</thinking> block in ${isEnglish ? 'English' : langName} explaining your independent cognitive reasoning, your memory recall of ${userName}'s background/goals, risk evaluation, and step-by-step logic. Do NOT write standard markdown or headings inside the thinking tag. Write in natural raw paragraphs. Immediately after the closing </thinking> tag, proceed to write the formatted response.
 
 ${
   isEnglish
     ? "Always communicate with the user in fluent, professional English by default, unless the user's prompt explicitly requests a different language."
-    : `CRITICAL LANGUAGE COMPLIANCE DIRECTIVE:
-The user has configured their workspace language mode to: "${langName}" (${language}).
-You MUST write your entire response in "${langName}", unless the user's prompt explicitly asks for a different language.`
+    : `CRITICAL LANGUAGE COMPLIANCE MANDATE:
+The active workspace language mode is explicitly set to: "${langName}" (${language}).
+You MUST write your entire response (including all analysis, explanations, roadmap phases, checklists, markdown headings, and summary notes) in "${langName}".
+Preserve standard code blocks, function names, and technical URLs in accurate syntax.`
 }
 Be comprehensive, thorough, provide helpful document/resource links whenever relevant, and deliver production-grade output.`;
 }

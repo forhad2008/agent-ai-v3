@@ -22,6 +22,35 @@ export type ToolCategory =
 export interface PlanStep {
   title: string;
   status: 'completed' | 'running' | 'pending';
+  description?: string;
+  subGoals?: string[];
+  durationMs?: number;
+}
+
+export interface ThoughtProcessRecord {
+  id: string;
+  timestamp: string;
+  query: string;
+  language: string;
+  status: 'reasoning' | 'planning' | 'executing' | 'completed' | 'idle';
+  phase: 'Goal Understanding' | 'Deep Reasoning' | 'Risk Evaluation' | 'Tool Orchestration' | 'Synthesis & Verification';
+  reasoningNotes: string[];
+  subGoals: { id: string; title: string; status: 'completed' | 'in_progress' | 'pending' }[];
+  planSteps: PlanStep[];
+  toolsUsed: string[];
+  confidenceScore: number;
+  thinkingRaw?: string;
+  memoryRecalled?: {
+    user: string;
+    role: string;
+    goals: string;
+    techStack: string;
+  };
+  webInformationGathered?: {
+    searchQueries: string[];
+    sources: { title: string; url: string; domain?: string }[];
+    summaryPoints?: string[];
+  };
 }
 
 export interface ToolExecutionRecord {
@@ -31,6 +60,32 @@ export interface ToolExecutionRecord {
   status: 'success' | 'running' | 'failed' | 'idle';
   description: string;
   timestamp?: string;
+}
+
+export type NotificationType = 
+  | 'task_started' 
+  | 'task_completed' 
+  | 'task_progress' 
+  | 'web_gathering' 
+  | 'tool_executed' 
+  | 'approval_required' 
+  | 'alarm_alert' 
+  | 'system';
+
+export interface AgentNotification {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  timestamp: string;
+  isoTime: string;
+  taskId?: string;
+  taskTitle?: string;
+  read: boolean;
+  webSources?: { title: string; url: string; domain?: string }[];
+  toolName?: string;
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  resultSummary?: string;
 }
 
 export interface TaskItem {
@@ -47,6 +102,15 @@ export interface TaskItem {
   result?: string;
   planSteps?: PlanStep[];
   error?: string;
+  groundingMetadata?: {
+    searchQueries?: string[];
+    sources?: { title: string; url: string; domain?: string }[];
+  };
+  webInformationGathered?: {
+    searchQueries: string[];
+    sources: { title: string; url: string; domain?: string }[];
+    summaryPoints?: string[];
+  };
 }
 
 export interface ToolItem {

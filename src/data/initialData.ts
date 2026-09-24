@@ -1,4 +1,57 @@
-import { TaskItem, ToolItem, FileItem, ApprovalRequest, ActivityItem, MessageItem } from '../types';
+import { TaskItem, ToolItem, FileItem, ApprovalRequest, ActivityItem, MessageItem, AgentNotification } from '../types';
+
+export const INITIAL_NOTIFICATIONS: AgentNotification[] = [
+  {
+    id: 'notif_001',
+    type: 'task_completed',
+    title: 'Task Completed: Website Audit Report',
+    message: 'Agent-sigma08 completed deep SEO and speed performance analysis with 92/100 score.',
+    timestamp: '2m ago',
+    isoTime: new Date(Date.now() - 120000).toISOString(),
+    taskId: 'task_001',
+    taskTitle: 'Audit website performance & SEO',
+    read: false,
+    priority: 'normal',
+    resultSummary: 'Scored 92/100. Recommendations saved to workspace-audit.md.',
+  },
+  {
+    id: 'notif_002',
+    type: 'web_gathering',
+    title: 'Web Information Gathered: 2026 AI Agent Standards',
+    message: 'Collected and verified 3 authoritative sources for autonomous workflow planning.',
+    timestamp: '15m ago',
+    isoTime: new Date(Date.now() - 900000).toISOString(),
+    read: false,
+    priority: 'normal',
+    webSources: [
+      { title: 'Google Gemini 2026 Developer Guide', url: 'https://ai.google.dev', domain: 'ai.google.dev' },
+      { title: 'MDN Web Specifications', url: 'https://developer.mozilla.org', domain: 'developer.mozilla.org' },
+      { title: 'Modern Agentic Architecture Benchmarks', url: 'https://github.com', domain: 'github.com' },
+    ],
+  },
+  {
+    id: 'notif_003',
+    type: 'task_started',
+    title: 'Real Working: Autonomous Task Execution',
+    message: 'Agent-sigma08 actively executing customer reply synthesis and validation pipeline.',
+    timestamp: '34m ago',
+    isoTime: new Date(Date.now() - 2040000).toISOString(),
+    taskId: 'task_002',
+    taskTitle: 'Draft reply to customer message',
+    read: false,
+    priority: 'normal',
+  },
+  {
+    id: 'notif_004',
+    type: 'system',
+    title: 'Agent-sigma08 Operational',
+    message: 'System online with unconstrained Gemini reasoning core & real-time search grounding.',
+    timestamp: '1h ago',
+    isoTime: new Date(Date.now() - 3600000).toISOString(),
+    read: true,
+    priority: 'low',
+  },
+];
 
 export const INITIAL_TOOLS: ToolItem[] = [
   // FILE_TOOLS
@@ -318,11 +371,30 @@ export const INITIAL_TASKS: TaskItem[] = [
     approvalStatus: 'None',
     result: 'Audit completed. Score 92/100. Generated "website-audit.md" with prioritized recommendations.',
     planSteps: [
-      { title: 'Understanding request', status: 'completed' },
-      { title: 'Checking available files', status: 'completed' },
-      { title: 'Analyzing project assets', status: 'completed' },
-      { title: 'Preparing report & file', status: 'completed' },
+      { title: '🌐 লাইভ ওয়েব বেঞ্চমার্ক ও অডিট ফ্রেমওয়ার্ক সংগ্রহ', status: 'completed' },
+      { title: 'Understanding request & goals', status: 'completed' },
+      { title: 'Checking available project assets', status: 'completed' },
+      { title: 'Analyzing web vitals against live standards', status: 'completed' },
+      { title: 'Preparing report & deliverables', status: 'completed' },
     ],
+    groundingMetadata: {
+      searchQueries: ['Core Web Vitals 2026 performance benchmarks', 'Web accessibility WCAG 2.1 guidelines'],
+      sources: [
+        { title: 'Web.dev Performance Metrics', url: 'https://web.dev/vitals/', domain: 'web.dev' },
+        { title: 'W3C Accessibility Standards', url: 'https://www.w3.org/WAI/standards-guidelines/wcag/', domain: 'w3.org' }
+      ]
+    },
+    webInformationGathered: {
+      searchQueries: ['Core Web Vitals 2026 performance benchmarks', 'Web accessibility WCAG 2.1 guidelines'],
+      sources: [
+        { title: 'Web.dev Performance Metrics', url: 'https://web.dev/vitals/', domain: 'web.dev' },
+        { title: 'W3C Accessibility Standards', url: 'https://www.w3.org/WAI/standards-guidelines/wcag/', domain: 'w3.org' }
+      ],
+      summaryPoints: [
+        'Collected LCP and INP benchmark requirements from web.dev',
+        'Verified WCAG 2.1 color contrast compliance rules'
+      ]
+    }
   },
   {
     id: 'task_002',
@@ -355,6 +427,7 @@ export const INITIAL_TASKS: TaskItem[] = [
     requiredTools: ['Analyze Code', 'Debug Code'],
     approvalStatus: 'None',
     planSteps: [
+      { title: '🌐 সার্চিং Node.js async/await best practices', status: 'completed' },
       { title: 'Scanning AST tree', status: 'completed' },
       { title: 'Checking error handling', status: 'completed' },
       { title: 'Drafting refactored code', status: 'running' },
@@ -374,10 +447,29 @@ export const INITIAL_TASKS: TaskItem[] = [
     approvalStatus: 'None',
     result: 'Researched 12 leading design systems. Highlighted dark neo-minimalism, high-contrast serif/sans pairings, and AI copilot integrations.',
     planSteps: [
+      { title: '🌐 লাইভ ওয়েব সার্চ ও ট্রেন্ড ইন্টেলিজেন্স সংগ্রহ', status: 'completed' },
       { title: 'Querying design sources', status: 'completed' },
       { title: 'Extracting key takeaways', status: 'completed' },
       { title: 'Formatting research summary', status: 'completed' },
     ],
+    groundingMetadata: {
+      searchQueries: ['Modern portfolio design trends 2026', 'Awwwards site of the day typography'],
+      sources: [
+        { title: 'Awwwards Design Trends', url: 'https://www.awwwards.com', domain: 'awwwards.com' },
+        { title: 'Godly - Curated Web Design', url: 'https://godly.website', domain: 'godly.website' }
+      ]
+    },
+    webInformationGathered: {
+      searchQueries: ['Modern portfolio design trends 2026', 'Awwwards site of the day typography'],
+      sources: [
+        { title: 'Awwwards Design Trends', url: 'https://www.awwwards.com', domain: 'awwwards.com' },
+        { title: 'Godly - Curated Web Design', url: 'https://godly.website', domain: 'godly.website' }
+      ],
+      summaryPoints: [
+        'Collected trends from 12+ award-winning design portfolios',
+        'Gathered interactive micro-interaction and spring physics standards'
+      ]
+    }
   },
   {
     id: 'task_005',
@@ -391,10 +483,17 @@ export const INITIAL_TASKS: TaskItem[] = [
     requiredTools: ['Create Product Description', 'Format Document'],
     approvalStatus: 'None',
     planSteps: [
+      { title: '🌐 মার্কেট কপিরাইটিং বেঞ্চমার্ক সংগ্রহ', status: 'completed' },
       { title: 'Analyzing target audience', status: 'completed' },
       { title: 'Structuring value propositions', status: 'running' },
       { title: 'Refining tone & call-to-actions', status: 'pending' },
     ],
+    groundingMetadata: {
+      searchQueries: ['High converting B2B SaaS product descriptions examples', 'AI agent landing page copy'],
+      sources: [
+        { title: 'SaaS Copywriting Playbook', url: 'https://copyhackers.com', domain: 'copyhackers.com' }
+      ]
+    }
   },
 ];
 

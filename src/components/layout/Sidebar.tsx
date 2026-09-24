@@ -14,6 +14,7 @@ import {
   Cpu,
   Palette,
   Sparkles,
+  Brain,
 } from 'lucide-react';
 import { useAgent, ActiveView } from '../../context/AgentContext';
 
@@ -32,6 +33,7 @@ export const Sidebar: React.FC = () => {
   }[] = [
     { id: 'dashboard', label: currentLanguage?.labels?.dashboardTitle || 'Home', icon: Home },
     { id: 'profile', label: 'Agent OS', icon: Cpu },
+    { id: 'thought-process', label: 'Thought Process', icon: Brain },
     { id: 'chat', label: currentLanguage?.labels?.chatTitle || 'Chat', icon: MessageSquare },
     { id: 'image-studio', label: 'Image Studio', icon: Palette },
     { id: 'ailab', label: 'AI Lab', icon: FlaskConical },

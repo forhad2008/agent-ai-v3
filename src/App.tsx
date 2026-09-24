@@ -15,8 +15,11 @@ import { UserProfileView } from './components/profile/UserProfileView';
 import { AILabView } from './components/ailab/AILabView';
 import { ImageStudioView } from './components/image-studio/ImageStudioView';
 import { PerfectAgentView } from './components/perfect-agent/PerfectAgentView';
+import { ThoughtProcessView } from './components/thought-process/ThoughtProcessView';
 import { LanguageModeModal } from './components/common/LanguageModeModal';
 import { InstallGuideModal } from './components/common/InstallGuideModal';
+import { NotificationCenterModal } from './components/notifications/NotificationCenterModal';
+import { NotificationToast } from './components/notifications/NotificationToast';
 import { sound } from './services/sound';
 
 const MainLayout: React.FC = () => {
@@ -42,6 +45,8 @@ const MainLayout: React.FC = () => {
         return <DashboardView />;
       case 'perfect-agent':
         return <PerfectAgentView />;
+      case 'thought-process':
+        return <ThoughtProcessView />;
       case 'profile':
         return <UserProfileView />;
       case 'chat':
@@ -127,6 +132,8 @@ const MainLayout: React.FC = () => {
       {/* Modals & alert portals */}
       <LanguageModeModal />
       <InstallGuideModal />
+      <NotificationCenterModal />
+      <NotificationToast />
 
       {/* Alarm ringing popup overlay */}
       {triggeredAlarm && (

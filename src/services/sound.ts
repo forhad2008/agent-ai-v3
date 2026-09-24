@@ -333,11 +333,30 @@ class SoundService {
   }
 
   // General UI sound dispatcher
-  public play(type: 'click' | 'success' | 'send' | 'receive' | 'error' = 'click') {
+  public play(type: 'click' | 'success' | 'send' | 'receive' | 'error' | 'delete' | 'info' = 'click') {
     if (type === 'send') {
       this.playSendSound();
     } else if (type === 'receive' || type === 'success') {
       this.playReceiveSound();
+    } else if (type === 'delete') {
+      // Soft digital deletion sound
+      const ctx = this.getAudioContext();
+      if (!ctx) return;
+      try {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(320, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(140, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.04, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.08);
+      } catch (e) {
+        // silent
+      }
     } else {
       // Subtle tactile click
       const ctx = this.getAudioContext();

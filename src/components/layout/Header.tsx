@@ -21,6 +21,11 @@ import {
   Plus,
   Palette,
   Check,
+  Trash2,
+  CheckCircle2,
+  ShieldAlert,
+  Info,
+  CheckCheck,
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
 import { TECH_LANGUAGES, TechLanguage } from '../../data/languages';
@@ -57,9 +62,18 @@ export const Header: React.FC = () => {
     userProfile,
     searchQuery,
     setSearchQuery,
+    notifications,
+    unreadNotificationCount,
+    deleteNotification,
+    clearAllNotifications,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    setIsNotificationCenterOpen,
   } = useAgent();
 
   const [showNotifications, setShowNotifications] = useState(false);
+  const notificationDropdownRef = useRef<HTMLDivElement>(null);
+  const notificationButtonRef = useRef<HTMLButtonElement>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [langSearch, setLangSearch] = useState('');
@@ -88,7 +102,7 @@ export const Header: React.FC = () => {
     });
   }, [langSearch, selectedLangRegion]);
 
-  // Close search and language dropdowns on click outside
+  // Close search, language, and notification dropdowns on click outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target as Node)) {
@@ -101,6 +115,14 @@ export const Header: React.FC = () => {
         !languageButtonRef.current.contains(e.target as Node)
       ) {
         setIsLanguageDropdownOpen(false);
+      }
+      if (
+        notificationDropdownRef.current &&
+        !notificationDropdownRef.current.contains(e.target as Node) &&
+        notificationButtonRef.current &&
+        !notificationButtonRef.current.contains(e.target as Node)
+      ) {
+        setShowNotifications(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -698,33 +720,41 @@ export const Header: React.FC = () => {
             relative
             flex
             items-center
-            gap-1.5
-            sm:gap-2
+            gap-2
+            sm:gap-2.5
             rounded-full
-            neumorph-btn-secondary
-            px-3
-            sm:px-3.5
+            bg-gradient-to-r
+            from-[#1C080E]/95
+            via-[#140509]/95
+            to-[#260A14]/95
+            px-3.5
+            sm:px-4
             py-1.5
             text-xs
             font-semibold
             text-white
             cursor-pointer
             border
-            border-[#E50914]/30
-            hover:border-[#FF204E]/70
-            hover:shadow-[0_0_16px_rgba(229,9,20,0.4)]
+            border-[#FF204E]/40
+            hover:border-[#FF204E]
+            shadow-[0_2px_12px_rgba(0,0,0,0.6),0_0_14px_rgba(255,32,78,0.22)]
+            hover:shadow-[0_0_22px_rgba(255,32,78,0.55)]
             active:scale-95
             transition-all
             duration-200
+            backdrop-blur-md
           "
         >
-          <Globe className="h-3.5 w-3.5 text-[#FF204E] shrink-0 transition-transform duration-300 group-hover:rotate-45 drop-shadow-[0_0_8px_rgba(255,32,78,0.85)] animate-pulse" />
+          <div className="relative flex items-center justify-center">
+            <Globe className="h-3.5 w-3.5 text-[#FF204E] shrink-0 transition-transform duration-300 group-hover:rotate-45 drop-shadow-[0_0_8px_rgba(255,32,78,0.9)]" />
+            <span className="absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-emerald-400 ring-2 ring-[#140509] animate-pulse" />
+          </div>
           <span className="font-semibold text-xs text-white tracking-tight flex items-center gap-1.5 select-none transition-colors">
             <span className="text-sm leading-none drop-shadow-sm transform transition-transform group-hover:scale-110">{currentLanguage.flag}</span>
-            <span className="truncate max-w-[80px] sm:max-w-[120px] font-bold text-white group-hover:text-[#FF204E] transition-colors">
+            <span className="truncate max-w-[85px] sm:max-w-[130px] font-extrabold tracking-wide text-white group-hover:text-[#FF4D6D] transition-colors drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">
               {currentLanguage.name}
             </span>
-            <span className="hidden md:inline-flex text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#FF204E]/15 text-[#FF204E] border border-[#FF204E]/30 uppercase tracking-wider">
+            <span className="hidden md:inline-flex text-[9px] font-mono font-bold px-1.5 py-0.5 rounded bg-[#FF204E]/20 text-[#FF4D6D] border border-[#FF204E]/40 uppercase tracking-wider shadow-[0_0_8px_rgba(255,32,78,0.25)]">
               {currentLanguage.countryCode}
             </span>
           </span>
@@ -904,7 +934,11 @@ export const Header: React.FC = () => {
         {/* Notification Bell - Neumorphic Raised Circle Button */}
         <div className="relative">
           <button
-            onClick={() => setShowNotifications(!showNotifications)}
+            ref={notificationButtonRef}
+            onClick={() => {
+              setShowNotifications(!showNotifications);
+              sound.play('click');
+            }}
             className="
               relative
               flex
@@ -915,35 +949,181 @@ export const Header: React.FC = () => {
               neumorph-circle
               text-white/90
               cursor-pointer
+              transition-transform
+              active:scale-95
             "
-            title="Notifications"
+            title="Agent Notifications & Live Status"
           >
             <Bell className="h-4.5 w-4.5 text-[#FF204E]" />
-            <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full neumorph-badge-primary text-[10px] font-black text-white">
-              3
-            </span>
+            {unreadNotificationCount > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-4.5 min-w-[18px] px-1 items-center justify-center rounded-full neumorph-badge-primary text-[10px] font-black text-white shadow-[0_0_8px_rgba(255,32,78,0.8)] animate-pulse">
+                {unreadNotificationCount > 9 ? '9+' : unreadNotificationCount}
+              </span>
+            )}
           </button>
 
           {/* Notifications Dropdown Panel */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-72 rounded-2xl neumorph-card p-4 shadow-2xl z-50 text-xs space-y-3 animate-fadeIn">
-              <div className="flex items-center justify-between border-b border-[#E50914]/25 pb-2">
-                <span className="font-bold text-white">System Notifications</span>
-                <span className="text-[10px] text-[#FF204E] font-bold neumorph-badge px-2 py-0.5 rounded-full">3 New</span>
+            <div
+              ref={notificationDropdownRef}
+              className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl neumorph-card p-4 shadow-2xl z-50 text-xs space-y-3 animate-fadeIn border border-[#E50914]/25"
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-[#E50914]/25 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-white text-sm">Agent Notifications</span>
+                  {unreadNotificationCount > 0 && (
+                    <span className="text-[10px] text-[#FF204E] font-bold neumorph-badge px-2 py-0.5 rounded-full">
+                      {unreadNotificationCount} New
+                    </span>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {notifications.length > 0 && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markAllNotificationsAsRead();
+                          sound.play('click');
+                        }}
+                        className="text-[10px] text-[#94A3B8] hover:text-white px-2 py-1 rounded bg-white/5 hover:bg-white/10 transition-colors flex items-center gap-1 cursor-pointer"
+                        title="Mark all as read"
+                      >
+                        <CheckCheck className="h-3 w-3 text-emerald-400" />
+                        <span>Read All</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm('Delete all notifications?')) {
+                            clearAllNotifications();
+                            sound.play('delete');
+                          }
+                        }}
+                        className="text-[10px] text-red-400 hover:text-red-300 px-2 py-1 rounded bg-red-500/10 hover:bg-red-500/20 transition-colors flex items-center gap-1 cursor-pointer"
+                        title="Delete all notifications"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        <span>Clear</span>
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="space-y-2">
-                <div className="p-2.5 rounded-xl neumorph-inset hover:border-[#FF204E]/50 transition-all cursor-pointer">
-                  <div className="font-semibold text-white">Research Agent</div>
-                  <div className="text-[10px] text-[#94A3B8]">Completed web research task • 2m ago</div>
-                </div>
-                <div className="p-2.5 rounded-xl neumorph-inset hover:border-[#FF204E]/50 transition-all cursor-pointer">
-                  <div className="font-semibold text-white">Task Flow Pipeline</div>
-                  <div className="text-[10px] text-[#94A3B8]">Automated workflow executed • 34m ago</div>
-                </div>
-                <div className="p-2.5 rounded-xl neumorph-inset hover:border-[#FF204E]/50 transition-all cursor-pointer">
-                  <div className="font-semibold text-white">Agent-sigma08 Ready</div>
-                  <div className="text-[10px] text-[#94A3B8]">System running smoothly v3.8.0</div>
-                </div>
+
+              {/* Notification Items List */}
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                {notifications.length === 0 ? (
+                  <div className="py-8 text-center text-[#94A3B8]">
+                    <Bell className="h-6 w-6 mx-auto mb-2 opacity-30" />
+                    <p className="font-semibold text-zinc-300">No notifications</p>
+                    <p className="text-[11px] text-[#94A3B8] mt-0.5">
+                      Working states and completed tasks will appear here.
+                    </p>
+                  </div>
+                ) : (
+                  notifications.slice(0, 5).map((notif) => {
+                    const isWorking = notif.type === 'task_started';
+                    const isCompleted = notif.type === 'task_completed';
+                    const isWeb = notif.type === 'web_gathering';
+
+                    return (
+                      <div
+                        key={notif.id}
+                        onClick={() => {
+                          markNotificationAsRead(notif.id);
+                          if (notif.taskId) {
+                            const t = tasks.find((item) => item.id === notif.taskId);
+                            if (t) setSelectedTask(t);
+                            setActiveView('tasks');
+                            setShowNotifications(false);
+                          } else {
+                            setIsNotificationCenterOpen(true);
+                            setShowNotifications(false);
+                          }
+                          sound.play('click');
+                        }}
+                        className={`group relative p-3 rounded-xl transition-all cursor-pointer border ${
+                          notif.read
+                            ? 'neumorph-inset bg-black/30 border-white/5 hover:border-[#FF204E]/30'
+                            : 'bg-gradient-to-r from-[#FF204E]/10 to-transparent border-[#FF204E]/40 hover:border-[#FF204E]/70 shadow-[0_0_10px_rgba(255,32,78,0.1)]'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span
+                              className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md ${
+                                isWorking
+                                  ? 'bg-[#FF204E]/20 text-[#FF204E]'
+                                  : isCompleted
+                                  ? 'bg-emerald-500/20 text-emerald-400'
+                                  : isWeb
+                                  ? 'bg-cyan-500/20 text-cyan-300'
+                                  : 'bg-blue-500/20 text-blue-300'
+                              }`}
+                            >
+                              {isWorking
+                                ? 'Real Working'
+                                : isCompleted
+                                ? 'Completed'
+                                : isWeb
+                                ? 'Web Intel'
+                                : 'System'}
+                            </span>
+                            <span className="text-[10px] text-[#94A3B8]">{notif.timestamp}</span>
+                          </div>
+
+                          {/* Delete Single Notification */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteNotification(notif.id);
+                              sound.play('delete');
+                            }}
+                            className="p-1 rounded text-[#94A3B8] hover:text-red-400 hover:bg-red-500/20 transition-all cursor-pointer opacity-70 group-hover:opacity-100"
+                            title="Delete this notification"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+
+                        <div className="font-semibold text-white mt-1 line-clamp-1">
+                          {notif.title}
+                        </div>
+                        <div className="text-[11px] text-[#94A3B8] line-clamp-2 mt-0.5 leading-relaxed">
+                          {notif.message}
+                        </div>
+
+                        {notif.webSources && notif.webSources.length > 0 && (
+                          <div className="mt-1 text-[10px] text-cyan-300 flex items-center gap-1">
+                            <Globe className="h-3 w-3" />
+                            <span>{notif.webSources.length} Live Web Sources Gathered</span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Dropdown Footer */}
+              <div className="pt-2 border-t border-[#E50914]/20 flex items-center justify-between">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNotifications(false);
+                    setIsNotificationCenterOpen(true);
+                    sound.play('click');
+                  }}
+                  className="w-full py-2 px-3 rounded-xl bg-[#FF204E]/15 hover:bg-[#FF204E]/25 text-[#FF204E] font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-[#FF204E]/30"
+                >
+                  <span>Open Full Notification Hub</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
               </div>
             </div>
           )}

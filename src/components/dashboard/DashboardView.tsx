@@ -28,6 +28,7 @@ import {
   Square,
   Volume2,
   ExternalLink,
+  Brain,
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
 import { sound } from '../../services/sound';
@@ -259,7 +260,7 @@ export const DashboardView: React.FC = () => {
           </button>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           
           {/* Card 1: AI Chat */}
           <div
@@ -270,7 +271,7 @@ export const DashboardView: React.FC = () => {
               <MessageSquare className="h-5 w-5" />
             </div>
             <h4 className="text-xs font-bold text-white leading-tight">AI Chat</h4>
-            <p className="text-[10px] text-white/50 mt-1 leading-snug">Start a new conversation</p>
+            <p className="text-[10px] text-white/50 mt-1 leading-snug">Start conversation</p>
             <div className="mt-3 flex justify-end">
               <div className="flex h-7 w-7 items-center justify-center rounded-full neumorph-btn-primary group-hover:scale-110 transition-transform">
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -278,7 +279,24 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 2: Create Content */}
+          {/* Card 2: Thought Process */}
+          <div
+            onClick={() => setActiveView('thought-process')}
+            className="cursor-pointer group relative overflow-hidden rounded-2xl neumorph-card p-4 hover:border-[#FF204E] border border-[#FF204E]/30 bg-gradient-to-b from-[#200508]/40 to-transparent"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl neumorph-btn-inset text-[#FF204E] mb-3">
+              <Brain className="h-5 w-5 animate-pulse" />
+            </div>
+            <h4 className="text-xs font-bold text-white leading-tight">Thought Process</h4>
+            <p className="text-[10px] text-white/50 mt-1 leading-snug">Real-time reasoning & plans</p>
+            <div className="mt-3 flex justify-end">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full neumorph-btn-primary group-hover:scale-110 transition-transform">
+                <ArrowRight className="h-3.5 w-3.5" />
+              </div>
+            </div>
+          </div>
+
+          {/* Card 3: Create Content */}
           <div
             onClick={() => setActiveView('chat')}
             className="cursor-pointer group relative overflow-hidden rounded-2xl neumorph-card p-4 hover:border-[#FF204E]"
@@ -287,7 +305,7 @@ export const DashboardView: React.FC = () => {
               <FileText className="h-5 w-5" />
             </div>
             <h4 className="text-xs font-bold text-white leading-tight">Create Content</h4>
-            <p className="text-[10px] text-white/50 mt-1 leading-snug">Write, generate, edit</p>
+            <p className="text-[10px] text-white/50 mt-1 leading-snug">Write & generate</p>
             <div className="mt-3 flex justify-end">
               <div className="flex h-7 w-7 items-center justify-center rounded-full neumorph-btn-primary group-hover:scale-110 transition-transform">
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -295,7 +313,7 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 3: Image Studio */}
+          {/* Card 4: Image Studio */}
           <div
             onClick={() => setActiveView('ailab')}
             className="cursor-pointer group relative overflow-hidden rounded-2xl neumorph-card p-4 hover:border-[#FF204E]"
@@ -304,7 +322,7 @@ export const DashboardView: React.FC = () => {
               <ImageIcon className="h-5 w-5" />
             </div>
             <h4 className="text-xs font-bold text-white leading-tight">Image Studio</h4>
-            <p className="text-[10px] text-white/50 mt-1 leading-snug">Create stunning images</p>
+            <p className="text-[10px] text-white/50 mt-1 leading-snug">Generate visuals</p>
             <div className="mt-3 flex justify-end">
               <div className="flex h-7 w-7 items-center justify-center rounded-full neumorph-btn-primary group-hover:scale-110 transition-transform">
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -312,7 +330,7 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 4: Automation */}
+          {/* Card 5: Automation */}
           <div
             onClick={() => setActiveView('automations')}
             className="cursor-pointer group relative overflow-hidden rounded-2xl neumorph-card p-4 hover:border-[#FF204E]"
@@ -321,7 +339,7 @@ export const DashboardView: React.FC = () => {
               <Settings className="h-5 w-5" />
             </div>
             <h4 className="text-xs font-bold text-white leading-tight">Automation</h4>
-            <p className="text-[10px] text-white/50 mt-1 leading-snug">Build workflows & save time</p>
+            <p className="text-[10px] text-white/50 mt-1 leading-snug">Build workflows</p>
             <div className="mt-3 flex justify-end">
               <div className="flex h-7 w-7 items-center justify-center rounded-full neumorph-btn-primary group-hover:scale-110 transition-transform">
                 <ArrowRight className="h-3.5 w-3.5" />
@@ -329,16 +347,16 @@ export const DashboardView: React.FC = () => {
             </div>
           </div>
 
-          {/* Card 5: Task Flow */}
+          {/* Card 6: Task Flow */}
           <div
             onClick={() => setActiveView('tasks')}
-            className="cursor-pointer group relative overflow-hidden rounded-2xl neumorph-card p-4 hover:border-[#FF204E] col-span-2 sm:col-span-1"
+            className="cursor-pointer group relative overflow-hidden rounded-2xl neumorph-card p-4 hover:border-[#FF204E]"
           >
             <div className="flex h-10 w-10 items-center justify-center rounded-xl neumorph-btn-inset text-[#FF204E] mb-3">
               <Zap className="h-5 w-5" />
             </div>
             <h4 className="text-xs font-bold text-white leading-tight">Task Flow</h4>
-            <p className="text-[10px] text-white/50 mt-1 leading-snug">Plan, track, execute</p>
+            <p className="text-[10px] text-white/50 mt-1 leading-snug">Plan & execute</p>
             <div className="mt-3 flex justify-end">
               <div className="flex h-7 w-7 items-center justify-center rounded-full neumorph-btn-primary group-hover:scale-110 transition-transform">
                 <ArrowRight className="h-3.5 w-3.5" />
