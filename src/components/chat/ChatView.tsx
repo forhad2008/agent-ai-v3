@@ -76,6 +76,8 @@ export const ChatView: React.FC = () => {
     startNewConversation,
     activePlan,
     files,
+    setSelectedFile,
+    setActiveView,
     settings,
     currentLanguage,
     t,
@@ -127,6 +129,8 @@ export const ChatView: React.FC = () => {
   }, []);
 
   const demoSuggestions = [
+    { title: settings.language === 'Bangla' ? '🧠 মেমরি ও জেমিনি ওয়ার্ক প্ল্যান' : '🧠 Memory & Gemini Work Plan', prompt: settings.language === 'Bangla' ? 'আমার মেমরি ও লক্ষ্য অনুযায়ী আমার কাজের একটি পূর্ণাঙ্গ প্ল্যান তৈরি করো' : 'Make a complete work plan for me using your memory and Gemini reasoning' },
+    { title: settings.language === 'Bangla' ? '📄 গুরুত্বপূর্ণ ডকুমেন্টস ও লিংক' : '📄 Important Documents & Links', prompt: settings.language === 'Bangla' ? 'আমার প্রজেক্টের গুরুত্বপূর্ণ ডকুমেন্টস এবং প্রয়োজনীয় রেফারেন্স লিংকগুলো পাঠাও' : 'Send me the links to my important project documents and reference guides' },
     { title: t.demoAnalyzeWebsite, prompt: t.demoAnalyzeWebsitePrompt },
     { title: t.demoCustomerReply, prompt: t.demoCustomerReplyPrompt },
     { title: t.demoProductDescription, prompt: t.demoProductDescriptionPrompt },
@@ -775,7 +779,57 @@ export const ChatView: React.FC = () => {
 
                       {/* Markdown formatted content */}
                       <div className="prose prose-invert prose-sm max-w-none text-slate-200">
-                        <ReactMarkdown>{msg.text}</ReactMarkdown>
+                        <ReactMarkdown
+                          components={{
+                            a: ({ href, children, ...props }) => {
+                              // Handle workspace file deep links e.g. #file:file_web_audit
+                              if (href?.startsWith('#file:')) {
+                                const targetIdentifier = href.replace('#file:', '').trim();
+                                const matchedFile = files.find(
+                                  (f) => f.id === targetIdentifier || f.name.toLowerCase() === targetIdentifier.toLowerCase()
+                                );
+
+                                return (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      if (matchedFile) {
+                                        setSelectedFile(matchedFile);
+                                        setActiveView('files');
+                                      } else {
+                                        setActiveView('files');
+                                      }
+                                    }}
+                                    className="inline-flex items-center gap-1.5 rounded-lg bg-[#FF204E]/15 hover:bg-[#FF204E]/25 border border-[#FF204E]/40 px-2.5 py-1 text-xs font-semibold text-[#FF204E] hover:text-[#ff4d73] transition-all cursor-pointer shadow-sm my-1"
+                                    title={matchedFile ? `Open workspace document: ${matchedFile.name}` : 'Open Workspace Files'}
+                                  >
+                                    <FileText className="h-3.5 w-3.5 shrink-0 text-[#FF204E]" />
+                                    <span>{children}</span>
+                                    <ExternalLink className="h-3 w-3 opacity-70 shrink-0" />
+                                  </button>
+                                );
+                              }
+
+                              // Standard external web link
+                              const isExternal = href?.startsWith('http://') || href?.startsWith('https://');
+                              return (
+                                <a
+                                  href={href}
+                                  target={isExternal ? '_blank' : undefined}
+                                  rel={isExternal ? 'noopener noreferrer' : undefined}
+                                  className="inline-flex items-center gap-1 text-[#FF204E] hover:text-[#ff4d73] underline underline-offset-4 decoration-[#FF204E]/40 hover:decoration-[#FF204E] font-medium transition-colors"
+                                  {...props}
+                                >
+                                  <span>{children}</span>
+                                  {isExternal && <ExternalLink className="h-3 w-3 inline-block shrink-0 opacity-80" />}
+                                </a>
+                              );
+                            },
+                          }}
+                        >
+                          {msg.text}
+                        </ReactMarkdown>
                       </div>
 
                       {/* Embedded Approval Card if waiting for user confirmation */}

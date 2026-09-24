@@ -541,7 +541,9 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         activeLang,
         attachedList,
         userProfile,
-        { ...settings, language: activeLang }
+        { ...settings, language: activeLang },
+        tasks,
+        files
       );
 
       // Final plan step update

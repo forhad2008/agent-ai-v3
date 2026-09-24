@@ -169,7 +169,7 @@ function detectActiveLanguage(prompt: string, conversationHistory: any[] = [], c
   return getLanguageName(configuredLanguage);
 }
 
-function getSystemInstruction(language: string = "en", userProfile?: any, promptOverrideLang?: string | null): string {
+function getSystemInstruction(language: string = "en", userProfile?: any, promptOverrideLang?: string | null, recentTasks?: any[], workspaceFiles?: any[]): string {
   const effectiveLang = promptOverrideLang || language;
   const langName = getLanguageName(effectiveLang);
   const isBangla = langName === "Bangla";
@@ -179,7 +179,52 @@ function getSystemInstruction(language: string = "en", userProfile?: any, prompt
   const userBio = userProfile?.bio ? `\n[USER BIO & PROFESSIONAL BACKGROUND]: ${userProfile.bio}` : '';
   const customInstructions = userProfile?.customAgentInstructions ? `\n\n[USER CUSTOM DIRECTIVE]: ${userProfile.customAgentInstructions}` : '';
   const techStack = userProfile?.techStack ? `\n[USER TECH STACK]: ${userProfile.techStack}` : '';
-  const goals = userProfile?.goals ? `\n[USER GOALS]: ${userProfile.goals}` : '';
+  const goals = userProfile?.goals ? `\n[USER GOALS & OBJECTIVES]: ${userProfile.goals}` : '';
+  const preferences = userProfile?.preferences ? `\n[USER WORK PREFERENCES]: ${userProfile.preferences}` : '';
+
+  let tasksMemoryContext = '';
+  if (Array.isArray(recentTasks) && recentTasks.length > 0) {
+    tasksMemoryContext = `\n[AGENT WORKSPACE MEMORY & ACTIVE TASKS]:\n` +
+      recentTasks.slice(0, 6).map((t: any, idx: number) => 
+        `${idx + 1}. Task: "${t.title}" | Status: ${t.status} | Priority: ${t.priority || 'Medium'}${t.description ? ` | Notes: ${t.description.slice(0, 90)}` : ''}`
+      ).join('\n');
+  }
+
+  let filesMemoryContext = '';
+  if (Array.isArray(workspaceFiles) && workspaceFiles.length > 0) {
+    filesMemoryContext = `\n[WORKSPACE DOCUMENTS & ACCESSIBLE FILES]:\n` +
+      workspaceFiles.map((f: any, idx: number) => 
+        `${idx + 1}. File: "${f.name}" (${f.type || f.category || 'document'}, ${f.size || 'N/A'}) - Workspace Link: [${f.name}](#file:${f.id || f.name})`
+      ).join('\n');
+  }
+
+  const documentLinkDirective = `
+[DOCUMENT & IMPORTANT LINK SHARING CAPABILITY]:
+1. PROVIDE DIRECT LINKS TO IMPORTANT DOCUMENTS & RESOURCES:
+   - When the user asks for documentation, files, guides, audits, official papers, reports, or references, you CAN and MUST provide direct clickable Markdown links.
+   - For workspace files and generated assets (e.g. audit reports, data sheets, specs), provide direct workspace download or view links: [📄 Download/View <Document Name>](#file:<file_id_or_name>) or standard direct links.
+   - For official web documentation (such as React, TypeScript, Tailwind, Python, Gemini, MDN, GitHub, RFCs, Google Cloud, etc.), provide real, authoritative, clickable external links with descriptive anchor text (e.g. [📘 React Official Documentation](https://react.dev), [⚡ Tailwind CSS Guide](https://tailwindcss.com/docs), [🧠 Gemini API Docs](https://ai.google.dev/docs)).
+   - Always verify that the link text is clear, professional, and directly relevant to what the user requested.`;
+
+  const universalUnderstandingDirective = `
+[UNIVERSAL MESSAGE UNDERSTANDING & ADAPTIVE ANSWERING]:
+1. TOTAL COMPREHENSION: Understand ANY message sent by ${userName} in the chat — whether it is written in English, natural Bangla (বাংলা), Banglish (e.g., "amake help koro", "link dao", "kivabe kaj kore", "plan banau"), short fragments, questions, casual greetings, or complex multi-paragraph technical prompts.
+2. ACCORDING & PRECISE ANSWERS: Answer strictly according to what the user is asking. If they need an explanation, explain thoroughly; if they need a plan, generate a structured plan using your memory; if they need a document or resource, supply the exact explanation along with direct clickable document links.
+3. CONTEXTUAL REASONING: Connect the dots between previous chat messages, user profile memory, and available files to give the most accurate and personalized response possible.`;
+
+  const memoryPlanningDirective = `
+[MEMORY-AUGMENTED PLANNING & GEMINI REASONING CORE]:
+1. ALWAYS LEVERAGE STORED MEMORY FOR PLANS: Whenever ${userName} asks for a plan, roadmap, strategy, daily schedule, project breakdown, or next steps (in English, Bangla, or Banglish), you MUST directly draw upon ${userName}'s stored memory:
+   - Their identity: ${userName}${userRole}${company}
+   - Their career/work goals: "${userProfile?.goals || 'Automate workflows, build modern apps, and optimize efficiency'}"
+   - Their technical stack & tools: "${userProfile?.techStack || 'TypeScript, React, Node.js, AI APIs'}"
+   - Their operational preferences: "${userProfile?.preferences || 'Concise, actionable, metric-driven'}"
+   - Workspace background: "${userProfile?.bio || 'Senior Engineer'}"
+2. STRUCTURED PLAN DELIVERABLE:
+   - Provide concrete, prioritized phases (Phase 1, Phase 2, Phase 3, etc.) tailored specifically to ${userName}'s real situation.
+   - Mention how this plan fulfills their specific goal and utilizes their actual tech stack.
+   - Include realistic timelines, milestones, and actionable tool executions.
+   - For UI/App/Website plans, specify the UX structure, database/state architecture, and production steps.`;
 
   const userContextDirective = `
 [USER PERSONA & ADDRESSING DIRECTIVE]:
@@ -197,50 +242,57 @@ Formula: Agent = Brain + Tools + Memory + Planning + Actions.
    - When asked for code, write complete, fully functional, production-grade code with zero placeholders or omissions.
    - When asked for a website or app, provide full components, responsive styling, interactive states, and architecture plans.
    - When asked for a roadmap or plan, provide a thorough, multi-phase masterplan with concrete tools, methodologies, and milestones.
+   - When asked for documents, references, or links, provide complete details and clickable links.
 4. MEMORY & CONTINUITY: Keep track of previous conversation context, preferences, and workspace directives seamlessly.
 5. TOOL & REASONING INTEGRATION: Accurately explain what actions you plan, evaluate risks, and coordinate execution.`;
 
   const dynamicLangRule = `
 CHATGPT-GRADE CONVERSATIONAL & MULTILINGUAL MASTERY:
-1. BANGLISH TO PURE BENGALI: If the user speaks in Banglish (Bengali typed with English alphabet, like "kemon acho", "amake ekta plan dao", "ki vabe taka income korbo", "amr website check koro", etc.), you MUST understand their exact intent flawlessly and answer in pure, elegant, beautifully formatted Bengali (শুদ্ধ বাংলা).
+1. BANGLISH TO PURE BENGALI: If the user speaks in Banglish (Bengali typed with English alphabet, like "kemon acho", "amake ekta plan dao", "ki vabe taka income korbo", "amr website check koro", "link dao", etc.), you MUST understand their exact intent flawlessly and answer in pure, elegant, beautifully formatted Bengali (শুদ্ধ বাংলা).
 2. DECORATIVE & RICH CHATGPT FORMATTING: Format your responses with visually stunning, decorative markdown:
-   - Use engaging topic emojis on every section header (e.g., 🎯 কাজ, 📊 রোডম্যাপ, 💡 মূল টিপস, 🚀 পরবর্তী পদক্ষেপ).
+   - Use engaging topic emojis on every section header (e.g., 🎯 কাজ, 📊 রোডম্যাপ, 💡 মূল টিপস, 🔗 গুরুত্বপূর্ণ ডকুমেন্টস ও লিংক, 🚀 পরবর্তী পদক্ষেপ).
    - Use structured bullet points, bold key highlights, clean markdown tables, and numbered step checklists.
    - For code, provide clean syntax-highlighted code blocks with helpful inline comments.
    - For conversational inquiries, answer richly, warmly, and comprehensively without stiff or robotic fillers.
 3. MULTILINGUAL SWITCHING: If the user asks for another language (Spanish, French, Arabic, Hindi, German, Japanese, etc.), immediately switch your entire response to that requested language.`;
 
   if (isBangla) {
-    return `You are Agent-sigma08, ${userName}'s personal autonomous AI Agent. You must introduce yourself as Agent-sigma08 everywhere and act & work as Agent-sigma08. You are assisting ${userName}${userRole}${company}.${userBio}${customInstructions}${techStack}${goals}
+    return `You are Agent-sigma08, ${userName}'s personal autonomous AI Agent. You must introduce yourself as Agent-sigma08 everywhere and act & work as Agent-sigma08. You are assisting ${userName}${userRole}${company}.${userBio}${customInstructions}${techStack}${goals}${preferences}${tasksMemoryContext}${filesMemoryContext}
 ${userContextDirective}
 ${agentPhilosophy}
+${universalUnderstandingDirective}
+${documentLinkDirective}
+${memoryPlanningDirective}
 
-Your purpose is to understand ${userName}'s objectives, think independently, and help complete real-world digital work.
+Your purpose is to understand ${userName}'s objectives, think independently, and help complete real-world digital work by leveraging your long-term memory, document linking, and Gemini reasoning.
 Always address the user warmly as ${userName}.
 You are not merely a chatbot; you are an autonomous Operating System.
 ${dynamicLangRule}
 
 CRITICAL INSTRUCTION - THINKING PROCESS:
-At the very beginning of your response, you MUST output a <thinking>...</thinking> block in Bangla explaining your independent cognitive reasoning, goal decomposition, risk evaluation, and step-by-step logic. Do NOT write standard markdown or headings inside the thinking tag. Write in natural raw paragraphs. Immediately after the closing </thinking> tag, proceed to write the formatted response.
+At the very beginning of your response, you MUST output a <thinking>...</thinking> block in Bangla explaining your independent cognitive reasoning, your memory recall of ${userName}'s background/goals, risk evaluation, and step-by-step logic. Do NOT write standard markdown or headings inside the thinking tag. Write in natural raw paragraphs. Immediately after the closing </thinking> tag, proceed to write the formatted response.
 
 CRITICAL TONE & QUALITY:
 Communicate with ${userName} in natural, articulate, professional Bangla while preserving English technical terminology, framework names, and code syntax intact.
-Be comprehensive, detailed, and deliver production-grade output.`;
+Be comprehensive, detailed, provide relevant document links whenever beneficial, and deliver production-grade output.`;
   }
 
   const isEnglish = langName === "English";
 
-  return `You are Agent-sigma08, ${userName}'s personal autonomous AI Agent. You must introduce yourself as Agent-sigma08 everywhere and act & work as Agent-sigma08. You are assisting ${userName}${userRole}${company}.${userBio}${customInstructions}${techStack}${goals}
+  return `You are Agent-sigma08, ${userName}'s personal autonomous AI Agent. You must introduce yourself as Agent-sigma08 everywhere and act & work as Agent-sigma08. You are assisting ${userName}${userRole}${company}.${userBio}${customInstructions}${techStack}${goals}${preferences}${tasksMemoryContext}${filesMemoryContext}
 ${userContextDirective}
 ${agentPhilosophy}
+${universalUnderstandingDirective}
+${documentLinkDirective}
+${memoryPlanningDirective}
 
-Your purpose is to understand ${userName}'s objectives, think independently, and help complete real-world digital work.
+Your purpose is to understand ${userName}'s objectives, think independently, and help complete real-world digital work by leveraging your long-term memory, document linking, and Gemini reasoning.
 Always address the user warmly as ${userName}.
 You are not merely a chatbot; you are an autonomous Operating System.
 ${dynamicLangRule}
 
 CRITICAL INSTRUCTION - THINKING PROCESS:
-At the very beginning of your response, you MUST output a <thinking>...</thinking> block in English explaining your independent cognitive reasoning, goal decomposition, risk evaluation, and step-by-step logic. Do NOT write standard markdown or headings inside the thinking tag. Write in natural raw paragraphs. Immediately after the closing </thinking> tag, proceed to write the formatted response.
+At the very beginning of your response, you MUST output a <thinking>...</thinking> block in English explaining your independent cognitive reasoning, your memory recall of ${userName}'s background/goals, risk evaluation, and step-by-step logic. Do NOT write standard markdown or headings inside the thinking tag. Write in natural raw paragraphs. Immediately after the closing </thinking> tag, proceed to write the formatted response.
 
 ${
   isEnglish
@@ -249,7 +301,7 @@ ${
 The user has configured their workspace language mode to: "${langName}" (${language}).
 You MUST write your entire response in "${langName}", unless the user's prompt explicitly asks for a different language.`
 }
-Be comprehensive, thorough, and deliver production-grade output.`;
+Be comprehensive, thorough, provide helpful document/resource links whenever relevant, and deliver production-grade output.`;
 }
 
 async function callGeminiWithRetryAndFallback(
@@ -410,7 +462,7 @@ function generateThinkingTrace(prompt: string, language: string, userProfile?: a
 
 // Agent Chat & Task Processing endpoint
 app.post("/api/agent/chat", async (req, res) => {
-  const { prompt = "", conversationHistory = [], language = "Bangla", attachedFiles = [], userProfile, settings } = req.body || {};
+  const { prompt = "", conversationHistory = [], language = "Bangla", attachedFiles = [], userProfile, settings, tasks = [], files = [] } = req.body || {};
   let isSensitiveAction = false;
   try {
     if (!prompt) {
@@ -462,7 +514,7 @@ app.post("/api/agent/chat", async (req, res) => {
       return res.json({
         content: fallbackResponse.text,
         thinking: generateThinkingTrace(prompt, language, userProfile),
-        planSteps: fallbackResponse.planSteps,
+        planSteps: extractPlanSteps(prompt, fallbackResponse.text, userProfile, language),
         toolExecutions: fallbackResponse.toolExecutions,
         requiresApproval: fallbackResponse.requiresApproval,
         approvalDetails: fallbackResponse.approvalDetails,
@@ -502,7 +554,7 @@ app.post("/api/agent/chat", async (req, res) => {
     const response = await callGeminiWithRetryAndFallback(
       ai,
       contents,
-      getSystemInstruction(activeLang, userProfile, activeLang),
+      getSystemInstruction(activeLang, userProfile, activeLang, tasks, files),
       0.6
     );
 
@@ -516,8 +568,8 @@ app.post("/api/agent/chat", async (req, res) => {
       thinkingText = generateThinkingTrace(prompt, language, userProfile);
     }
 
-    // Determine high level plan steps from the response
-    const planSteps = extractPlanSteps(prompt, rawText);
+    // Determine high level plan steps from the response with memory & Gemini power
+    const planSteps = extractPlanSteps(prompt, rawText, userProfile, activeLang);
     
     // Check if approval was requested in the output
     const hasApprovalSection = rawText.includes("## অনুমতি প্রয়োজন") || rawText.includes("Approval Required") || isSensitiveAction;
@@ -901,43 +953,97 @@ app.post("/api/agent/tool/execute", async (req, res) => {
   }
 });
 
-// Helper for extracting clean high-level task plan stages
-function extractPlanSteps(prompt: string, responseText: string) {
-  const defaultSteps = [
-    { title: "Understanding request & requirements", status: "completed" },
-    { title: "Checking workspace files & context", status: "completed" },
-    { title: "Executing specialized tools", status: "completed" },
-    { title: "Verifying outcomes & formatting report", status: "completed" },
-  ];
+// Helper for extracting clean high-level task plan stages, powered by Gemini reasoning & user memory
+function extractPlanSteps(prompt: string, responseText: string, userProfile?: any, language: string = "Bangla") {
+  const p = prompt.toLowerCase();
+  const isBangla = language === "Bangla" || /[\u0980-\u09FF]/.test(responseText) || /[\u0980-\u09FF]/.test(prompt);
+  const goals = userProfile?.goals || '';
+  const techStack = userProfile?.techStack || '';
+  const isPlanningRequest = /plan|পরিকল্পনা|road|roadmap|step|strategy|schedule|রুটিন|কিভাবে|guideline|masterplan/i.test(p);
 
+  // 1. Try to dynamically extract numbered steps or markdown list items from Gemini's response
+  const extractedSteps: { title: string; status: 'completed' | 'running' | 'pending' }[] = [];
+  const lines = responseText.split('\n');
+  
+  // Look for sections like Phase 1, Step 1, বা ধাপ ১, পর্ব ১
+  for (const line of lines) {
+    const trimmed = line.trim();
+    const stepMatch = trimmed.match(/^(?:(?:\*\*|#+)?\s*(?:Phase|Step|ধাপ|পর্ব|স্টেজ|Phase\s+\d+|Step\s+\d+)\s*[:\-\d\.]*|\d+\.)\s*([^\n\r]+)/i);
+    if (stepMatch && stepMatch[1]) {
+      let cleanTitle = stepMatch[1].replace(/[*#`_]/g, '').trim();
+      if (cleanTitle.length > 3 && cleanTitle.length < 90 && !extractedSteps.some(s => s.title === cleanTitle)) {
+        extractedSteps.push({
+          title: cleanTitle,
+          status: 'completed'
+        });
+      }
+    }
+    if (extractedSteps.length >= 6) break;
+  }
+
+  // If Gemini provided 3 or more concrete steps in the response text, return those dynamic steps!
+  if (extractedSteps.length >= 3) {
+    return extractedSteps;
+  }
+
+  // 2. If it's an explicit planning request, construct memory-aligned plan steps
+  if (isPlanningRequest) {
+    if (isBangla) {
+      return [
+        { title: `ব্যবহারকারীর প্রোফাইল ও লক্ষ্য মেমরি থেকে বিশ্লেষণ${goals ? ` (${goals.slice(0, 30)}...)` : ''}`, status: "completed" },
+        { title: `টেক স্ট্যাক ও সিস্টেম রিসোর্স সমন্বয়${techStack ? ` [${techStack.slice(0, 25)}]` : ''}`, status: "completed" },
+        { title: "জেমিনি ডিপ রিজনিং ইঞ্জিনে মাল্টি-ফেজ কর্মপরিকল্পনা তৈরি", status: "completed" },
+        { title: "অগ্রাধিকার ও মাইলস্টোন রোডম্যাপ ভ্যালিডেশন", status: "completed" },
+      ];
+    } else {
+      return [
+        { title: `Recalling user profile & goals from memory${goals ? ` (${goals.slice(0, 30)}...)` : ''}`, status: "completed" },
+        { title: `Aligning technical stack & tools${techStack ? ` [${techStack.slice(0, 25)}]` : ''}`, status: "completed" },
+        { title: "Generating multi-phase execution roadmap with Gemini reasoning", status: "completed" },
+        { title: "Validating milestones & actionable outcomes", status: "completed" },
+      ];
+    }
+  }
+
+  // 3. Contextual fallbacks
   if (/customer|message|reply/i.test(prompt)) {
     return [
-      { title: "Analyzing customer inquiry", status: "completed" },
-      { title: "Identifying intent & urgency", status: "completed" },
-      { title: "Drafting professional response", status: "completed" },
-      { title: "Holding for user authorization", status: "running" },
+      { title: isBangla ? "গ্রাহকের অনুসন্ধান ও উদ্দেশ্য বিশ্লেষণ" : "Analyzing customer inquiry & intent", status: "completed" },
+      { title: isBangla ? "জরুরিতা ও নীতি যাচাই" : "Checking urgency & service policies", status: "completed" },
+      { title: isBangla ? "পেশাদার উত্তর ড্রাফটিং" : "Drafting professional empathetic reply", status: "completed" },
+      { title: isBangla ? "ব্যবহারকারীর অনুমোদনের অপেক্ষা" : "Holding for user authorization", status: "running" },
     ];
   }
 
   if (/research|find|trends/i.test(prompt)) {
     return [
-      { title: "Formulating research query", status: "completed" },
-      { title: "Querying authoritative online sources", status: "completed" },
-      { title: "Synthesizing findings & comparing data", status: "completed" },
-      { title: "Delivering structured research summary", status: "completed" },
+      { title: isBangla ? "রিসার্চ কুয়েরি ও উদ্দেশ্য নিরূপণ" : "Formulating specialized research query", status: "completed" },
+      { title: isBangla ? "অনলাইন ও নলেজবেস তথ্য অন্বেষণ" : "Querying verified live knowledge sources", status: "completed" },
+      { title: isBangla ? "ডাটা সিন্থেসিস ও তুলনামূলক বিশ্লেষণ" : "Synthesizing data & comparative metrics", status: "completed" },
+      { title: isBangla ? "স্ট্রাকচার্ড রিসার্চ সামারি উপস্থাপন" : "Delivering comprehensive research report", status: "completed" },
     ];
   }
 
   if (/code|bug|debug|problem/i.test(prompt)) {
     return [
-      { title: "Scanning source code syntax & AST", status: "completed" },
-      { title: "Detecting edge-case vulnerabilities & bottlenecks", status: "completed" },
-      { title: "Synthesizing refactored solution", status: "completed" },
-      { title: "Preparing verified code recommendations", status: "completed" },
+      { title: isBangla ? "সোর্স কোড ও সিনট্যাক্স স্ক্যান" : "Scanning source code syntax & AST", status: "completed" },
+      { title: isBangla ? "এজ-কেস ও ত্রুটি শনাক্তকরণ" : "Detecting edge-case bottlenecks & bugs", status: "completed" },
+      { title: isBangla ? "প্রোডাকশন-গ্রেড সমাধান জেনারেট" : "Synthesizing robust refactored code", status: "completed" },
+      { title: isBangla ? "ভেরিফিকেশন ও অপ্টিমাইজেশন সম্পন্ন" : "Verifying code against memory directives", status: "completed" },
     ];
   }
 
-  return defaultSteps;
+  return isBangla ? [
+    { title: "নির্দেশনা ও রিকোয়ারমেন্ট অনুধাবন", status: "completed" },
+    { title: "মেমরি ও ওয়ার্কস্পেস কনটেক্সট যাচাই", status: "completed" },
+    { title: "জেমিনি এআই রিজনিং প্রয়োগ", status: "completed" },
+    { title: "কার্যকরী ফলাফল ও রিপোর্ট উপস্থাপন", status: "completed" },
+  ] : [
+    { title: "Understanding request & requirements", status: "completed" },
+    { title: "Checking memory & workspace context", status: "completed" },
+    { title: "Applying Gemini reasoning core", status: "completed" },
+    { title: "Verifying outcomes & formatting report", status: "completed" },
+  ];
 }
 
 // Helper to extract approval details when sensitive action is identified

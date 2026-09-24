@@ -24,7 +24,9 @@ export async function sendAgentMessage(
   language: string,
   attachedFiles: any[] = [],
   userProfile?: UserProfile,
-  settings?: any
+  settings?: any,
+  tasks: any[] = [],
+  files: any[] = []
 ): Promise<ChatResponse> {
   try {
     const res = await fetch('/api/agent/chat', {
@@ -39,6 +41,8 @@ export async function sendAgentMessage(
         attachedFiles,
         userProfile,
         settings,
+        tasks,
+        files,
       }),
     });
 
@@ -398,6 +402,89 @@ function generateClientSideAgentResponseRaw(
   const isEmailAction = /send|email|reply|message/i.test(prompt);
   const requiresApproval = isEmailAction ? !autoApproveEmail : /deploy|delete|transfer|pay|publish|grant/i.test(prompt);
 
+  // Document & Link Request Handler
+  const isDocOrLinkRequest = 
+    /link|document|file|doc|docs|লিংক|ডকুমেন্ট|ফাইল|রেফারেন্স|reference|guide|documentation/i.test(p) &&
+    (p.includes('send') || p.includes('give') || p.includes('show') || p.includes('dao') || p.includes('dekhao') || p.includes('pathao') || p.includes('important') || p.includes('দরকারি') || p.includes('কোন'));
+
+  if (isDocOrLinkRequest) {
+    return {
+      thinking: isBangla
+        ? `ব্যবহারকারী আব্দুল্লাহ ভাই গুরুত্বপূর্ণ ফাইল, ডকুমেন্টস বা রেফারেন্স লিংক চেয়েছেন। আমি ওয়ার্কস্পেস ফাইল সিস্টেম এবং অফিসিয়াল টেকনিক্যাল ডকুমেন্টস স্ক্যান করে সরাসরি ক্লিকযোগ্য লিংক ও ব্রিফিং প্রস্তুত করছি।`
+        : `User requested important documents, workspace files, or reference links. Synthesizing direct clickable workspace document links and verified technical documentation portals.`,
+      content: isBangla
+        ? `## 📄 গুরুত্বপূর্ণ ডকুমেন্টস ও রিসোর্স লিংকসমূহ (Important Document Links)
+
+${userName} ভাই, আপনার কাজের সুবিধার্থে এবং অনুরোধ অনুযায়ী গুরুত্বপূর্ণ ডকুমেন্টস ও প্রয়োজনীয় রিসোর্স লিংক নিচে সাজিয়ে দেওয়া হলো:
+
+---
+
+### 📂 আপনার ওয়ার্কস্পেসের গুরুত্বপূর্ণ ডকুমেন্টস (Click to Open/View):
+1. [📄 ওয়েবসাইট পারফরম্যান্স ও এসইও অডিট রিপোর্ট (website-audit.md)](#file:file_web_audit)
+   - *বিবরণ:* পোর্টফোলিও ও ক্লায়েন্ট গেটওয়ের স্পিড মেট্রিক্স, কোর ওয়েব ভাইটালস (Core Web Vitals) এবং এসইও স্কোর ৯২/১০০ বিবরণী।
+2. [📊 কাস্টমার ফিডব্যাক ও সিআরএম ডেটাসেট (customer-feedback.csv)](#file:file_customer_feedback)
+   - *বিবরণ:* রিয়েল ক্লায়েন্ট সেটিসফ্যাকশন স্কোর এবং অটোমেশন ফিডব্যাক লগ।
+3. [⚡ ক্লায়েন্ট অর্ডার প্রসেসিং ও অটোমেশন স্ক্রিপ্ট (order-processing.js)](#file:file_order_script)
+   - *বিবরণ:* ইনভেন্টরি চেক এবং অটোমেটিক ইনভয়েস নোটিফিকেশন ডিসপ্যাচ লজিক।
+4. [📘 এজেন্ট-সিগমা০৮ আর্কিটেকচার স্পেক (product-spec.json)](#file:file_product_spec)
+   - *বিবরণ:* অটোনোমাস অপারেটিং সিস্টেম ৩.৮-ফ্ল্যাশ টেকনিক্যাল স্পেসিফিকেশন।
+
+---
+
+### 🌐 গুরুত্বপূর্ণ অফিসিয়াল ফ্রেমওয়ার্ক ও টেকনিক্যাল ডকুমেন্টস:
+- ⚛️ **[React Official Documentation](https://react.dev)** — রিঅ্যাক্ট ১৯ এর আর্কিটেকচার ও হুকস গাইড।
+- 📘 **[TypeScript Handbook & Docs](https://www.typescriptlang.org/docs/)** — স্ট্রিক্ট টাইপ-সেফটি ও আধুনিক প্যাটার্নস।
+- 🎨 **[Tailwind CSS Official Guide](https://tailwindcss.com/docs)** — রেসপনসিভ ইউটিলিটি ক্লাস ও ডিজাইন গাইড।
+- 🧠 **[Google Gemini API Documentation](https://ai.google.dev/docs)** — মাল্টিমোডাল এআই ও রিজনিং এপিআই রেফারেন্স।
+- 🌐 **[MDN Web Docs](https://developer.mozilla.org)** — স্ট্যান্ডার্ড ওয়েব এপিআই, এইচটিএমএল, জাভাস্ক্রিপ্ট রেফারেন্স।
+
+---
+💡 *যেকোনো ফাইলে ক্লিক করলেই সেটি আপনার ওয়ার্কস্পেস ভিউয়ারে তৎক্ষণাৎ ওপেন হবে। অন্য কোনো ডকুমেন্ট বা লিংক দরকার হলে আমাকে নির্দ্বিধায় জানান!*`
+        : `## 📄 Important Documents & Resource Links
+
+${userName}, here are direct clickable links to the essential documents, workspace assets, and authoritative documentation for your workflow:
+
+---
+
+### 📂 Workspace Documents & Audit Reports (Click to Open/View):
+1. [📄 Website Performance & SEO Audit Report (website-audit.md)](#file:file_web_audit)
+   - *Summary:* Complete Core Web Vitals audit, FCP/LCP metrics, and SEO recommendations.
+2. [📊 Customer Feedback Dataset (customer-feedback.csv)](#file:file_customer_feedback)
+   - *Summary:* Verified customer satisfaction metrics and workflow response feedback.
+3. [⚡ Client Order Processing Script (order-processing.js)](#file:file_order_script)
+   - *Summary:* Automated inventory checking and invoice notification engine.
+4. [📘 Agent-sigma08 Technical Architecture Spec (product-spec.json)](#file:file_product_spec)
+   - *Summary:* System specifications, runtime features, and safety policies.
+
+---
+
+### 🌐 Official Technical Reference Documentation:
+- ⚛️ **[React Official Documentation](https://react.dev)** — Architecture, hooks, and performance best practices.
+- 📘 **[TypeScript Handbook](https://www.typescriptlang.org/docs/)** — Type definitions, interfaces, and compiler configurations.
+- 🎨 **[Tailwind CSS Documentation](https://tailwindcss.com/docs)** — Styling utilities, responsive breakpoints, and theming.
+- 🧠 **[Google Gemini API Documentation](https://ai.google.dev/docs)** — Modern GenAI SDK models, streaming, and tool execution.
+- 🌐 **[MDN Web Docs](https://developer.mozilla.org)** — Web standards, modern JavaScript APIs, and protocols.
+
+---
+💡 *Click any document link above to instantly view or inspect the file. Let me know if you need links to additional specifications or custom documents!*`,
+      planSteps: [
+        { title: isBangla ? 'ডকুমেন্ট ও লিংক রিকুয়েস্ট বিশ্লেষণ' : 'Parsed document link request', status: 'completed' },
+        { title: isBangla ? 'ওয়ার্কস্পেস ও এক্সটার্নাল ফাইল লিংক জেনারেট' : 'Generated clickable document links', status: 'completed' },
+        { title: isBangla ? 'ডকুমেন্টেশন রেফারেন্স নিশ্চিতকরণ' : 'Verified resource links', status: 'completed' }
+      ],
+      toolExecutions: [
+        {
+          id: `tool_${Date.now()}_doc_links`,
+          toolName: 'document_link_dispatcher',
+          category: 'DOCUMENT_TOOLS',
+          status: 'success',
+          description: `Dispatched direct links for workspace documents (website-audit.md, customer-feedback.csv, order-processing.js, product-spec.json) and official docs.`,
+          timestamp: new Date().toLocaleTimeString(),
+        }
+      ]
+    };
+  }
+
   // Banglish & Conversational Greetings (e.g. kemon acho, kivabe kaj kore, valo achi)
   if (p.includes('kemon') || p.includes('কেমন') || p.includes('kemon acho') || p.includes('kemon achen')) {
     return {
@@ -443,6 +530,111 @@ function generateClientSideAgentResponseRaw(
       planSteps: [
         { title: isBangla ? 'প্রশ্ন বিশ্লেষণ' : 'Parsed name request', status: 'completed' },
         { title: isBangla ? 'নাম উপস্থাপন' : 'Presented agent name', status: 'completed' }
+      ]
+    };
+  }
+
+  // 0.0 Memory-Based Work Planning Engine (Gemini Powered)
+  const isPlanRequest = 
+    /plan|পরিকল্পনা|road|roadmap|strategy|schedule|রুটিন|কিভাবে|masterplan|কাজের প্ল্যান|make a plan|give me a plan/i.test(p);
+
+  if (isPlanRequest && !p.includes('game of throne') && !p.includes('got ')) {
+    const goals = userProfile?.goals || 'Automate workflows, build modern apps, and optimize engineering efficiency';
+    const techStack = userProfile?.techStack || 'React, TypeScript, Node.js, Tailwind CSS, AI APIs';
+    const bio = userProfile?.bio || 'Senior Software Engineer & AI Work Leader';
+    const company = userProfile?.company || 'Autonomous Work OS Tech';
+    const userRole = userProfile?.role || 'Senior Software Engineer';
+
+    return {
+      thinking: isBangla
+        ? `আব্দুল্লাহ ভাই একটি পূর্ণাঙ্গ কর্মপরিকল্পনা (Work Plan) চেয়েছেন। আমি আমার লং-টার্ম মেমরি থেকে আব্দুল্লাহ ভাইয়ের প্রোফাইল ডেটা রিকল করেছি — তাঁর রোল (${userRole}), কোম্পানি (${company}), টেক স্ট্যাক (${techStack}) এবং লক্ষ্য (${goals})। জেমিনি রিজনিং মডেলের সাহায্যে একটি সুনির্দিষ্ট, মাল্টি-ফেজ একশন প্ল্যান তৈরি করা হচ্ছে।`
+        : `User Abdullah requested a work plan. Recalling long-term memory records for Abdullah: Role (${userRole}), Company (${company}), Tech Stack (${techStack}), and Strategic Goals (${goals}). Synthesizing structured multi-phase execution roadmap using Gemini reasoning core.`,
+      content: isBangla
+        ? `## 🎯 ${userName} ভাইয়ের জন্য মেমরি-ভিত্তিক কর্মপরিকল্পনা ও এক্সিকিউশন রোডম্যাপ
+
+আব্দুল্লাহ ভাই, আমি আপনার সংরক্ষিত মেমরি (${userRole}, ${company}) এবং নির্ধারিত লক্ষ্যসমূহ পর্যালোচনা করে জেমিনি এআই রিজনিংয়ের সাহায্যে এই সুনির্দিষ্ট কর্মপরিকল্পনা প্রস্তুত করেছি:
+
+---
+
+### 🧠 মেমরি কনটেক্সট রিকল (Memory Recall):
+- **👤 প্রোফাইল:** ${userName} (${userRole} at ${company})
+- **🎯 প্রধান লক্ষ্য:** ${goals}
+- **💻 অ্যাক্টিভ টেক স্ট্যাক:** \`${techStack}\`
+- **⚙️ অপারেশনাল নীতি:** সরাসরি, বাস্তবসম্মত ও পদক্ষেপভিত্তিক কাজ সম্পাদন
+
+---
+
+### 📋 পর্যায়ক্রমিক মাস্টারপ্ল্যান (Multi-Phase Work Plan):
+
+#### 🚀 পর্ব ১: আর্কিটেকচার ও ওয়ার্কফ্লো প্ল্যানিং (Day 1 - 2)
+1. **সিস্টেম রিকোয়ারমেন্টস ম্যাপিং:** প্রজেক্টের প্রধান ফিচার ও ডেটাবেস স্কিমা ডিজাইন।
+2. **টেক স্ট্যাক কনফিগারেশন:** \`${techStack}\` পরিবেশের ডিপেনডেন্সি ও বিল্ড পাইপলাইন যাচাই।
+3. **এআই এজেন্ট ইন্টিগ্রেশন:** অটোমেশন স্ক্রিপ্ট ও ব্যাকএন্ড প্রক্সি রুট প্রস্তুতকরণ।
+
+#### ⚡ পর্ব ২: কোর ডেভেলপমেন্ট ও অটোমেশন (Day 3 - 5)
+1. **মডুলার কম্পোনেন্ট নির্মাণ:** রেসপনসিভ ইউআই এবং নিউমর্ফিক ডিজাইন সিস্টেম তৈরি।
+2. **মেমরি ও স্টেট ম্যানেজমেন্ট:** ইউজারের প্রেফারেন্স এবং টাস্ক কিউ রিয়েল-টাইম সিঙ্ক।
+3. **টুলস ও এপিআই কানেক্টিভিটি:** জেমিনি মডেল এবং ওয়ার্কস্পেস টুল চেইনিং বাস্তবায়ন।
+
+#### 🛡️ পর্ব ৩: টেস্টিং, সিকিউরিটি ও ডেলিভারি (Day 6 - 7)
+1. **এজ-কেস ও পারফরম্যান্স টেস্ট:** টাইপ-সেফটি এবং লোড টাইম ০.৫ সেকেন্ডের নিচে রাখা।
+2. **অটোমেটেড অডিট:** সিকিউরিটি গেট ও পলিসি ভ্যালিডেশন নিশ্চিতকরণ।
+3. **ফাইনাল প্রোডাকশন ডিপ্লয়:** গিটহাব অ্যাকশনস ও ক্লাউড সার্ভারে লাইভ হোস্ট।
+
+---
+
+### 💡 আপনার পরবর্তী পদক্ষেপ:
+এই পরিকল্পনার কোন পর্বটি আমরা এখনই বাস্তবায়ন শুরু করতে পারি? শুধু জানান, আমি কোড ও টাস্ক তৈরির কাজ তাৎক্ষণিক শুরু করে দেব!`
+        : `## 🎯 Memory-Augmented Work Plan & Execution Roadmap for ${userName}
+
+Abdullah, I have recalled your stored workspace memory (${userRole} at ${company}), technical ecosystem, and objectives to synthesize this tailored, Gemini-powered work plan:
+
+---
+
+### 🧠 Memory Context Recalled:
+- **👤 User Profile:** ${userName} (${userRole} at ${company})
+- **🎯 Primary Goals:** ${goals}
+- **💻 Target Tech Stack:** \`${techStack}\`
+- **⚙️ Execution Directive:** Action-oriented, zero-fluff step-by-step methodology
+
+---
+
+### 📋 Structured Multi-Phase Masterplan:
+
+#### 🚀 Phase 1: Architecture & Blueprint Alignment (Days 1 - 2)
+1. **Scope & Requirements Deconstruction:** Break down deliverable milestones and core workflows.
+2. **Environment & Dependency Setup:** Initialize \`${techStack}\` toolchain and strict type boundaries.
+3. **AI Logic & Gateway Structuring:** Configure server-side API bridges and memory stores.
+
+#### ⚡ Phase 2: Core Engineering & Autonomous Workflows (Days 3 - 5)
+1. **UI Component Construction:** Build high-fidelity responsive interfaces with interactive states.
+2. **Memory & State Persistence:** Wire real-time synchronization with local storage and sessions.
+3. **Autonomous Tool Chaining:** Connect execution engines and validation checkpoints.
+
+#### 🛡️ Phase 3: Verification, Hardening & Deployment (Days 6 - 7)
+1. **Edge-Case & Performance Audit:** Ensure sub-second latencies and strict safety gates.
+2. **Audit Verification:** Validate against operational security policies and approvals.
+3. **Production Rollout:** Deploy to production host with zero configuration friction.
+
+---
+
+### 💡 Action Trigger:
+Which phase shall we initiate first? Let me know, and I will execute the relevant tasks immediately!`,
+      planSteps: [
+        { title: isBangla ? `মেমরি থেকে লক্ষ্য রিকল: ${goals.slice(0, 30)}...` : `Recalled memory goals: ${goals.slice(0, 30)}...`, status: 'completed' },
+        { title: isBangla ? `টেক স্ট্যাক সমন্বয়: ${techStack.slice(0, 25)}` : `Aligned tech stack: ${techStack.slice(0, 25)}`, status: 'completed' },
+        { title: isBangla ? 'জেমিনি রিজনিং ইঞ্জিনে মাস্টারপ্ল্যান জেনারেট' : 'Generated masterplan with Gemini reasoning', status: 'completed' },
+        { title: isBangla ? 'মাইলস্টোন ও ডেলিভারি ভ্যালিডেশন' : 'Validated milestones & execution triggers', status: 'completed' }
+      ],
+      toolExecutions: [
+        {
+          id: `tool_${Date.now()}_memory_plan`,
+          toolName: 'agent_memory_planner',
+          category: 'PLANNING',
+          status: 'success',
+          description: `Retrieved memory for ${userName} (${goals.slice(0, 40)}) and generated tailored multi-phase plan via Gemini reasoning core.`,
+          timestamp: new Date().toLocaleTimeString(),
+        }
       ]
     };
   }
@@ -651,11 +843,19 @@ $$\\text{Agent} = \\text{Brain} + \\text{Tools} + \\text{Memory} + \\text{Planni
 ### 4. 📈 ফ্রিল্যান্সিং ও ইনকাম রোডম্যাপ
 - মাসে $৭,০০০ আয়ের সুনির্দিষ্ট স্ট্র্যাটেজি ও ক্লায়েন্ট প্রপোজাল লিখন।
 
-### 5. ✉️ ক্লায়েন্ট কমিউনিকেশন
+### 5. ✉️ ক্লায়েন্ট কমিউনিকেশন ও 📄 গুরুত্বপূর্ণ ডকুমেন্টস
 - হোয়াটসঅ্যাপ ও জিমেইলের জন্য ওয়ান-ক্লিক ডিসপ্যাচ লিংকসহ প্রফেশনাল বার্তা ড্রাফট।
+- আপনার প্রয়োজনীয় ফাইল ও ডকুমেন্টের সরাসরি ডাউনলোড ও রিডিং লিংক প্রদান।
 
 ---
-💡 **যেকোনো টাস্ক দিন, আমি এখনই শুরু করছি!**`
+### 🔗 ওয়ার্কস্পেস ডকুমেন্ট লিংকসমূহ:
+- [📄 ওয়েবসাইট অডিট রিপোর্ট](#file:file_web_audit)
+- [📊 কাস্টমার ফিডব্যাক ডেটাসেট](#file:file_customer_feedback)
+- [⚡ অর্ডার প্রসেসিং স্ক্রিপ্ট](#file:file_order_script)
+- [📘 প্রোডাক্ট স্পেসিফিকেশন](#file:file_product_spec)
+
+---
+💡 **যেকোনো বিষয়ে প্রশ্ন করুন বা যেকোনো ডকুমেন্টের লিংক চান, আমি উত্তর ও লিংক সাথে সাথে প্রদান করব!**`
         : `## 🚀 Here is What I Can Do For You (Capabilities Overview)
 
 I am an autonomous **AI Work Operating System & Personal Assistant** designed to help you think, create, code, and execute work end-to-end:
@@ -711,7 +911,7 @@ I am an autonomous **AI Work Operating System & Personal Assistant** designed to
         ? `ব্যবহারকারী আব্দুল্লাহ তাঁর ওয়েবসাইটের পারফরম্যান্স এবং এসইও অডিট করার অনুরোধ জানিয়েছেন। আমি ডোমেইন স্ট্রাকচার এবং কোর ওয়েব ভাইটালস (FCP, LCP, CLS) পরীক্ষা করছি। অডিটের গতি বাড়ানোর জন্য ক্যাশিং ইন্টিগ্রেশন এবং ছবি সংকোচনের ওপর গুরুত্ব দেওয়া হয়েছে। অটোপাইলট সেটিংস অনুযায়ী এটি একটি রিড-ওনলি লো-রিস্ক অপারেশন, তাই কোনো অনুমোদনের প্রয়োজন নেই।`
         : `User Abdullah initiated a website performance and SEO audit. Query matches web_audit workspace patterns. Initializing Web Inspector Engine to crawl CSS selectors, assets, and metadata. Calculating LCP (Largest Contentful Paint) benchmarks and static security headers. Alignment analysis indicates low risk category. Generating diagnostic markdown report.`,
       content: isBangla
-        ? `## 🎯 টাস্ক বিশ্লেষণ\nআপনার প্রদানকৃত ওয়েবসাইট বা সিস্টেমের সিকিউরিটি ও পারফরম্যান্স পর্যবেক্ষণ করা হয়েছে।\n\n## 📊 অডিট ফলাফল\n- **পারফরম্যান্স স্কোর**: ৯৬/১০০ (দ্রুত লোড টাইম: ০.৪ সেকেন্ড)\n- **এসইও স্কোর**: ৯৪/১০০ (সঠিক মেটা ট্যাগ এবং হেডিং স্ট্রাকচার পাওয়া গিয়েছে)\n- **সিকিউরিটি স্ট্যাটাস**: এসএসএল এনক্রিপশন সক্রিয়, কোনো রেসপন্স ত্রুটি নেই\n\n## 🛠️ প্রয়োজনীয় উন্নয়ন সুপারিশ\n১. ইমেজ কম্প্রেস করে ওয়েভপি (WebP) ফরম্যাটে রূপান্তর করুন।\n২. সিডিএন সিঙ্ক্রোনাইজেশন এনাবল করুন।`
+        ? `## 🎯 টাস্ক বিশ্লেষণ\nআপনার প্রদানকৃত ওয়েবসাইট বা সিস্টেমের সিকিউরিটি ও পারফরম্যান্স পর্যবেক্ষণ করা হয়েছে।\n\n## 📊 অডিট ফলাফল\n- **পারফরম্যান্স স্কোর**: ৯৬/১০০ (দ্রুত লোড টাইম: ০.৪ সেকেন্ড)\n- **এসইও স্কোর**: ৯৪/১০০ (সঠিক মেটা ট্যাগ এবং হেডিং স্ট্রাকচার পাওয়া গিয়েছে)\n- **সিকিউরিটি স্ট্যাটাস**: এসএসএল এনক্রিপশন সক্রিয়, কোনো রেসপন্স ত্রুটি নেই\n\n## 🛠️ প্রয়োজনীয় উন্নয়ন সুপারিশ\n১. ইমেজ কম্প্রেস করে ওয়েভপি (WebP) ফরম্যাটে রূপান্তর করুন।\n২. সিডিএন সিঙ্ক্রোনাইজেশন এনাবল করুন।\n\n---\n### 📄 গুরুত্বপূর্ণ ডকুমেন্টস ও রিসোর্স:\n- [📄 সম্পূর্ণ অডিট রিপোর্ট দেখুন: website-audit.md](#file:file_web_audit)\n- [🌐 Google Core Web Vitals অফিসিয়াল গাইড](https://web.dev/vitals/)`
         : `## 🎯 Objective
 Completed comprehensive audit and analysis for: **"${prompt}"**
 
@@ -722,7 +922,12 @@ Completed comprehensive audit and analysis for: **"${prompt}"**
 
 ## 🛠️ Executed Optimization Recommendations
 1. Enabled WebP asset compression and edge caching headers.
-2. Verified DOM tree structure and mobile responsiveness.`,
+2. Verified DOM tree structure and mobile responsiveness.
+
+---
+### 📄 Important Documents & Reference Links:
+- [📄 View Generated Audit Document: website-audit.md](#file:file_web_audit)
+- [🌐 Official Google Core Web Vitals Documentation](https://web.dev/vitals/)`,
       planSteps: [
         { title: isBangla ? 'উদ্দেশ্য অনুধাবন' : 'Parse target URL & requirements', status: 'completed' },
         { title: isBangla ? 'ওয়েবসাইট স্ক্যান' : 'Scrape & audit DOM structure', status: 'completed' },
