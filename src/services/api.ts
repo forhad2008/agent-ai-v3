@@ -3092,6 +3092,13 @@ export interface SystemHealthData {
     rpmLimit: number;
     lastUpdated: string;
   };
+  apiCallStats?: {
+    totalCalls: number;
+    successfulCalls: number;
+    failedCalls: number;
+    successRatePercent: number;
+    timeWindow: string;
+  };
   uptimeSeconds: number;
   timestamp: string;
 }
@@ -3130,11 +3137,18 @@ export async function fetchSystemHealthApi(): Promise<SystemHealthData> {
         percentRemaining: 85.7,
         promptTokens: 94600,
         completionTokens: 48200,
-        requestsCount: 38,
+        requestsCount: 42,
         activeModel: 'gemini-2.5-flash',
         tpmLimit: 1000000,
         rpmLimit: 2000,
         lastUpdated: new Date().toISOString(),
+      },
+      apiCallStats: {
+        totalCalls: 42,
+        successfulCalls: 42,
+        failedCalls: 0,
+        successRatePercent: 100.0,
+        timeWindow: 'Last 60 Minutes',
       },
       uptimeSeconds: 3600,
       timestamp: new Date().toISOString(),

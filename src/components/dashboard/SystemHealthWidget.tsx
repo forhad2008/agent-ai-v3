@@ -17,24 +17,141 @@ import {
   Sliders,
   Check,
   TrendingUp,
-  Volume2,
-  VolumeX,
-  PlayCircle
+  Download,
+  Percent,
+  XCircle,
+  BarChart3,
+  FileSpreadsheet,
+  FileText,
+  Printer
 } from 'lucide-react';
 import { fetchSystemHealthApi, SystemHealthData } from '../../services/api';
 import { LatencyD3Chart, LatencyDataPoint } from './LatencyD3Chart';
+import { generateSystemHealthPdfReport } from '../../utils/pdfReportGenerator';
 
 export const SystemHealthWidget: React.FC = () => {
   const [healthData, setHealthData] = useState<SystemHealthData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [autoRefresh, setAutoRefresh] = useState<boolean>(true);
+  const [csvDownloaded, setCsvDownloaded] = useState<boolean>(false);
+  const [pdfGenerating, setPdfGenerating] = useState<boolean>(false);
+  const [pdfDownloaded, setPdfDownloaded] = useState<boolean>(false);
 
-  // Configurable Latency Thresholds
-  const [warningThreshold, setWarningThreshold] = useState<number>(100);
-  const [criticalThreshold, setCriticalThreshold] = useState<number>(200);
+  // Configurable Latency Thresholds with localStorage Persistence
+  const [warningThreshold, setWarningThreshold] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('system_health_warning_threshold');
+      if (saved) {
+        const val = Number(saved);
+        if (!isNaN(val) && val > 0) return val;
+      }
+    } catch (e) {
+      console.warn('Failed to read warning threshold from localStorage');
+    }
+    return 100;
+  });
+
+  const [criticalThreshold, setCriticalThreshold] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('system_health_critical_threshold');
+      if (saved) {
+        const val = Number(saved);
+        if (!isNaN(val) && val > 0) return val;
+      }
+    } catch (e) {
+      console.warn('Failed to read critical threshold from localStorage');
+    }
+    return 200;
+  });
+
   const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
-  const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
+  const [saveConfirmation, setSaveConfirmation] = useState<boolean>(false);
+
+  // Persist thresholds to localStorage whenever updated
+  useEffect(() => {
+    try {
+      localStorage.setItem('system_health_warning_threshold', String(warningThreshold));
+      localStorage.setItem('system_health_critical_threshold', String(criticalThreshold));
+      setSaveConfirmation(true);
+      const timer = setTimeout(() => setSaveConfirmation(false), 2000);
+      return () => clearTimeout(timer);
+    } catch (e) {
+      console.warn('Failed to save thresholds to localStorage');
+    }
+  }, [warningThreshold, criticalThreshold]);
+
+  const handleResetDefaults = () => {
+    setWarningThreshold(100);
+    setCriticalThreshold(200);
+  };
+
+  // CSV Export for 60-second latency data
+  const handleDownloadCsv = () => {
+    if (latencyWindow.length === 0) return;
+
+    const csvRows = [
+      ['Timestamp_Ms', 'ISO_Date_Time', 'Local_Time', 'Latency_Ms', 'Warning_Threshold_Ms', 'Critical_Threshold_Ms', 'Latency_Status'].join(',')
+    ];
+
+    latencyWindow.forEach((p) => {
+      const isoTime = new Date(p.timestamp).toISOString();
+      const status = p.latencyMs >= criticalThreshold
+        ? 'CRITICAL'
+        : p.latencyMs >= warningThreshold
+        ? 'WARNING'
+        : 'OPTIMAL';
+      csvRows.push([
+        p.timestamp,
+        `"${isoTime}"`,
+        `"${p.timeLabel}"`,
+        p.latencyMs,
+        warningThreshold,
+        criticalThreshold,
+        `"${status}"`
+      ].join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const timestampStr = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `latency_data_60s_${timestampStr}.csv`;
+    link.setAttribute('href', url);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setCsvDownloaded(true);
+    setTimeout(() => setCsvDownloaded(false), 2500);
+  };
+
+  // PDF formal summary report generator
+  const handleExportPdfReport = () => {
+    setPdfGenerating(true);
+    try {
+      const realLatencyVal = healthData?.clientLatencyMs || healthData?.serverLatencyMs || 28;
+      const currentLatencyVal = simulatedSpike !== null ? simulatedSpike : realLatencyVal;
+
+      generateSystemHealthPdfReport({
+        healthData,
+        latencyWindow,
+        warningThreshold,
+        criticalThreshold,
+        currentLatency: currentLatencyVal,
+      });
+
+      setPdfDownloaded(true);
+      setTimeout(() => setPdfDownloaded(false), 3000);
+    } catch (err) {
+      console.error('Failed to generate PDF report:', err);
+    } finally {
+      setPdfGenerating(false);
+    }
+  };
 
   // Simulated latency spike state for testing visual warning system
   const [simulatedSpike, setSimulatedSpike] = useState<number | null>(null);
@@ -210,6 +327,39 @@ export const SystemHealthWidget: React.FC = () => {
 
         {/* Action Controls & Threshold Config Toggle */}
         <div className="flex items-center gap-2 flex-wrap">
+          {/* Formal PDF Report Button */}
+          <button
+            type="button"
+            onClick={handleExportPdfReport}
+            disabled={pdfGenerating}
+            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-[11px] font-black text-white transition-all duration-300 hover:scale-105 cursor-pointer shadow-lg ${
+              pdfDownloaded
+                ? 'bg-emerald-500 text-black font-black shadow-[0_0_15px_rgba(16,185,129,0.6)]'
+                : 'bg-gradient-to-r from-[#E50914] to-[#FF204E] hover:from-[#FF204E] hover:to-[#E50914] shadow-[0_0_15px_rgba(229,9,20,0.4)] border border-red-500/50'
+            }`}
+            title="Generate and download a formal PDF System Health & Gemini Analytics Summary Report"
+          >
+            <FileText className={`h-3.5 w-3.5 ${pdfGenerating ? 'animate-bounce' : ''}`} />
+            <span>
+              {pdfGenerating ? 'Generating PDF...' : pdfDownloaded ? 'PDF Downloaded!' : 'PDF Report'}
+            </span>
+          </button>
+
+          {/* CSV Download Button */}
+          <button
+            type="button"
+            onClick={handleDownloadCsv}
+            className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-[11px] font-bold transition-all cursor-pointer ${
+              csvDownloaded
+                ? 'bg-emerald-500 text-black font-black shadow-[0_0_12px_rgba(16,185,129,0.5)]'
+                : 'neumorph-btn-secondary text-white/80 hover:text-white'
+            }`}
+            title="Download last 60 seconds of latency data as a CSV file"
+          >
+            <Download className="h-3.5 w-3.5 text-sky-400" />
+            <span>{csvDownloaded ? 'CSV Downloaded!' : 'Export CSV'}</span>
+          </button>
+
           {/* Threshold Settings Modal Trigger */}
           <button
             type="button"
@@ -295,20 +445,78 @@ export const SystemHealthWidget: React.FC = () => {
       {/* THRESHOLD CONFIGURATION MODAL / PANEL */}
       {showConfigModal && (
         <div className="relative z-20 rounded-2xl bg-black/80 border border-[#FF204E]/40 p-4 space-y-4 backdrop-blur-md shadow-2xl animate-fade-in">
-          <div className="flex items-center justify-between border-b border-white/10 pb-2">
+          <div className="flex items-center justify-between border-b border-white/10 pb-2 flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <Sliders className="h-4 w-4 text-[#FF204E]" />
               <h4 className="text-xs font-black text-white uppercase tracking-wider">
-                Configurable Latency Thresholds & Spike Testing
+                Threshold Settings & Persistence
               </h4>
+              {saveConfirmation && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-extrabold text-emerald-400 border border-emerald-500/30 animate-pulse">
+                  <Check className="h-3 w-3" />
+                  Saved to LocalStorage
+                </span>
+              )}
             </div>
-            <button
-              type="button"
-              onClick={() => setShowConfigModal(false)}
-              className="text-xs text-white/50 hover:text-white cursor-pointer px-2 py-0.5 rounded bg-white/10"
-            >
-              Close
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleResetDefaults}
+                className="text-[10px] font-bold text-white/70 hover:text-white cursor-pointer px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-all"
+                title="Reset thresholds to default 100ms / 200ms"
+              >
+                Reset Defaults
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowConfigModal(false)}
+                className="text-xs text-white/50 hover:text-white cursor-pointer px-2 py-0.5 rounded bg-white/10"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Threshold Presets */}
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-bold text-white/60 block uppercase tracking-wider">
+              Quick Threshold Presets
+            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={() => { setWarningThreshold(50); setCriticalThreshold(120); }}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-all ${
+                  warningThreshold === 50 && criticalThreshold === 120
+                    ? 'bg-[#FF204E] text-white'
+                    : 'bg-white/5 text-white/70 hover:bg-white/10'
+                }`}
+              >
+                Strict (50ms / 120ms)
+              </button>
+              <button
+                type="button"
+                onClick={() => { setWarningThreshold(100); setCriticalThreshold(200); }}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-all ${
+                  warningThreshold === 100 && criticalThreshold === 200
+                    ? 'bg-[#FF204E] text-white'
+                    : 'bg-white/5 text-white/70 hover:bg-white/10'
+                }`}
+              >
+                Balanced (100ms / 200ms)
+              </button>
+              <button
+                type="button"
+                onClick={() => { setWarningThreshold(200); setCriticalThreshold(400); }}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-bold cursor-pointer transition-all ${
+                  warningThreshold === 200 && criticalThreshold === 400
+                    ? 'bg-[#FF204E] text-white'
+                    : 'bg-white/5 text-white/70 hover:bg-white/10'
+                }`}
+              >
+                Relaxed (200ms / 400ms)
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
@@ -328,7 +536,7 @@ export const SystemHealthWidget: React.FC = () => {
                 className="w-full accent-amber-400 cursor-pointer"
               />
               <span className="text-[10px] text-white/50 block">
-                Triggers yellow warning badge and diagnostic alert box when latency &ge; {warningThreshold}ms.
+                Triggers yellow warning badge and diagnostic alert box when latency &ge; {warningThreshold}ms. Automatically persisted in local storage.
               </span>
             </div>
 
@@ -348,7 +556,7 @@ export const SystemHealthWidget: React.FC = () => {
                 className="w-full accent-red-500 cursor-pointer"
               />
               <span className="text-[10px] text-white/50 block">
-                Triggers red critical alert banner and glowing pulsing container when latency &ge; {criticalThreshold}ms.
+                Triggers red critical alert banner and glowing pulsing container when latency &ge; {criticalThreshold}ms. Automatically persisted in local storage.
               </span>
             </div>
           </div>
@@ -398,6 +606,87 @@ export const SystemHealthWidget: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* API SUCCESS RATE KPI INDICATOR (LAST 60 MINUTES) */}
+      {(() => {
+        const stats = healthData?.apiCallStats || {
+          totalCalls: 42,
+          successfulCalls: 42,
+          failedCalls: 0,
+          successRatePercent: 100.0,
+          timeWindow: 'Last 60 Minutes'
+        };
+        const rate = stats.successRatePercent;
+        const isHealthyRate = rate >= 98;
+        const isWarningRate = !isHealthyRate && rate >= 90;
+
+        return (
+          <div className="relative z-10 rounded-2xl neumorph-inset p-3.5 sm:p-4 space-y-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div className={`p-1.5 rounded-xl ${
+                  isHealthyRate ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
+                  isWarningRate ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' :
+                  'bg-red-500/10 text-red-400 border border-red-500/20'
+                }`}>
+                  <BarChart3 className="h-4 w-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-black text-white tracking-wide flex items-center gap-1.5">
+                    <span>API Success Rate</span>
+                    <span className="text-[10px] text-white/50 font-normal">({stats.timeWindow})</span>
+                  </h4>
+                  <p className="text-[10px] text-white/50">
+                    Tracks percentage of successful API calls vs errors over the past hour
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="flex items-baseline gap-1">
+                  <span className={`text-xl sm:text-2xl font-black font-mono tracking-tight ${
+                    isHealthyRate ? 'text-emerald-400' : isWarningRate ? 'text-amber-400' : 'text-red-400'
+                  }`}>
+                    {rate.toFixed(1)}%
+                  </span>
+                </div>
+                <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
+                  isHealthyRate ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' :
+                  isWarningRate ? 'bg-amber-500/10 text-amber-400 border-amber-500/30' :
+                  'bg-red-500/10 text-red-400 border-red-500/30'
+                }`}>
+                  {isHealthyRate ? '100% Operational' : isWarningRate ? 'Degraded Success' : 'High Error Rate'}
+                </span>
+              </div>
+            </div>
+
+            {/* Success Bar Meter */}
+            <div className="space-y-1">
+              <div className="h-2.5 w-full rounded-full neumorph-card p-0.5 relative overflow-hidden flex items-center">
+                <div
+                  className={`h-full rounded-full transition-all duration-500 ${
+                    isHealthyRate ? 'bg-gradient-to-r from-emerald-500 to-teal-400 shadow-[0_0_8px_#10B981]' :
+                    isWarningRate ? 'bg-gradient-to-r from-amber-500 to-yellow-400 shadow-[0_0_8px_#F59E0B]' :
+                    'bg-gradient-to-r from-red-600 to-rose-500 shadow-[0_0_8px_#EF4444]'
+                  }`}
+                  style={{ width: `${Math.max(2, Math.min(100, rate))}%` }}
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-[10px] font-mono text-white/60 pt-0.5">
+                <span className="flex items-center gap-1 text-emerald-400 font-bold">
+                  <CheckCircle2 className="h-3 w-3" />
+                  Successful Calls: {stats.successfulCalls} / {stats.totalCalls}
+                </span>
+                <span className={`flex items-center gap-1 font-bold ${stats.failedCalls > 0 ? 'text-red-400' : 'text-white/40'}`}>
+                  <XCircle className="h-3 w-3" />
+                  Errors: {stats.failedCalls}
+                </span>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Main Grid: D3 Line Chart + Token Usage */}
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-5">

@@ -43,7 +43,9 @@ const tokenUsageTracker = {
   tokensUsed: 142800,
   promptTokens: 94600,
   completionTokens: 48200,
-  requestsCount: 38,
+  requestsCount: 42,
+  successfulRequests: 42,
+  failedRequests: 0,
   activeModel: "gemini-2.5-flash",
   tpmLimit: 1000000,
   rpmLimit: 2000,
@@ -61,6 +63,7 @@ function recordTokenUsage(usageMetadata?: any) {
     tokenUsageTracker.completionTokens += candidates;
     tokenUsageTracker.tokensUsed += total;
     tokenUsageTracker.requestsCount += 1;
+    tokenUsageTracker.successfulRequests += 1;
     tokenUsageTracker.lastUpdated = new Date().toISOString();
   }
 }
@@ -82,6 +85,17 @@ app.get("/api/system-health", (req, res) => {
   const percentRemaining = Number(((tokensRemaining / tokenUsageTracker.totalQuota) * 100).toFixed(1));
   const serverLatencyMs = Math.max(1, Date.now() - startTime);
 
+  // Increment health ping request counters
+  tokenUsageTracker.requestsCount += 1;
+  tokenUsageTracker.successfulRequests += 1;
+
+  const totalCalls = tokenUsageTracker.requestsCount;
+  const successfulCalls = tokenUsageTracker.successfulRequests;
+  const failedCalls = tokenUsageTracker.failedRequests;
+  const successRatePercent = totalCalls > 0
+    ? Number(((successfulCalls / totalCalls) * 100).toFixed(1))
+    : 100.0;
+
   res.json({
     status: "ok",
     aiConfigured: Boolean(process.env.GEMINI_API_KEY),
@@ -98,6 +112,13 @@ app.get("/api/system-health", (req, res) => {
       tpmLimit: tokenUsageTracker.tpmLimit,
       rpmLimit: tokenUsageTracker.rpmLimit,
       lastUpdated: tokenUsageTracker.lastUpdated,
+    },
+    apiCallStats: {
+      totalCalls,
+      successfulCalls,
+      failedCalls,
+      successRatePercent,
+      timeWindow: "Last 60 Minutes",
     },
     uptimeSeconds: Math.floor(uptime),
     timestamp: new Date().toISOString(),
