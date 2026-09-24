@@ -102,6 +102,20 @@ export default defineConfig(() => {
     // GitHub Pages
     base: './',
 
+    build: {
+      chunkSizeWarningLimit: 3500,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-lucide': ['lucide-react'],
+            'vendor-recharts': ['recharts', 'd3'],
+            'vendor-jspdf': ['jspdf'],
+          },
+        },
+      },
+    },
+
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
