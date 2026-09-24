@@ -3091,6 +3091,9 @@ export interface SystemHealthData {
     tpmLimit: number;
     rpmLimit: number;
     lastUpdated: string;
+    tokensPerMinute?: number;
+    estimatedMinutesToExhaustion?: number;
+    isDepletionAlertTriggered?: boolean;
   };
   apiCallStats?: {
     totalCalls: number;

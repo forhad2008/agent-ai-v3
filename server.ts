@@ -50,6 +50,7 @@ const tokenUsageTracker = {
   tpmLimit: 1000000,
   rpmLimit: 2000,
   lastUpdated: new Date().toISOString(),
+  startTimeMs: Date.now() - 3600000, // 1 hour ago initialization baseline
 };
 
 function recordTokenUsage(usageMetadata?: any) {
@@ -96,6 +97,14 @@ app.get("/api/system-health", (req, res) => {
     ? Number(((successfulCalls / totalCalls) * 100).toFixed(1))
     : 100.0;
 
+  // Calculate predictive consumption rate
+  const elapsedMinutes = Math.max(1, (Date.now() - tokenUsageTracker.startTimeMs) / 60000);
+  const tokensPerMinute = Math.round(tokenUsageTracker.tokensUsed / elapsedMinutes);
+  const estimatedMinutesToExhaustion = tokensPerMinute > 0
+    ? Math.round(tokensRemaining / tokensPerMinute)
+    : 999;
+  const isDepletionAlertTriggered = estimatedMinutesToExhaustion <= 60;
+
   res.json({
     status: "ok",
     aiConfigured: Boolean(process.env.GEMINI_API_KEY),
@@ -112,6 +121,9 @@ app.get("/api/system-health", (req, res) => {
       tpmLimit: tokenUsageTracker.tpmLimit,
       rpmLimit: tokenUsageTracker.rpmLimit,
       lastUpdated: tokenUsageTracker.lastUpdated,
+      tokensPerMinute,
+      estimatedMinutesToExhaustion,
+      isDepletionAlertTriggered,
     },
     apiCallStats: {
       totalCalls,
