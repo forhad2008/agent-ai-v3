@@ -97,6 +97,72 @@ class SoundService {
     }
   }
 
+  // Subtle futuristic UI click sound
+  public playClick() {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(600, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.04);
+      gain.gain.setValueAtTime(0.04, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.04);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.04);
+    } catch (e) {
+      console.warn('Audio click failed:', e);
+    }
+  }
+
+  // Pop sound for pipeline progression
+  public playPop() {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    try {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(400, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.06);
+      gain.gain.setValueAtTime(0.05, ctx.currentTime);
+      gain.gain.linearRampToValueAtTime(0.001, ctx.currentTime + 0.06);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.06);
+    } catch (e) {
+      console.warn('Audio pop failed:', e);
+    }
+  }
+
+  // Success chime on completing a task or pipeline
+  public playSuccess() {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    try {
+      const notes = [523.25, 659.25, 783.99, 1046.5]; // C5, E5, G5, C6
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        const start = ctx.currentTime + idx * 0.07;
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0.05, start);
+        gain.gain.linearRampToValueAtTime(0.001, start + 0.18);
+        osc.start(start);
+        osc.stop(start + 0.18);
+      });
+    } catch (e) {
+      console.warn('Audio success failed:', e);
+    }
+  }
+
   // Play authentic "Pirates of the Caribbean" theme song (Real MP3/WAV Audio Track with Fallback)
   public playPiratesTheme(loop: boolean = true) {
     this.stopPiratesTheme();

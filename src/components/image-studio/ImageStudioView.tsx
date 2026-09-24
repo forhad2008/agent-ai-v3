@@ -32,9 +32,11 @@ import {
   Square,
   Circle,
   HelpCircle,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
 import { sound } from '../../services/sound';
+import { PromptGeneratorTool } from './PromptGeneratorTool';
 
 type AspectRatio = '1:1' | '16:9' | '9:16' | '4:3' | '3:4';
 type ActiveTool = 'select' | 'brush' | 'eraser' | 'mask' | 'text' | 'shape' | 'crop' | 'filters';
@@ -47,8 +49,9 @@ interface CanvasHistoryState {
 export const ImageStudioView: React.FC = () => {
   const { uploadFile, setActiveView, handleSendMessage } = useAgent();
 
-  // Mode: 'generate' | 'edit' | 'gallery'
-  const [studioMode, setStudioMode] = useState<'generate' | 'edit' | 'gallery'>('generate');
+  // Mode: 'generate' | 'edit' | 'gallery' | 'generator-tool'
+  const [studioMode, setStudioMode] = useState<'generate' | 'edit' | 'gallery' | 'generator-tool'>('generate');
+  const [showPromptGeneratorModal, setShowPromptGeneratorModal] = useState(false);
 
   // Generation Controls
   const [prompt, setPrompt] = useState('Futuristic robotic AI core glowing with cosmic red circuits in deep space, hyper-detailed, octane render 8k');
@@ -678,14 +681,14 @@ export const ImageStudioView: React.FC = () => {
         </div>
 
         {/* Studio View Mode Switcher */}
-        <div className="flex items-center gap-1.5 neumorph-inset p-1 rounded-xl">
+        <div className="flex items-center gap-1.5 neumorph-inset p-1 rounded-xl overflow-x-auto max-w-full">
           <button
             type="button"
             onClick={() => {
               setStudioMode('generate');
               sound.play('click');
             }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               studioMode === 'generate' ? 'neumorph-btn-primary text-white shadow-md' : 'text-[#94A3B8] hover:text-white'
             }`}
           >
@@ -695,10 +698,23 @@ export const ImageStudioView: React.FC = () => {
           <button
             type="button"
             onClick={() => {
+              setStudioMode('generator-tool');
+              sound.play('click');
+            }}
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
+              studioMode === 'generator-tool' ? 'neumorph-btn-primary text-white shadow-md' : 'text-[#FF204E] hover:text-white'
+            }`}
+          >
+            <SlidersHorizontal className="h-3.5 w-3.5" />
+            Prompt Generator Tool
+          </button>
+          <button
+            type="button"
+            onClick={() => {
               setStudioMode('edit');
               sound.play('click');
             }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               studioMode === 'edit' ? 'neumorph-btn-primary text-white shadow-md' : 'text-[#94A3B8] hover:text-white'
             }`}
           >
@@ -711,7 +727,7 @@ export const ImageStudioView: React.FC = () => {
               setStudioMode('gallery');
               sound.play('click');
             }}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap ${
               studioMode === 'gallery' ? 'neumorph-btn-primary text-white shadow-md' : 'text-[#94A3B8] hover:text-white'
             }`}
           >
@@ -723,8 +739,8 @@ export const ImageStudioView: React.FC = () => {
 
       {/* Main Workspace Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-1 min-h-[620px]">
-        {/* LEFT COLUMN: Controls & Tools (4 cols) */}
-        <div className="lg:col-span-4 flex flex-col space-y-4">
+        {/* LEFT COLUMN: Controls & Tools (4 cols normally, 6 cols in generator-tool mode) */}
+        <div className={`${studioMode === 'generator-tool' ? 'lg:col-span-6' : 'lg:col-span-4'} flex flex-col space-y-4`}>
           {studioMode === 'generate' ? (
             /* GENERATOR PANEL */
             <div className="neumorph-card p-4 rounded-2xl space-y-4 border border-[#E50914]/20 flex-1">
@@ -733,15 +749,29 @@ export const ImageStudioView: React.FC = () => {
                   <Sparkles className="h-4 w-4 text-[#FF204E]" />
                   Creative Prompt Studio
                 </span>
-                <button
-                  type="button"
-                  onClick={handleEnhancePrompt}
-                  disabled={isEnhancingPrompt}
-                  className="neumorph-btn-secondary px-2.5 py-1 rounded-lg text-[11px] font-bold text-[#FF204E] hover:text-white flex items-center gap-1 cursor-pointer"
-                >
-                  <Wand2 className={`h-3 w-3 ${isEnhancingPrompt ? 'animate-spin' : ''}`} />
-                  {isEnhancingPrompt ? 'Enhancing...' : 'Enhance Prompt'}
-                </button>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStudioMode('generator-tool');
+                      sound.play('click');
+                    }}
+                    className="neumorph-btn-primary px-2.5 py-1 rounded-lg text-[11px] font-bold text-white flex items-center gap-1 cursor-pointer shadow-sm"
+                    title="Open Prompt Generator Tool to build deep style, lighting & mood prompts"
+                  >
+                    <SlidersHorizontal className="h-3 w-3" />
+                    Prompt Builder
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleEnhancePrompt}
+                    disabled={isEnhancingPrompt}
+                    className="neumorph-btn-secondary px-2.5 py-1 rounded-lg text-[11px] font-bold text-[#FF204E] hover:text-white flex items-center gap-1 cursor-pointer"
+                  >
+                    <Wand2 className={`h-3 w-3 ${isEnhancingPrompt ? 'animate-spin' : ''}`} />
+                    {isEnhancingPrompt ? 'Enhancing...' : 'Enhance'}
+                  </button>
+                </div>
               </div>
 
               {/* Prompt Textarea */}
@@ -1206,6 +1236,21 @@ export const ImageStudioView: React.FC = () => {
                 </button>
               </div>
             </div>
+          ) : studioMode === 'generator-tool' ? (
+            /* DEDICATED PROMPT GENERATOR TOOL IN LEFT PANEL */
+            <div className="flex-1 overflow-y-auto max-h-[760px] scrollbar-thin">
+              <PromptGeneratorTool
+                initialPrompt={prompt}
+                onApplyPrompt={(genPrompt, styleId, negPrompt) => {
+                  setPrompt(genPrompt);
+                  if (styleId) setSelectedStyle(styleId);
+                  if (negPrompt) setNegativePrompt(negPrompt);
+                  setStudioMode('generate');
+                  sound.play('success');
+                }}
+                onClose={() => setStudioMode('generate')}
+              />
+            </div>
           ) : (
             /* SHOWCASE GALLERY PROMPTS PANEL */
             <div className="neumorph-card p-4 rounded-2xl space-y-3 border border-[#E50914]/20 flex-1 overflow-y-auto max-h-[700px]">
@@ -1269,8 +1314,8 @@ export const ImageStudioView: React.FC = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: The Interactive Pro Canvas (8 cols) */}
-        <div className="lg:col-span-8 flex flex-col space-y-3">
+        {/* RIGHT COLUMN: The Interactive Pro Canvas (8 cols normally, 6 cols in generator-tool mode) */}
+        <div className={`${studioMode === 'generator-tool' ? 'lg:col-span-6' : 'lg:col-span-8'} flex flex-col space-y-3`}>
           {/* Canvas Floating Top Toolbar */}
           <div className="neumorph-card px-4 py-2.5 rounded-2xl flex items-center justify-between border border-[#E50914]/25">
             <div className="flex items-center gap-2">

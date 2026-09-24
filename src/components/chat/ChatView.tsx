@@ -101,21 +101,15 @@ export const ChatView: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const speechRecognitionRef = useRef<any>(null);
 
-  // High-performance response action timer (10s guarantee countdown)
-  const [countdown, setCountdown] = useState(10);
+  // Deep thinking elapsed timer (Autonomous mode without artificial time pressure)
+  const [thinkingSeconds, setThinkingSeconds] = useState(0);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
     if (isGenerating) {
-      setCountdown(10);
+      setThinkingSeconds(0);
       interval = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            return 1;
-          }
-          return prev - 1;
-        });
+        setThinkingSeconds((prev) => prev + 1);
       }, 1000);
     }
     return () => {
@@ -897,37 +891,63 @@ export const ChatView: React.FC = () => {
                   <span className="font-semibold">{settings.agentName || 'Agent-sigma08'}</span>
                 </div>
                 <span className="hidden sm:inline">•</span>
-                <span className="bg-[#E50914]/15 text-[#FF204E] px-2 py-0.5 rounded-md border border-[#FF204E]/30 font-bold tracking-wider font-mono text-[9px] animate-pulse">
-                  ⚡ 10S IMMEDIATE ACTION GUARANTEE: {countdown}S LEFT
+                <span className="bg-[#E50914]/15 text-[#FF204E] px-2.5 py-0.5 rounded-md border border-[#FF204E]/30 font-bold tracking-wider font-mono text-[10px] flex items-center gap-1.5">
+                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#FF204E] animate-pulse" />
+                  {settings.language === 'Bangla'
+                    ? `🧠 স্বাধীন চিন্তাভাবনা ও বিশ্লেষণ চলছে • ${thinkingSeconds}s`
+                    : `🧠 Autonomous Deep Thinking • ${thinkingSeconds}s`}
                 </span>
               </div>
 
-              <div className="w-full max-w-[85%] rounded-2xl bg-[#0f0306]/90 border border-[#E50914]/30 rounded-tl-none space-y-3 p-3">
+              <div className="w-full max-w-[85%] rounded-2xl bg-[#0f0306]/90 border border-[#E50914]/30 rounded-tl-none space-y-3 p-3.5 shadow-xl">
                 {activePlan && (
                   <PlanProgressCard steps={activePlan} isGenerating={true} />
                 )}
 
-                {/* Instant Action Countdown Progress Bar */}
-                <div className="space-y-1 bg-[#080204]/60 rounded-xl p-2.5 border border-white/5">
-                  <div className="flex items-center justify-between text-[10px] font-mono text-[#FF204E]">
-                    <span className="font-sans">Fast Processing & Response Pipeline:</span>
-                    <span className="font-bold">{((10 - countdown) * 10).toFixed(0)}% Completed</span>
+                {/* Autonomous Thought Pipeline & Depth Indicator */}
+                <div className="space-y-1.5 bg-[#080204]/70 rounded-xl p-2.5 border border-white/5">
+                  <div className="flex items-center justify-between text-[11px] font-mono">
+                    <span className="text-slate-300 font-medium flex items-center gap-1.5">
+                      <span className="text-[#FF204E]">◈</span>
+                      {thinkingSeconds < 4
+                        ? (settings.language === 'Bangla' ? 'লক্ষ্য অনুধাবন ও প্রয়োজনীয় আর্কিটেকচার বিশ্লেষণ...' : 'Deconstructing goals & exploring optimal architectures...')
+                        : thinkingSeconds < 9
+                        ? (settings.language === 'Bangla' ? 'গভীর ডোমেন জ্ঞান ও সর্বোত্তম সমাধান অনুসন্ধান...' : 'Synthesizing domain knowledge & evaluating solutions...')
+                        : thinkingSeconds < 16
+                        ? (settings.language === 'Bangla' ? 'পূর্ণাঙ্গ সমাধান, কোড ও কার্যপ্রণালী প্রস্তুত হচ্ছে...' : 'Formulating comprehensive deliverables & production-grade code...')
+                        : (settings.language === 'Bangla' ? 'নিখুঁত মান যাচাই ও চূড়ান্ত ডেলিভারি প্রস্তুত হচ্ছে...' : 'Polishing deliverable & verifying quality edge-cases...')}
+                    </span>
+                    <span className="text-[#FF204E] font-bold text-[10px] bg-[#FF204E]/10 px-2 py-0.5 rounded border border-[#FF204E]/20">
+                      {thinkingSeconds}s elapsed
+                    </span>
                   </div>
-                  <div className="w-full bg-[#080204] rounded-full h-1.5 overflow-hidden">
+                  <div className="w-full bg-[#140207] rounded-full h-1.5 overflow-hidden">
                     <div 
-                      className="bg-gradient-to-r from-[#E50914] via-[#FF204E] to-[#990000] h-1.5 transition-all duration-300" 
-                      style={{ width: `${Math.min(100, ((11 - countdown) * 10))}%` }} 
+                      className="bg-gradient-to-r from-[#E50914] via-[#FF204E] to-[#FF6B8B] h-1.5 transition-all duration-500 animate-pulse" 
+                      style={{ width: `${Math.min(96, Math.max(15, thinkingSeconds * 6))}%` }} 
                     />
+                  </div>
+                  <div className="flex items-center justify-between text-[9px] text-slate-400 pt-0.5">
+                    <span>
+                      {settings.language === 'Bangla'
+                        ? '✨ কোনো কৃত্রিম সময়সীমা নেই • সম্পূর্ণ সঠিক ও পূর্ণাঙ্গ উত্তর তৈরির নিশ্চয়তা'
+                        : '✨ No artificial rush • Prioritizing comprehensive excellence over speed'}
+                    </span>
+                    <span className="text-emerald-400/80 font-mono">Independent Mode Active</span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 text-xs text-slate-400 pt-1">
+                <div className="flex items-center gap-3 text-xs text-slate-400 pt-0.5">
                   <div className="flex space-x-1">
                     <div className="h-2 w-2 rounded-full bg-[#FF204E] animate-bounce" style={{ animationDelay: '0ms' }} />
                     <div className="h-2 w-2 rounded-full bg-[#FF204E] animate-bounce" style={{ animationDelay: '150ms' }} />
                     <div className="h-2 w-2 rounded-full bg-[#FF204E] animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
-                  <span>{settings.language === 'Bangla' ? 'টাস্ক এক্সিকিউশন ও ফলাফল যাচাই চলছে...' : 'Executing tools and verifying results...'}</span>
+                  <span>
+                    {settings.language === 'Bangla'
+                      ? 'এজেন্ট সম্পূর্ণ ফলাফল প্রস্তুত করছে, উত্তর প্রস্তুত হওয়া মাত্রই প্রদর্শিত হবে...'
+                      : 'Agent is formulating the complete response, will deliver as soon as ready...'}
+                  </span>
                 </div>
               </div>
             </div>

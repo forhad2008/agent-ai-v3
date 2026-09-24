@@ -26,6 +26,7 @@ import { getPageTranslations, PageTranslations } from '../data/translations';
 
 export type ActiveView = 
   | 'dashboard' 
+  | 'perfect-agent'
   | 'chat' 
   | 'tasks' 
   | 'approvals' 
@@ -496,6 +497,33 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       associatedTaskId = newTask.id;
     }
 
+    // Dynamic Language Recognition & Session Continuity
+    let activeLang = settings.language;
+    const lowerText = text.toLowerCase();
+    if (
+      lowerText.includes('speak in bangla') ||
+      lowerText.includes('বাংলায় কথা বলুন') ||
+      lowerText.includes('বাংলায় কথা বলো') ||
+      lowerText.includes('বাংলায় কথা বলো') ||
+      lowerText.includes('বাংলায় বলো') ||
+      lowerText.includes('speak in bengali') ||
+      lowerText.includes('banglay kotha bolo') ||
+      lowerText.includes('bangla te bolo')
+    ) {
+      activeLang = 'Bangla';
+      setSettings((prev) => ({ ...prev, language: 'Bangla' }));
+    } else if (
+      lowerText.includes('speak in english') ||
+      lowerText.includes('ইংরেজিতে কথা বলো') ||
+      lowerText.includes('talk in english')
+    ) {
+      activeLang = 'English';
+      setSettings((prev) => ({ ...prev, language: 'English' }));
+    } else if (/[\u0980-\u09FF]/.test(text) && activeLang !== 'Bangla') {
+      activeLang = 'Bangla';
+      setSettings((prev) => ({ ...prev, language: 'Bangla' }));
+    }
+
     try {
       // Step 2 in progress
       setActivePlan((prev) => 
@@ -510,10 +538,10 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       const agentResponse = await sendAgentMessage(
         text,
         messages,
-        settings.language,
+        activeLang,
         attachedList,
         userProfile,
-        settings
+        { ...settings, language: activeLang }
       );
 
       // Final plan step update

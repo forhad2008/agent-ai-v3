@@ -243,6 +243,76 @@ export const DashboardView: React.FC = () => {
       </div>
 
       {/* ======================================================== */}
+      {/* FEATURED: WHAT IS A PERFECT AI AGENT? SHOWCASE           */}
+      {/* ======================================================== */}
+      <div
+        id="perfect_agent_featured_banner"
+        className="
+          relative
+          overflow-hidden
+          rounded-3xl
+          p-5
+          sm:p-6
+          neumorph-card
+          border
+          border-[#FF204E]/40
+          bg-gradient-to-r
+          from-[#1f0408]
+          via-[#130205]
+          to-[#1b0307]
+          shadow-[0_0_30px_rgba(229,9,20,0.3)]
+        "
+      >
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="space-y-2 max-w-2xl">
+            <div className="flex items-center gap-2">
+              <span className="rounded-full bg-[#E50914]/25 border border-[#FF204E]/40 px-3 py-0.5 text-[10px] font-mono font-bold text-[#FF4D4D] uppercase tracking-wider">
+                Agent Architecture Matrix
+              </span>
+              <span className="rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 text-[10px] font-bold">
+                10 Pillars & Simulator
+              </span>
+            </div>
+
+            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+              What is a Perfect AI Agent? 🎯
+            </h3>
+
+            <p className="text-xs sm:text-sm text-white/90 leading-relaxed font-medium">
+              “AI Agent হলো এমন একটি AI system যেটা শুধু প্রশ্নের উত্তর দেয় না—বরং নিজে <span className="text-[#FF204E] font-bold">লক্ষ্য বুঝে</span>, <span className="text-[#FF204E] font-bold">পরিকল্পনা করে</span>, <span className="text-[#FF204E] font-bold">প্রয়োজনীয় কাজ করে</span> এবং <span className="text-[#FF204E] font-bold">ফলাফল দেখে পরবর্তী সিদ্ধান্ত নেয়</span>।”
+            </p>
+
+            <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-mono text-zinc-300">
+              <span className="text-amber-300 font-bold">AI = Brain 🧠</span>
+              <span className="text-white/40">|</span>
+              <span className="text-[#FF4D4D] font-bold">Agent = Brain + Tools + Memory + Planning + Actions ⚙️</span>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0">
+            <button
+              onClick={() => setActiveView('perfect-agent')}
+              className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#E50914] to-[#B80610] hover:from-[#FF204E] hover:to-[#E50914] text-white px-5 py-3 font-bold text-xs shadow-[0_0_20px_rgba(229,9,20,0.5)] transition-all cursor-pointer transform hover:scale-[1.02]"
+            >
+              <Sparkles className="h-4 w-4 fill-white" />
+              <span>Explore Blueprint & Simulator</span>
+            </button>
+
+            <button
+              onClick={() => {
+                handleSendMessage('আমার জন্য একটা restaurant website বানাও');
+                setActiveView('chat');
+              }}
+              className="flex items-center justify-center gap-2 rounded-2xl neumorph-card border border-[#E50914]/30 hover:border-[#FF204E]/60 text-white/90 hover:text-white px-4 py-2.5 font-semibold text-xs transition-all cursor-pointer"
+            >
+              <span>Test Restaurant Example</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ======================================================== */}
       {/* 2. QUICK ACTIONS BAR (5 Neumorphic Cards)                */}
       {/* ======================================================== */}
       <div className="space-y-3">

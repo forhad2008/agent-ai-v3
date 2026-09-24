@@ -134,6 +134,13 @@ export const Header: React.FC = () => {
         icon: LayoutDashboard,
       },
       {
+        id: 'page_perfect_agent',
+        label: 'What is a Perfect AI Agent? 🎯',
+        desc: '10 architectural pillars, Normal AI vs Agent battle arena & simulator',
+        view: 'perfect-agent' as const,
+        icon: Sparkles,
+      },
+      {
         id: 'page_chat',
         label: 'AI Co-Pilot Chat',
         desc: 'ChatGPT-grade conversational reasoning with autonomous execution',

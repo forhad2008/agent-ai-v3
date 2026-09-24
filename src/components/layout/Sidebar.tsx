@@ -13,6 +13,7 @@ import {
   Download,
   Cpu,
   Palette,
+  Sparkles,
 } from 'lucide-react';
 import { useAgent, ActiveView } from '../../context/AgentContext';
 
