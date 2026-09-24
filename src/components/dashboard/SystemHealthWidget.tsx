@@ -151,35 +151,41 @@ export const SystemHealthWidget: React.FC = () => {
     setCriticalThreshold(200);
   };
 
-  // CSV Export for 60-second latency data
+  // Refactored Stream-oriented Blob CSV Export for high performance
   const handleDownloadCsv = () => {
     if (latencyWindow.length === 0) return;
 
-    const csvRows = [
-      ['Timestamp_Ms', 'ISO_Date_Time', 'Local_Time', 'Latency_Ms', 'Warning_Threshold_Ms', 'Critical_Threshold_Ms', 'Latency_Status'].join(',')
-    ];
+    // Stream buffer parts array for chunked Blob construction without single-string memory overhead
+    const blobParts: BlobPart[] = [];
 
-    latencyWindow.forEach((p) => {
-      const isoTime = new Date(p.timestamp).toISOString();
-      const status = p.latencyMs >= criticalThreshold
-        ? 'CRITICAL'
-        : p.latencyMs >= warningThreshold
-        ? 'WARNING'
-        : 'OPTIMAL';
-      csvRows.push([
-        p.timestamp,
-        `"${isoTime}"`,
-        `"${p.timeLabel}"`,
-        p.latencyMs,
-        warningThreshold,
-        criticalThreshold,
-        `"${status}"`
-      ].join(','));
-    });
+    // Header row chunk
+    blobParts.push('Timestamp_Ms,ISO_Date_Time,Local_Time,Latency_Ms,Warning_Threshold_Ms,Critical_Threshold_Ms,Latency_Status\n');
 
-    const csvString = csvRows.join('\n');
-    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+    // Process data rows in stream chunks (50 samples per chunk)
+    const CHUNK_SIZE = 50;
+    for (let i = 0; i < latencyWindow.length; i += CHUNK_SIZE) {
+      const chunk = latencyWindow.slice(i, i + CHUNK_SIZE);
+      let chunkBuffer = '';
+
+      for (let j = 0; j < chunk.length; j++) {
+        const p = chunk[j];
+        const isoTime = new Date(p.timestamp).toISOString();
+        const status = p.latencyMs >= criticalThreshold
+          ? 'CRITICAL'
+          : p.latencyMs >= warningThreshold
+          ? 'WARNING'
+          : 'OPTIMAL';
+
+        chunkBuffer += `${p.timestamp},"${isoTime}","${p.timeLabel}",${p.latencyMs},${warningThreshold},${criticalThreshold},"${status}"\n`;
+      }
+
+      blobParts.push(chunkBuffer);
+    }
+
+    // Construct Blob directly from stream parts array
+    const streamBlob = new Blob(blobParts, { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(streamBlob);
+
     const link = document.createElement('a');
     const timestampStr = new Date().toISOString().replace(/[:.]/g, '-');
     const filename = `latency_data_60s_${timestampStr}.csv`;
@@ -188,7 +194,9 @@ export const SystemHealthWidget: React.FC = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+
+    // Asynchronous URL revocation after frame execution
+    setTimeout(() => URL.revokeObjectURL(url), 150);
 
     setCsvDownloaded(true);
     setTimeout(() => setCsvDownloaded(false), 2500);

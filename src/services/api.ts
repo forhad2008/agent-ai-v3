@@ -3145,6 +3145,9 @@ export async function fetchSystemHealthApi(): Promise<SystemHealthData> {
         tpmLimit: 1000000,
         rpmLimit: 2000,
         lastUpdated: new Date().toISOString(),
+        tokensPerMinute: 2380,
+        estimatedMinutesToExhaustion: 360,
+        isDepletionAlertTriggered: false,
       },
       apiCallStats: {
         totalCalls: 42,
