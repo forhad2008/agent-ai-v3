@@ -350,3 +350,34 @@ export interface GeneratedMasterPlan {
   planSteps: PlanStep[];
   formattedMarkdown?: string;
 }
+
+export type VoiceIntentType =
+  | 'navigate'
+  | 'create_task'
+  | 'search'
+  | 'ask_agent'
+  | 'execute_tool'
+  | 'manage_notifications'
+  | 'manage_alarm'
+  | 'system_control'
+  | 'help'
+  | 'unknown';
+
+export interface VoiceCommandRecord {
+  id: string;
+  transcript: string;
+  intent: VoiceIntentType;
+  actionSummary: string;
+  responseSpeech?: string;
+  timestamp: string;
+  success: boolean;
+  confidence?: number;
+  parameters?: Record<string, any>;
+}
+
+export interface VoiceCheatItem {
+  phrase: string;
+  intent: VoiceIntentType;
+  description: string;
+  category: 'Navigation' | 'Task Creation' | 'AI & Tools' | 'System & Audio';
+}

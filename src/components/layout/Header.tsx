@@ -33,8 +33,11 @@ import {
   TrendingUp,
   Bot,
   History,
+  Mic,
+  MicOff,
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
+import { useVoiceCommand } from '../../context/VoiceCommandContext';
 import { TECH_LANGUAGES, TechLanguage } from '../../data/languages';
 import { sound } from '../../services/sound';
 
@@ -89,6 +92,13 @@ export const Header: React.FC = () => {
     markAllNotificationsAsRead,
     setIsNotificationCenterOpen,
   } = useAgent();
+
+  const {
+    isListening,
+    toggleListening,
+    setIsVoiceModalOpen,
+    isSupported: isVoiceSupported,
+  } = useVoiceCommand();
 
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationDropdownRef = useRef<HTMLDivElement>(null);
@@ -688,6 +698,25 @@ export const Header: React.FC = () => {
           />
 
           <div className="absolute right-1.5 sm:right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            {isVoiceSupported && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  sound.playClick();
+                  toggleListening();
+                }}
+                className={`h-6 w-6 sm:h-5 sm:w-5 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                  isListening
+                    ? 'bg-[#FF204E] text-white animate-pulse shadow-[0_0_10px_rgba(255,32,78,0.8)]'
+                    : 'text-[#94A3B8] hover:text-[#FF204E] hover:bg-white/5'
+                }`}
+                title={isListening ? 'Stop Voice Listening (Alt+V)' : 'Voice-Activated Search & Commands (Alt+V)'}
+              >
+                <Mic className="h-3 w-3" />
+              </button>
+            )}
+
             {searchQuery && (
               <button
                 type="button"
@@ -1148,6 +1177,86 @@ export const Header: React.FC = () => {
                 <ArrowRight className="h-2.5 w-2.5" />
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Voice-Activated Command Trigger & HUD Opener */}
+        {isVoiceSupported && (
+          <div className="relative flex items-center">
+            <button
+              id="btn_voice_command_header"
+              type="button"
+              onClick={() => {
+                sound.playClick();
+                toggleListening();
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                sound.playClick();
+                setIsVoiceModalOpen(true);
+              }}
+              className={`
+                group
+                relative
+                flex
+                h-9
+                items-center
+                gap-1.5
+                px-2.5
+                sm:px-3
+                rounded-full
+                cursor-pointer
+                transition-all
+                duration-200
+                border
+                active:scale-95
+                ${
+                  isListening
+                    ? 'bg-gradient-to-r from-[#FF204E]/30 via-[#E50914]/40 to-[#FF204E]/30 border-[#FF204E] text-white shadow-[0_0_18px_rgba(255,32,78,0.7)]'
+                    : 'neumorph-raised text-[#94A3B8] hover:text-white border-[#FF204E]/30 hover:border-[#FF204E]/60'
+                }
+              `}
+              title={
+                isListening
+                  ? 'Voice Listening Active (Alt+V to stop, right-click for Hub)'
+                  : 'Hands-Free Voice Commands (Alt+V to start, right-click for Hub)'
+              }
+            >
+              {isListening ? (
+                <>
+                  <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-[#FF204E] animate-ping" />
+                  <Mic className="h-4 w-4 text-[#FF204E] animate-bounce shrink-0" />
+                  <span className="hidden md:inline-flex text-[11px] font-bold text-white font-mono tracking-wide uppercase">
+                    Listening...
+                  </span>
+                  <div className="hidden sm:flex items-end gap-0.5 h-3">
+                    <span className="w-0.5 bg-[#FF204E] rounded-full animate-pulse h-full" />
+                    <span className="w-0.5 bg-[#FF4D6D] rounded-full animate-pulse h-1.5" style={{ animationDelay: '0.15s' }} />
+                    <span className="w-0.5 bg-[#FF204E] rounded-full animate-pulse h-2.5" style={{ animationDelay: '0.3s' }} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <Mic className="h-4 w-4 text-[#FF204E] group-hover:scale-110 transition-transform shrink-0" />
+                  <span className="hidden lg:inline-flex text-[11px] font-semibold text-slate-300 group-hover:text-white transition-colors">
+                    Voice
+                  </span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                sound.playClick();
+                setIsVoiceModalOpen(true);
+              }}
+              className="hidden sm:flex h-5 w-5 -ml-2 z-10 rounded-full neumorph-circle items-center justify-center text-[#94A3B8] hover:text-white hover:border-[#FF204E]/50 text-[9px] cursor-pointer"
+              title="Open Voice Command Hub & Cheatsheet"
+            >
+              <Sparkles className="h-2.5 w-2.5 text-amber-400" />
+            </button>
           </div>
         )}
 

@@ -20,6 +20,9 @@ import { LanguageModeModal } from './components/common/LanguageModeModal';
 import { InstallGuideModal } from './components/common/InstallGuideModal';
 import { NotificationCenterModal } from './components/notifications/NotificationCenterModal';
 import { NotificationToast } from './components/notifications/NotificationToast';
+import { VoiceCommandProvider } from './context/VoiceCommandContext';
+import { VoiceCommandHUD } from './components/voice/VoiceCommandHUD';
+import { VoiceCommandModal } from './components/voice/VoiceCommandModal';
 import { sound } from './services/sound';
 
 const MainLayout: React.FC = () => {
@@ -134,6 +137,8 @@ const MainLayout: React.FC = () => {
       <InstallGuideModal />
       <NotificationCenterModal />
       <NotificationToast />
+      <VoiceCommandHUD />
+      <VoiceCommandModal />
 
       {/* Alarm ringing popup overlay */}
       {triggeredAlarm && (
@@ -227,7 +232,9 @@ const MainLayout: React.FC = () => {
 export default function App() {
   return (
     <AgentProvider>
-      <MainLayout />
+      <VoiceCommandProvider>
+        <MainLayout />
+      </VoiceCommandProvider>
     </AgentProvider>
   );
 }
