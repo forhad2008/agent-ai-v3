@@ -38,40 +38,71 @@ const EMOJI_OPTIONS = ['👍', '❤️', '🔥', '🚀', '💡', '👏'];
 
 const ThinkingTraceSection: React.FC<{ thinkingText: string }> = ({ thinkingText }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
   const { setActiveView } = useAgent();
 
-  return (
-    <div className="my-2.5 overflow-hidden rounded-xl bg-[#0f0306]/70 border border-[#FF204E]/25 shadow-sm transition-all">
-      <div className="flex items-center justify-between px-3.5 py-2 bg-[#140407]/60">
-        <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 text-left text-[11px] font-bold uppercase tracking-wider text-[#FF204E] hover:text-[#ff4d73] transition-colors focus:outline-none cursor-pointer"
-        >
-          <div className="relative flex h-3.5 w-3.5 items-center justify-center">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E50914] opacity-35"></span>
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#FF204E]"></span>
-          </div>
-          <span className="font-semibold tracking-wider text-[#FF204E]">Agent Cognitive Thoughts</span>
-          <span className="text-[10px] text-[#94A3B8] font-mono tracking-wide">({isOpen ? 'COLLAPSE' : 'EXPAND'})</span>
-        </button>
+  const handleCopyThinking = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(thinkingText);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
 
+  return (
+    <div className="my-3 overflow-hidden rounded-2xl bg-gradient-to-br from-[#120408]/90 via-[#0a0204]/90 to-[#18050a]/90 border border-[#FF204E]/30 shadow-lg transition-all">
+      <div className="flex items-center justify-between px-4 py-2.5 bg-[#170509]/80 border-b border-[#FF204E]/15">
         <button
           type="button"
-          onClick={() => setActiveView('thought-process')}
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FF204E]/15 hover:bg-[#FF204E]/30 text-[#FF4D4D] text-[10px] font-bold font-mono transition-all cursor-pointer border border-[#FF204E]/30"
-          title="Open real-time Thought Process View"
+          onClick={() => setIsOpen(!isOpen)}
+          className="flex items-center gap-2.5 text-left text-xs font-bold uppercase tracking-wider text-[#FF204E] hover:text-[#ff4d73] transition-colors focus:outline-none cursor-pointer group"
         >
-          <Brain className="h-3 w-3" />
-          <span>Open Thought Process View ↗</span>
+          <div className="relative flex h-4 w-4 items-center justify-center">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#E50914] opacity-35"></span>
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#FF204E] shadow-[0_0_8px_#FF204E]"></span>
+          </div>
+          <span className="font-bold tracking-wider text-[#FF204E] group-hover:underline underline-offset-2">
+            🧠 Deep Cognitive Thinking & Web Strategy
+          </span>
+          <span className="text-[10px] text-[#94A3B8] font-mono px-2 py-0.5 rounded bg-black/40 border border-white/10">
+            {isOpen ? 'COLLAPSE ▴' : 'EXPAND ▾'}
+          </span>
         </button>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleCopyThinking}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-black/40 hover:bg-white/10 text-slate-300 hover:text-white text-[10px] font-mono transition-all border border-white/10 cursor-pointer"
+            title="Copy thinking trace"
+          >
+            {isCopied ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
+            <span>{isCopied ? 'Copied' : 'Copy'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveView('thought-process')}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#FF204E]/15 hover:bg-[#FF204E]/30 text-[#FF4D4D] text-[10px] font-bold font-mono transition-all cursor-pointer border border-[#FF204E]/30"
+            title="Open real-time Thought Process View"
+          >
+            <Brain className="h-3 w-3" />
+            <span className="hidden sm:inline">Thought Process View ↗</span>
+          </button>
+        </div>
       </div>
 
       {isOpen && (
-        <div className="border-t border-[#E50914]/15 bg-[#080204]/90 p-3 font-mono text-[11px] leading-relaxed text-[#94A3B8] whitespace-pre-wrap select-all">
-          <div className="flex items-start gap-1 text-[#FF204E] mb-1.5 font-bold tracking-tight">
-            <span>&gt;_ [system_cognitive_loop] unconstrained reasoning & sub-goals active...</span>
+        <div className="bg-[#060102]/95 p-4 font-mono text-[11px] leading-relaxed text-[#CBD5E1] whitespace-pre-wrap select-all space-y-2 border-t border-[#FF204E]/10">
+          <div className="flex items-center justify-between pb-2 border-b border-white/10 text-[10px] text-[#94A3B8]">
+            <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Multi-Platform Reasoning Engine • Complete Trace</span>
+            </div>
+            <span className="text-slate-400">Autonomous Execution Active</span>
           </div>
-          {thinkingText}
+          <div className="text-slate-300 whitespace-pre-wrap leading-relaxed">
+            {thinkingText}
+          </div>
         </div>
       )}
     </div>
@@ -96,6 +127,7 @@ export const ChatView: React.FC = () => {
     t,
     setIsLanguageModalOpen,
     deleteMessageWhatsAppStyle,
+    openPlanArchitect,
   } = useAgent();
 
   const [input, setInput] = useState('');
@@ -142,12 +174,11 @@ export const ChatView: React.FC = () => {
   }, []);
 
   const demoSuggestions = [
+    { title: settings.language === 'Bangla' ? '💰 অনলাইন ইনকাম ও সম্পদ প্ল্যান' : '💰 $5k/mo Wealth & Skill Plan', prompt: settings.language === 'Bangla' ? 'আমি অনলাইন থেকে প্রতি মাসে ৩০০০ ডলার আয় করতে চাই। গুগল ওয়েব ডেটা ও মার্কেট অ্যানালাইসিস দিয়ে আমার জন্য একটি নিখুঁত ৪-পর্যায়ের এক্সিকিউশন প্ল্যান তৈরি করো।' : 'I want to earn $3,000-$5,000/mo online. Synthesize a 4-phase strategic masterplan with verified Google market benchmarks.' },
+    { title: settings.language === 'Bangla' ? '💪 মাসল বিল্ডিং ও ওজন বৃদ্ধি প্ল্যান' : '💪 Muscle Hypertrophy & Weight Gain', prompt: settings.language === 'Bangla' ? 'আমি স্বাস্থ্যকরভাবে ৮ কেজি ওজন বাড়াতে এবং মাসল তৈরি করতে চাই। আমার উচ্চতা ৫ ফিট ৮ ইঞ্চি, ওজন ৬০ কেজি। সাইন্টিফিক ডায়েট ও ওয়ার্কআউট প্ল্যান দাও।' : 'I want to gain 8kg of lean muscle mass. My weight is 60kg, height 5ft 8in. Create a scientific caloric surplus nutrition and 4-phase workout masterplan.' },
     { title: settings.language === 'Bangla' ? '🧠 মেমরি ও জেমিনি ওয়ার্ক প্ল্যান' : '🧠 Memory & Gemini Work Plan', prompt: settings.language === 'Bangla' ? 'আমার মেমরি ও লক্ষ্য অনুযায়ী আমার কাজের একটি পূর্ণাঙ্গ প্ল্যান তৈরি করো' : 'Make a complete work plan for me using your memory and Gemini reasoning' },
     { title: settings.language === 'Bangla' ? '📄 গুরুত্বপূর্ণ ডকুমেন্টস ও লিংক' : '📄 Important Documents & Links', prompt: settings.language === 'Bangla' ? 'আমার প্রজেক্টের গুরুত্বপূর্ণ ডকুমেন্টস এবং প্রয়োজনীয় রেফারেন্স লিংকগুলো পাঠাও' : 'Send me the links to my important project documents and reference guides' },
     { title: t.demoAnalyzeWebsite, prompt: t.demoAnalyzeWebsitePrompt },
-    { title: t.demoCustomerReply, prompt: t.demoCustomerReplyPrompt },
-    { title: t.demoProductDescription, prompt: t.demoProductDescriptionPrompt },
-    { title: t.demoDebugCode, prompt: t.demoDebugCodePrompt },
     { title: t.demoResearchTrends, prompt: t.demoResearchTrendsPrompt },
   ];
 
@@ -415,6 +446,16 @@ export const ChatView: React.FC = () => {
 
         {/* Chat Header Actions */}
         <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Plan Architect Trigger Button */}
+          <button
+            onClick={() => openPlanArchitect()}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#FF204E] to-[#FF4D4D] text-white text-xs font-bold transition-all shadow-[0_0_15px_rgba(255,32,78,0.35)] hover:shadow-[0_0_22px_rgba(255,32,78,0.55)] cursor-pointer"
+            title="Open AI High-Quality Masterplan Architect"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-yellow-300" />
+            <span className="hidden sm:inline">{settings.language === 'Bangla' ? '🎯 মাস্টারপ্ল্যান তৈরি' : '🎯 Masterplan Architect'}</span>
+          </button>
+
           {/* Autonomous Web-Research & Learning Indicator */}
           <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-full neumorph-badge text-[10px] text-sky-300 font-mono">
             <Globe className="h-3 w-3 text-sky-400 animate-pulse" />
@@ -749,28 +790,28 @@ export const ChatView: React.FC = () => {
                         </div>
                       )}
 
-                      {/* Google Search Live Grounding & Web Sources Card */}
+                      {/* Google Search Live Grounding & Multi-Platform Web Sources Card */}
                       {msg.groundingMetadata && (Boolean(msg.groundingMetadata.searchQueries?.length) || Boolean(msg.groundingMetadata.sources?.length)) && (
-                        <div className="my-3 rounded-xl bg-[#030712]/90 border border-sky-500/35 p-3 text-xs shadow-lg space-y-2">
+                        <div className="my-3 rounded-2xl bg-[#030712]/95 border border-sky-500/35 p-3.5 text-xs shadow-[0_4px_20px_rgba(14,165,233,0.15)] space-y-2.5">
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-sky-400 font-bold text-[11px] sm:text-xs">
-                              <Globe className="h-3.5 w-3.5 text-sky-400 animate-pulse" />
-                              <span>Google Live Web Search & Grounding</span>
+                            <div className="flex items-center gap-2 text-sky-400 font-bold text-xs sm:text-sm">
+                              <Globe className="h-4 w-4 text-sky-400 animate-pulse" />
+                              <span>Google Live Grounding & Multi-Platform Web Intelligence</span>
                             </div>
                             {msg.groundingMetadata.sources && msg.groundingMetadata.sources.length > 0 && (
-                              <span className="text-[10px] text-sky-300 font-mono bg-sky-500/15 px-2 py-0.5 rounded-full border border-sky-500/30">
-                                {msg.groundingMetadata.sources.length} sources retrieved
+                              <span className="text-[10px] text-sky-300 font-mono bg-sky-500/20 px-2.5 py-0.5 rounded-full border border-sky-500/40">
+                                {msg.groundingMetadata.sources.length} verified citations
                               </span>
                             )}
                           </div>
 
                           {msg.groundingMetadata.searchQueries && msg.groundingMetadata.searchQueries.length > 0 && (
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="text-[10px] text-slate-400 font-mono">Query:</span>
+                            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                              <span className="text-[10px] text-slate-400 font-mono font-semibold">Searched:</span>
                               {msg.groundingMetadata.searchQueries.map((q, idx) => (
                                 <span
                                   key={idx}
-                                  className="inline-flex items-center gap-1 rounded-md bg-sky-950/60 border border-sky-500/30 px-2 py-0.5 text-[10px] text-sky-200 font-mono"
+                                  className="inline-flex items-center gap-1 rounded-md bg-sky-950/70 border border-sky-500/40 px-2 py-0.5 text-[10px] text-sky-200 font-mono"
                                 >
                                   <Search className="h-2.5 w-2.5 text-sky-400" />
                                   <span>"{q}"</span>
@@ -780,21 +821,44 @@ export const ChatView: React.FC = () => {
                           )}
 
                           {msg.groundingMetadata.sources && msg.groundingMetadata.sources.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-sky-500/20">
-                              {msg.groundingMetadata.sources.slice(0, 6).map((source, idx) => (
-                                <a
-                                  key={idx}
-                                  href={source.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1.5 rounded-lg bg-white/5 hover:bg-sky-500/10 border border-white/10 hover:border-sky-400/40 px-2 py-1 text-[11px] text-slate-300 hover:text-white transition-all group max-w-[240px]"
-                                  title={source.title}
-                                >
-                                  <span className="text-[9px] font-bold text-sky-400 bg-sky-500/20 rounded px-1">{idx + 1}</span>
-                                  <span className="truncate text-[10px]">{source.title || source.domain}</span>
-                                  <ExternalLink className="h-2.5 w-2.5 text-slate-500 group-hover:text-sky-400 shrink-0" />
-                                </a>
-                              ))}
+                            <div className="flex flex-wrap gap-2 pt-2 border-t border-sky-500/20">
+                              {msg.groundingMetadata.sources.slice(0, 8).map((source, idx) => {
+                                const platform = source.platform || 'Live Web';
+                                const isGitHub = platform.includes('GitHub');
+                                const isMDN = platform.includes('MDN');
+                                const isStackOverflow = platform.includes('Stack');
+                                const isDocs = platform.includes('Docs') || platform.includes('Google');
+                                const isPkg = platform.includes('NPM') || platform.includes('PyPI');
+
+                                const badgeColor = isGitHub
+                                  ? 'bg-purple-950/60 border-purple-500/40 text-purple-300'
+                                  : isMDN
+                                  ? 'bg-amber-950/60 border-amber-500/40 text-amber-300'
+                                  : isStackOverflow
+                                  ? 'bg-orange-950/60 border-orange-500/40 text-orange-300'
+                                  : isPkg
+                                  ? 'bg-rose-950/60 border-rose-500/40 text-rose-300'
+                                  : isDocs
+                                  ? 'bg-emerald-950/60 border-emerald-500/40 text-emerald-300'
+                                  : 'bg-sky-950/60 border-sky-500/40 text-sky-300';
+
+                                return (
+                                  <a
+                                    key={idx}
+                                    href={source.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 rounded-xl bg-white/5 hover:bg-sky-500/15 border border-white/10 hover:border-sky-400/50 px-2.5 py-1.5 text-[11px] text-slate-300 hover:text-white transition-all group max-w-[280px] shadow-sm"
+                                    title={`${source.title} (${source.url})`}
+                                  >
+                                    <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded border ${badgeColor}`}>
+                                      {platform}
+                                    </span>
+                                    <span className="truncate text-[10px] font-medium">{source.title || source.domain}</span>
+                                    <ExternalLink className="h-3 w-3 text-slate-500 group-hover:text-sky-400 shrink-0 ml-auto" />
+                                  </a>
+                                );
+                              })}
                             </div>
                           )}
                         </div>

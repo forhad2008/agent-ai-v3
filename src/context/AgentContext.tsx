@@ -15,6 +15,9 @@ import {
   ThoughtProcessRecord,
   AgentNotification,
   NotificationType,
+  PlanGoalInput,
+  GeneratedMasterPlan,
+  TaskAiAnalysisResult,
 } from '../types';
 import {
   INITIAL_TASKS,
@@ -25,10 +28,11 @@ import {
   INITIAL_MESSAGES,
   INITIAL_NOTIFICATIONS,
 } from '../data/initialData';
-import { sendAgentMessage, executeToolApi, checkServerHealth } from '../services/api';
+import { sendAgentMessage, executeToolApi, checkServerHealth, generateMasterPlanApi, analyzeTaskWithAi } from '../services/api';
 import { sound } from '../services/sound';
 import { TECH_LANGUAGES, TechLanguage, getLanguage, getInitialLanguage, DEFAULT_LANGUAGE_ID } from '../data/languages';
 import { getPageTranslations, PageTranslations } from '../data/translations';
+import { PlanArchitectModal } from '../components/planner/PlanArchitectModal';
 
 export type ActiveView = 
   | 'dashboard' 
@@ -85,7 +89,19 @@ interface AgentContextType {
   stopGeneration: () => void;
   regenerateLastResponse: () => Promise<void>;
   startNewConversation: () => void;
-  createTask: (title: string, description: string, priority?: TaskItem['priority'], gatherWebInfo?: boolean, initialSubTasks?: { title: string; priority?: TaskPriority; description?: string }[]) => TaskItem;
+  createTask: (
+    title: string,
+    description: string,
+    priority?: TaskItem['priority'],
+    gatherWebInfo?: boolean,
+    initialSubTasks?: { title: string; priority?: TaskPriority; description?: string }[],
+    category?: string,
+    tags?: string[],
+    aiAnalysis?: TaskAiAnalysisResult
+  ) => TaskItem;
+  autoCategorizeTask: (taskId: string) => Promise<TaskAiAnalysisResult | null>;
+  analyzeTaskDescription: (title: string, description: string) => Promise<TaskAiAnalysisResult>;
+  updateTaskTagsAndCategory: (taskId: string, category: string, tags: string[]) => void;
   gatherWebInfoForTask: (taskId: string) => Promise<void>;
   updateTaskStatus: (taskId: string, status: TaskStatus) => void;
   
@@ -134,6 +150,20 @@ interface AgentContextType {
   setIsNotificationCenterOpen: (open: boolean) => void;
   activeNotificationToast: AgentNotification | null;
   setActiveNotificationToast: (toast: AgentNotification | null) => void;
+
+  // High-Quality Master Plan Architect System
+  isPlanArchitectModalOpen: boolean;
+  setIsPlanArchitectModalOpen: (open: boolean) => void;
+  planArchitectCategory: PlanGoalInput['category'];
+  setPlanArchitectCategory: (cat: PlanGoalInput['category']) => void;
+  planArchitectGoal: string;
+  setPlanArchitectGoal: (goal: string) => void;
+  openPlanArchitect: (category?: PlanGoalInput['category'], goal?: string) => void;
+  activeMasterPlan: GeneratedMasterPlan | null;
+  setActiveMasterPlan: (plan: GeneratedMasterPlan | null) => void;
+  generateMasterPlan: (input: PlanGoalInput) => Promise<GeneratedMasterPlan | null>;
+  convertPlanToTasks: (plan: GeneratedMasterPlan) => void;
+  savePlanAsDocument: (plan: GeneratedMasterPlan) => void;
 }
 
 const AgentContext = createContext<AgentContextType | undefined>(undefined);
@@ -360,6 +390,164 @@ export const AgentProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       localStorage.setItem('abdullah_notifications', JSON.stringify([]));
     } catch (e) {}
     setActiveNotificationToast(null);
+  };
+
+  // High-Quality Master Plan Architect System State & Handlers
+  const [isPlanArchitectModalOpen, setIsPlanArchitectModalOpen] = useState(false);
+  const [planArchitectCategory, setPlanArchitectCategory] = useState<PlanGoalInput['category']>('wealth_money');
+  const [planArchitectGoal, setPlanArchitectGoal] = useState<string>('');
+  const [activeMasterPlan, setActiveMasterPlan] = useState<GeneratedMasterPlan | null>(() => {
+    try {
+      const saved = localStorage.getItem('abdullah_active_masterplan');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return null;
+  });
+
+  const openPlanArchitect = (category?: PlanGoalInput['category'], goal?: string) => {
+    if (category) setPlanArchitectCategory(category);
+    if (goal) setPlanArchitectGoal(goal);
+    setIsPlanArchitectModalOpen(true);
+  };
+
+  const generateMasterPlan = async (input: PlanGoalInput): Promise<GeneratedMasterPlan | null> => {
+    try {
+      setIsGenerating(true);
+      const isBangla = settings?.language === 'Bangla';
+
+      sendNotification({
+        type: 'task_working',
+        title: isBangla ? 'মাস্টারপ্ল্যান জেনারেশন শুরু হয়েছে...' : 'Synthesizing Masterplan...',
+        message: isBangla ? `"${input.goal}"-এর জন্য গুগল ডাটা ও সাইন্টিফিক ক্যালকুলেশন প্রস্তুত করা হচ্ছে` : `Harvesting Google live intelligence & calculating benchmarks for "${input.goal}"`,
+        priority: 'high',
+      });
+
+      const plan = await generateMasterPlanApi({
+        ...input,
+        language: settings?.language || 'en',
+        userProfile,
+      });
+
+      setActiveMasterPlan(plan);
+      try {
+        localStorage.setItem('abdullah_active_masterplan', JSON.stringify(plan));
+      } catch (e) {}
+
+      sound.playTaskCompleteSound();
+
+      sendNotification({
+        type: 'task_completed',
+        title: isBangla ? '🎯 মাস্টারপ্ল্যান সফলভাবে তৈরি হয়েছে!' : '🎯 Masterplan Successfully Generated!',
+        message: isBangla ? `"${plan.title}" ৪টি ফেজ ও অ্যাকশন আইটেম সহ প্রস্তুত।` : `"${plan.title}" synthesized with 4 execution phases and Google citations.`,
+        priority: 'high',
+        resultSummary: plan.executiveSummary.slice(0, 150) + '...',
+      });
+
+      addActivity(
+        'Masterplan Generated',
+        'AI Plan Architect',
+        `Generated 4-phase masterplan for "${input.goal}"`,
+        'success'
+      );
+
+      return plan;
+    } catch (err: any) {
+      console.error('Masterplan generation error:', err);
+      return null;
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const convertPlanToTasks = (plan: GeneratedMasterPlan) => {
+    const isBangla = settings?.language === 'Bangla';
+    const newTasks: TaskItem[] = plan.phases.map((phase) => {
+      const subTasks: SubTaskItem[] = phase.actionItems.map((item, idx) => ({
+        id: `st_${Date.now()}_${phase.phaseNumber}_${idx}`,
+        title: item.task,
+        completed: false,
+        status: 'Pending',
+        priority: item.priority || 'Medium',
+        description: item.description,
+        createdTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      }));
+
+      return {
+        id: `task_plan_${Date.now()}_${phase.phaseNumber}`,
+        title: `[Phase ${phase.phaseNumber}] ${phase.phaseTitle}`,
+        description: `⏱ Duration: ${phase.duration}\n🎯 Focus: ${phase.focus}\n\n🏆 Deliverables:\n` +
+          phase.keyDeliverables.map(k => `• ${k}`).join('\n'),
+        category: 'Research & Strategy',
+        tags: ['#MasterPlan', '#Roadmap', '#Strategy'],
+        status: (phase.phaseNumber === 1 ? 'Running' : 'Planning') as TaskStatus,
+        priority: 'High' as TaskPriority,
+        progress: phase.phaseNumber === 1 ? 25 : 0,
+        requiredTools: ['Web Search', 'Document Tools'],
+        approvalStatus: 'None',
+        subTasks,
+        createdTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+        updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+      };
+    });
+
+    setTasks((prev) => {
+      const updated = [...newTasks, ...prev];
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    sound.playTaskCompleteSound();
+
+    sendNotification({
+      type: 'task_completed',
+      title: isBangla ? 'টাস্ক শিডিউলে যুক্ত হয়েছে' : 'Plan Converted to Tasks',
+      message: isBangla ? `${plan.phases.length}টি ফেজ ও সাব-টাস্কসমূহ টাস্ক ম্যানেজারে যোগ করা হয়েছে।` : `Added ${plan.phases.length} high-priority roadmap phases to your Task Manager.`,
+      priority: 'high',
+    });
+
+    addActivity(
+      'Plan Converted to Tasks',
+      'Task Scheduler',
+      `Imported ${newTasks.length} roadmap phases into workspace tasks`,
+      'success'
+    );
+  };
+
+  const savePlanAsDocument = (plan: GeneratedMasterPlan) => {
+    const isBangla = settings?.language === 'Bangla';
+    const docContent = `# ${plan.title}\n\n` +
+      `**Category:** ${plan.category}\n` +
+      `**Generated:** ${new Date().toLocaleDateString()} with Google Grounding\n` +
+      `**Feasibility Score:** ${plan.userAssessment.feasibilityScore}\n\n` +
+      `---\n\n` +
+      `## 🎯 Executive Summary & Strategy\n${plan.executiveSummary}\n\n` +
+      `## 📊 User Assessment & Baseline\n` +
+      `- **Baseline:** ${plan.userAssessment.baseline}\n` +
+      `- **Target Goal:** ${plan.userAssessment.target}\n` +
+      `- **Timeline:** ${plan.userAssessment.timeline}\n\n` +
+      `## 🚀 4-Phase Architectural Roadmap\n\n` +
+      plan.phases.map(p => 
+        `### Phase ${p.phaseNumber}: ${p.phaseTitle} (${p.duration})\n` +
+        `**Focus:** ${p.focus}\n\n` +
+        `**Key Deliverables:**\n` + p.keyDeliverables.map(k => `- ${k}`).join('\n') + `\n\n` +
+        `**Action Items:**\n` + p.actionItems.map(a => `- [ ] **[${a.priority}]** ${a.task}${a.description ? ` - *${a.description}*` : ''}`).join('\n')
+      ).join('\n\n---\n\n') +
+      `\n\n## 📅 Daily Non-Negotiable Checklist\n` +
+      plan.dailyChecklist.map(d => `- [ ] ${d}`).join('\n') +
+      `\n\n## 🛡 Risks & Mitigation Matrix\n` +
+      (plan.risksAndMitigations || []).map(rm => `- **Risk:** ${rm.risk}\n  - **Mitigation:** ${rm.mitigation}`).join('\n\n');
+
+    const fileName = `Masterplan_${plan.category}_${Date.now()}.md`;
+    createNewFile(fileName, docContent, 'document');
+
+    sendNotification({
+      type: 'task_completed',
+      title: isBangla ? 'ডকুমেন্ট ফাইলে সেভ হয়েছে' : 'Saved Plan as Document',
+      message: isBangla ? `"${fileName}" ফাইল ম্যানেজারে সংরক্ষিত হয়েছে।` : `"${fileName}" successfully saved in your Workspace Files.`,
+      priority: 'normal',
+    });
   };
 
   const markNotificationAsRead = (notificationId: string) => {
@@ -995,12 +1183,101 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
     addActivity('New Session Initialized', 'Workspace Controller', 'Cleared active chat buffer.', 'success');
   };
 
+  const analyzeTaskDescription = async (title: string, description: string): Promise<TaskAiAnalysisResult> => {
+    return await analyzeTaskWithAi(title, description, settings.language, userProfile);
+  };
+
+  const updateTaskTagsAndCategory = (taskId: string, category: string, tags: string[]) => {
+    setTasks((prev) =>
+      prev.map((t) => {
+        if (t.id === taskId) {
+          return {
+            ...t,
+            category,
+            tags,
+            updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+          };
+        }
+        return t;
+      })
+    );
+
+    if (selectedTask?.id === taskId) {
+      setSelectedTask((prev) => (prev ? { ...prev, category, tags } : null));
+    }
+  };
+
+  const autoCategorizeTask = async (taskId: string): Promise<TaskAiAnalysisResult | null> => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return null;
+
+    sound.playSendSound();
+    const isBangla = settings.language === 'Bangla';
+    addActivity('AI Task Categorization', 'Gemini Task Analyzer', `Analyzing scope and auto-assigning tags for "${task.title}"`, 'pending');
+
+    try {
+      const result = await analyzeTaskWithAi(task.title, task.description, settings.language, userProfile);
+
+      setTasks((prev) =>
+        prev.map((t) => {
+          if (t.id === taskId) {
+            return {
+              ...t,
+              category: result.category || t.category,
+              tags: result.tags && result.tags.length > 0 ? result.tags : t.tags,
+              priority: result.suggestedPriority || t.priority,
+              aiAnalysis: result,
+              updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+            };
+          }
+          return t;
+        })
+      );
+
+      if (selectedTask?.id === taskId) {
+        setSelectedTask((prev) =>
+          prev
+            ? {
+                ...prev,
+                category: result.category || prev.category,
+                tags: result.tags && result.tags.length > 0 ? result.tags : prev.tags,
+                priority: result.suggestedPriority || prev.priority,
+                aiAnalysis: result,
+              }
+            : null
+        );
+      }
+
+      sound.playReceiveSound();
+      addActivity('AI Categorization Complete', 'Gemini Task Analyzer', `Assigned Category: "${result.category}" with ${result.tags.length} tags to "${task.title}"`, 'success');
+
+      sendNotification({
+        type: 'system',
+        title: isBangla ? `🏷️ এআই ক্যাটাগরি ও ট্যাগ যুক্ত: "${task.title}"` : `🏷️ AI Categorized & Tagged: "${task.title}"`,
+        message: isBangla
+          ? `ক্যাটাগরি: "${result.category}" | ট্যাগসমূহ: ${result.tags.join(' ')}`
+          : `Assigned Category: "${result.category}" with tags: ${result.tags.join(', ')}`,
+        taskId: task.id,
+        taskTitle: task.title,
+        priority: 'normal',
+      });
+
+      return result;
+    } catch (err: any) {
+      console.warn('Auto-categorization error:', err);
+      return null;
+    }
+  };
+
   const createTask = (
     title: string,
     description: string,
     priority: TaskItem['priority'] = 'Medium',
     gatherWebInfo: boolean = true,
-    initialSubTasks?: { title: string; priority?: TaskPriority; description?: string }[]
+    initialSubTasks?: { title: string; priority?: TaskPriority; description?: string }[],
+    category?: string,
+    tags?: string[],
+    aiAnalysis?: TaskAiAnalysisResult
   ): TaskItem => {
     const isBangla = settings.language === 'Bangla';
     
@@ -1016,12 +1293,48 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
         }))
       : undefined;
 
+    // Smart initial category & tags fallback if not explicitly passed
+    let initialCategory = category;
+    let initialTags = tags;
+
+    if (!initialCategory || !initialTags || initialTags.length === 0) {
+      const combined = `${title} ${description}`.toLowerCase();
+      if (combined.includes('ai') || combined.includes('gemini') || combined.includes('model') || combined.includes('agent')) {
+        initialCategory = initialCategory || 'AI & Automation';
+        initialTags = initialTags || ['#AI', '#Automation', '#Gemini', '#SmartAgent'];
+      } else if (combined.includes('react') || combined.includes('ui') || combined.includes('tailwind') || combined.includes('css')) {
+        initialCategory = initialCategory || 'Frontend & UI/UX';
+        initialTags = initialTags || ['#Frontend', '#React', '#UIUX', '#Design'];
+      } else if (combined.includes('api') || combined.includes('backend') || combined.includes('database') || combined.includes('server')) {
+        initialCategory = initialCategory || 'Backend & Infrastructure';
+        initialTags = initialTags || ['#Backend', '#API', '#NodeJS', '#Database'];
+      } else if (combined.includes('seo') || combined.includes('audit') || combined.includes('speed') || combined.includes('performance')) {
+        initialCategory = initialCategory || 'SEO & Performance';
+        initialTags = initialTags || ['#SEO', '#Performance', '#Audit', '#CoreWebVitals'];
+      } else if (combined.includes('customer') || combined.includes('email') || combined.includes('reply') || combined.includes('support')) {
+        initialCategory = initialCategory || 'Customer Support & CRM';
+        initialTags = initialTags || ['#CustomerSupport', '#CRM', '#EmailDraft', '#Urgent'];
+      } else if (combined.includes('debug') || combined.includes('test') || combined.includes('bug') || combined.includes('code')) {
+        initialCategory = initialCategory || 'Code Quality & Testing';
+        initialTags = initialTags || ['#Debugging', '#CodeQuality', '#Testing', '#Refactor'];
+      } else if (combined.includes('research') || combined.includes('plan') || combined.includes('strategy')) {
+        initialCategory = initialCategory || 'Research & Strategy';
+        initialTags = initialTags || ['#Research', '#Strategy', '#Planning', '#Roadmap'];
+      } else {
+        initialCategory = initialCategory || 'Operations & Workflow';
+        initialTags = initialTags || ['#Operations', '#Task', '#Workflow'];
+      }
+    }
+
     const newTask: TaskItem = {
       id: `task_${Date.now()}`,
       title,
       description,
       status: 'Running',
       priority,
+      category: initialCategory,
+      tags: initialTags,
+      aiAnalysis: aiAnalysis,
       createdTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
       updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
       progress: 25,
@@ -1060,18 +1373,56 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
     };
 
     setTasks((prev) => [newTask, ...prev]);
-    addActivity('Task Created', 'Task Manager', `Created task "${title}" with real-time web intelligence.`, 'success');
+    addActivity('Task Created', 'Task Manager', `Created task "${title}" categorized under "${initialCategory}" with ${initialTags.length} tags.`, 'success');
     
     sendNotification({
       type: 'task_started',
       title: isBangla ? `🚀 নতুন টাস্ক শুরু: "${title}"` : `🚀 New Task Initiated: "${title}"`,
       message: isBangla
-        ? `Agent-sigma08 "${title}" এর জন্য প্ল্যানিং ও লাইভ ওয়েব রিসার্চ চালু করেছে।`
-        : `Agent-sigma08 started autonomous execution pipeline and live web gathering for "${title}".`,
+        ? `Agent-sigma08 "${title}" এর জন্য প্ল্যানিং ও লাইভ ওয়েব রিসার্চ চালু করেছে [${initialCategory}]।`
+        : `Agent-sigma08 started autonomous execution pipeline for "${title}" [${initialCategory}].`,
       taskId: newTask.id,
       taskTitle: title,
       priority: priority === 'Urgent' ? 'urgent' : priority === 'High' ? 'high' : 'normal',
     });
+
+    // If full AI analysis wasn't pre-computed, run asynchronous AI categorization & tagging in background
+    if (!aiAnalysis) {
+      analyzeTaskWithAi(title, description, settings.language, userProfile)
+        .then((aiResult) => {
+          if (aiResult && aiResult.category) {
+            setTasks((prev) =>
+              prev.map((t) => {
+                if (t.id === newTask.id) {
+                  return {
+                    ...t,
+                    category: aiResult.category,
+                    tags: aiResult.tags && aiResult.tags.length > 0 ? aiResult.tags : t.tags,
+                    priority: aiResult.suggestedPriority || t.priority,
+                    aiAnalysis: aiResult,
+                    // Auto-append AI suggested subtasks if no subtasks were provided by user
+                    subTasks: (!t.subTasks || t.subTasks.length === 0) && aiResult.subTasksSuggestion && aiResult.subTasksSuggestion.length > 0
+                      ? aiResult.subTasksSuggestion.map((st, idx) => ({
+                          id: `subtask_${Date.now()}_${idx}_ai`,
+                          title: st.title,
+                          description: st.description || undefined,
+                          status: 'Pending' as const,
+                          priority: st.priority || 'Medium',
+                          completed: false,
+                          createdTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                        }))
+                      : t.subTasks,
+                  };
+                }
+                return t;
+              })
+            );
+          }
+        })
+        .catch((err) => {
+          console.warn('Async AI task analysis notice:', err);
+        });
+    }
 
     return newTask;
   };
@@ -1624,6 +1975,9 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
         regenerateLastResponse,
         startNewConversation,
         createTask,
+        autoCategorizeTask,
+        analyzeTaskDescription,
+        updateTaskTagsAndCategory,
         gatherWebInfoForTask,
         updateTaskStatus,
         addSubTask,
@@ -1669,9 +2023,29 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
         setIsNotificationCenterOpen,
         activeNotificationToast,
         setActiveNotificationToast,
+
+        // High-Quality Master Plan Architect System
+        isPlanArchitectModalOpen,
+        setIsPlanArchitectModalOpen,
+        planArchitectCategory,
+        setPlanArchitectCategory,
+        planArchitectGoal,
+        setPlanArchitectGoal,
+        openPlanArchitect,
+        activeMasterPlan,
+        setActiveMasterPlan,
+        generateMasterPlan,
+        convertPlanToTasks,
+        savePlanAsDocument,
       }}
     >
       {children}
+      <PlanArchitectModal
+        isOpen={isPlanArchitectModalOpen}
+        onClose={() => setIsPlanArchitectModalOpen(false)}
+        initialCategory={planArchitectCategory}
+        initialGoal={planArchitectGoal}
+      />
     </AgentContext.Provider>
   );
 };

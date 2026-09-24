@@ -44,6 +44,7 @@ export const DashboardView: React.FC = () => {
     deleteAlarm,
     currentLanguage,
     t,
+    openPlanArchitect,
   } = useAgent();
 
   const [promptInput, setPromptInput] = useState('');
@@ -262,6 +263,23 @@ export const DashboardView: React.FC = () => {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           
+          {/* Card 0: Plan Architect */}
+          <div
+            onClick={() => openPlanArchitect('wealth_money')}
+            className="cursor-pointer group relative overflow-hidden rounded-2xl neumorph-card p-4 hover:border-[#FF204E] border border-[#FF204E]/40 bg-gradient-to-b from-[#2a060d] to-transparent shadow-[0_0_20px_rgba(255,32,78,0.15)]"
+          >
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FF204E]/20 border border-[#FF204E]/40 text-[#FF204E] mb-3 shadow-[0_0_12px_rgba(255,32,78,0.3)]">
+              <Sparkles className="h-5 w-5 animate-pulse text-yellow-300" />
+            </div>
+            <h4 className="text-xs font-black text-white leading-tight">Plan Architect</h4>
+            <p className="text-[10px] text-slate-300 mt-1 leading-snug">Money, fitness & goals</p>
+            <div className="mt-3 flex justify-end">
+              <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#FF204E] text-white group-hover:scale-110 transition-transform shadow-[0_0_10px_rgba(255,32,78,0.4)]">
+                <ArrowRight className="h-3.5 w-3.5" />
+              </div>
+            </div>
+          </div>
+
           {/* Card 1: AI Chat */}
           <div
             onClick={() => setActiveView('chat')}

@@ -163,6 +163,10 @@ class SoundService {
     }
   }
 
+  public playTaskCompleteSound() {
+    this.playSuccess();
+  }
+
   // Play authentic "Pirates of the Caribbean" theme song (Real MP3/WAV Audio Track with Fallback)
   public playPiratesTheme(loop: boolean = true) {
     this.stopPiratesTheme();

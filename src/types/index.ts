@@ -74,6 +74,7 @@ export interface ToolExecutionRecord {
 
 export type NotificationType = 
   | 'task_started' 
+  | 'task_working'
   | 'task_completed' 
   | 'task_progress' 
   | 'web_gathering' 
@@ -98,12 +99,26 @@ export interface AgentNotification {
   resultSummary?: string;
 }
 
+export interface TaskAiAnalysisResult {
+  category: string;
+  tags: string[];
+  suggestedPriority?: TaskPriority;
+  estimatedHours?: number;
+  subTasksSuggestion?: { title: string; priority: TaskPriority; description?: string }[];
+  analysisSummary?: string;
+  keySkills?: string[];
+  confidence?: number;
+}
+
 export interface TaskItem {
   id: string;
   title: string;
   description: string;
   status: TaskStatus;
   priority: TaskPriority;
+  category?: string;
+  tags?: string[];
+  aiAnalysis?: TaskAiAnalysisResult;
   createdTime: string;
   updatedTime: string;
   progress: number;
@@ -115,11 +130,11 @@ export interface TaskItem {
   error?: string;
   groundingMetadata?: {
     searchQueries?: string[];
-    sources?: { title: string; url: string; domain?: string }[];
+    sources?: { title: string; url: string; domain?: string; platform?: string; category?: string }[];
   };
   webInformationGathered?: {
     searchQueries: string[];
-    sources?: { title: string; url: string; domain?: string }[];
+    sources?: { title: string; url: string; domain?: string; platform?: string; category?: string }[];
     summaryPoints?: string[];
   };
 }
@@ -179,7 +194,7 @@ export interface MessageItem {
   toolExecutions?: ToolExecutionRecord[];
   groundingMetadata?: {
     searchQueries?: string[];
-    sources?: { title: string; url: string; domain?: string }[];
+    sources?: { title: string; url: string; domain?: string; platform?: string; category?: string }[];
   };
   requiresApproval?: boolean;
   approvalDetails?: ApprovalRequest;
@@ -234,4 +249,57 @@ export interface AlarmItem {
   label: string;
   enabled: boolean;
   timestamp: number; // Scheduled timestamp in millisecond
+}
+
+export interface PlanGoalInput {
+  goal: string;
+  category: 'wealth_money' | 'fitness_body' | 'career_skill' | 'business_startup' | 'study_exam' | 'custom';
+  currentStatus?: string;
+  targetMetric?: string;
+  timeframe?: string;
+  dailyCommitment?: string;
+  additionalInfo?: string;
+  dietPreference?: string;
+  experienceLevel?: string;
+  budgetOrCapital?: string;
+  currentWeight?: string;
+  targetWeight?: string;
+  height?: string;
+  age?: string;
+  gymAccess?: string;
+  language?: string;
+  userProfile?: UserProfile;
+}
+
+export interface GeneratedMasterPlan {
+  id: string;
+  title: string;
+  category: string;
+  executiveSummary: string;
+  thinking: string;
+  userAssessment: {
+    baseline: string;
+    target: string;
+    timeline: string;
+    feasibilityScore: string;
+    keyVariablesRequired?: string[];
+  };
+  groundingMetadata?: {
+    searchQueries?: string[];
+    sources?: { title: string; url: string; domain?: string; platform?: string; category?: string }[];
+  };
+  phases: {
+    phaseNumber: number;
+    phaseTitle: string;
+    duration: string;
+    focus: string;
+    keyDeliverables: string[];
+    actionItems: { task: string; priority: TaskPriority; description?: string }[];
+  }[];
+  dailyChecklist: string[];
+  scientificOrMarketBenchmarks: string[];
+  risksAndMitigations: { risk: string; mitigation: string }[];
+  recommendedResources: { title: string; url: string; description?: string }[];
+  planSteps: PlanStep[];
+  formattedMarkdown?: string;
 }
