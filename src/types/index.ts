@@ -77,6 +77,8 @@ export type NotificationType =
   | 'task_working'
   | 'task_completed' 
   | 'task_progress' 
+  | 'smart_reminder'
+  | 'task_reminder'
   | 'web_gathering' 
   | 'tool_executed' 
   | 'approval_required' 
@@ -97,6 +99,40 @@ export interface AgentNotification {
   toolName?: string;
   priority?: 'low' | 'normal' | 'high' | 'urgent';
   resultSummary?: string;
+  dueDate?: string;
+  reminderOffsetMinutes?: number;
+}
+
+export interface SimilarHistoricalTaskSample {
+  id: string;
+  title: string;
+  category?: string;
+  priority?: TaskPriority;
+  actualDurationMinutes: number;
+  completedAt?: string;
+  onTime?: boolean;
+}
+
+export interface SmartReminderHistoricalBasis {
+  similarTasksCount: number;
+  averageCompletionMinutes: number;
+  categoryBaselineHours: number;
+  matchingFactors: string[];
+  confidenceScore: number;
+  similarTasksSample?: SimilarHistoricalTaskSample[];
+}
+
+export interface SmartReminderConfig {
+  enabled: boolean;
+  predictedDurationMinutes: number;
+  suggestedDueDate: string;
+  suggestedReminderDate: string;
+  reminderOffsetMinutes: number;
+  reminderNote?: string;
+  autoScheduled: boolean;
+  historicalBasis?: SmartReminderHistoricalBasis;
+  reminderStatus?: 'pending' | 'sent' | 'dismissed' | 'snoozed';
+  snoozeUntil?: string;
 }
 
 export interface TaskAiAnalysisResult {
@@ -108,6 +144,7 @@ export interface TaskAiAnalysisResult {
   analysisSummary?: string;
   keySkills?: string[];
   confidence?: number;
+  smartReminder?: SmartReminderConfig;
 }
 
 export interface TaskItem {
@@ -119,7 +156,17 @@ export interface TaskItem {
   category?: string;
   tags?: string[];
   aiAnalysis?: TaskAiAnalysisResult;
+  dueDate?: string;
+  dueDateTimeStamp?: number;
+  reminderTime?: string;
+  reminderTimeStamp?: number;
+  reminderTriggered?: boolean;
+  smartReminderConfig?: SmartReminderConfig;
+  completedAt?: string;
+  completedTimeStamp?: number;
+  actualDurationMinutes?: number;
   createdTime: string;
+  createdTimeStamp?: number;
   updatedTime: string;
   progress: number;
   requiredTools: string[];

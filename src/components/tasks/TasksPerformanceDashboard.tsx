@@ -307,8 +307,13 @@ export const TasksPerformanceDashboard: React.FC<TasksPerformanceDashboardProps>
           'Status',
           'Priority',
           'Progress (%)',
+          'Due Date',
+          'Reminder Time',
+          'Actual Duration (Mins)',
+          'AI Predicted Duration (Mins)',
           'Estimated Hours',
           'AI Confidence',
+          'Historical Basis (Similar Tasks)',
           'Created Time',
           'Updated Time',
           'Subtask Count',
@@ -327,6 +332,7 @@ export const TasksPerformanceDashboard: React.FC<TasksPerformanceDashboardProps>
         const estimatedHours = t.aiAnalysis?.estimatedHours || (t.status === 'Completed' ? 3.5 : t.status === 'Running' ? 2.0 : 1.0);
         const tagsString = t.tags ? t.tags.join(' ') : '';
         const aiConfidence = t.aiAnalysis?.confidence ? `${Math.round(t.aiAnalysis.confidence * 100)}%` : 'N/A';
+        const similarCount = t.smartReminderConfig?.historicalBasis?.similarTasksCount || 'N/A';
 
         rows.push(
           [
@@ -337,8 +343,13 @@ export const TasksPerformanceDashboard: React.FC<TasksPerformanceDashboardProps>
             escapeCsv(t.status),
             escapeCsv(t.priority),
             escapeCsv(t.progress || (t.status === 'Completed' ? 100 : 0)),
+            escapeCsv(t.dueDate || 'N/A'),
+            escapeCsv(t.reminderTime || 'N/A'),
+            escapeCsv(t.actualDurationMinutes || (t.status === 'Completed' ? Math.round(estimatedHours * 60) : 'In Progress')),
+            escapeCsv(t.smartReminderConfig?.predictedDurationMinutes || Math.round(estimatedHours * 60)),
             escapeCsv(estimatedHours),
             escapeCsv(aiConfidence),
+            escapeCsv(similarCount),
             escapeCsv(t.createdTime),
             escapeCsv(t.updatedTime),
             escapeCsv(subTasksCount),

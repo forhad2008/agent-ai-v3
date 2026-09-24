@@ -25,9 +25,17 @@ import {
   Zap,
   BrainCircuit,
   Award,
+  Bell,
+  BellRing,
+  CalendarClock,
+  Timer,
+  History,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
-import { SubTaskItem, TaskItem, TaskPriority, TaskStatus, TaskAiAnalysisResult } from '../../types';
+import { SubTaskItem, TaskItem, TaskPriority, TaskStatus, TaskAiAnalysisResult, SmartReminderConfig } from '../../types';
 import { TasksPerformanceDashboard } from './TasksPerformanceDashboard';
 
 export const TasksView: React.FC = () => {
@@ -38,6 +46,11 @@ export const TasksView: React.FC = () => {
     analyzeTaskDescription,
     updateTaskTagsAndCategory,
     gatherWebInfoForTask,
+    predictTaskSmartDueDate,
+    applySmartDueDateReminder,
+    updateTaskDueDateAndReminder,
+    snoozeTaskReminder,
+    dismissTaskReminder,
     selectedTask,
     setSelectedTask,
     handleSendMessage,
@@ -62,6 +75,7 @@ export const TasksView: React.FC = () => {
 
   // Card-level AI auto-categorizing loader state
   const [isAutoCategorizingId, setIsAutoCategorizingId] = useState<string | null>(null);
+  const [isPredictingReminderId, setIsPredictingReminderId] = useState<string | null>(null);
 
   // Create Task Modal States
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -74,6 +88,8 @@ export const TasksView: React.FC = () => {
   const [isModalAnalyzing, setIsModalAnalyzing] = useState(false);
   const [modalAiAnalysis, setModalAiAnalysis] = useState<TaskAiAnalysisResult | null>(null);
   const [gatherWebInfoForNewTask, setGatherWebInfoForNewTask] = useState(true);
+  const [createModalSmartSchedule, setCreateModalSmartSchedule] = useState<SmartReminderConfig | null>(null);
+  const [isModalPredictingSchedule, setIsModalPredictingSchedule] = useState(false);
 
   // Draft subtasks in Create Task Modal
   const [draftSubTasks, setDraftSubTasks] = useState<{ title: string; priority: TaskPriority; description?: string }[]>([]);
@@ -199,14 +215,17 @@ export const TasksView: React.FC = () => {
     setDraftSubTasks((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // AI Auto-Detect in Create Task Modal
+  // AI Auto-Detect in Create Task Modal with Smart Due-Date & Reminder Prediction
   const handleModalAiAnalyze = async () => {
     if (!newTitle.trim() && !newDesc.trim()) return;
     setIsModalAnalyzing(true);
+    setIsModalPredictingSchedule(true);
     try {
       const result = await analyzeTaskDescription(newTitle.trim(), newDesc.trim());
       if (result) {
         setModalAiAnalysis(result);
+        const resolvedCategory = result.category || newCategory;
+        const resolvedPriority = result.suggestedPriority || newPriority;
         if (result.category) setNewCategory(result.category);
         if (result.tags && result.tags.length > 0) setNewTags(result.tags);
         if (result.suggestedPriority) setNewPriority(result.suggestedPriority);
@@ -219,12 +238,58 @@ export const TasksView: React.FC = () => {
             }))
           );
         }
+
+        // Auto predict smart due date & reminder config based on historical completion trends
+        const schedule = await predictTaskSmartDueDate(
+          newTitle.trim(),
+          newDesc.trim(),
+          resolvedCategory,
+          resolvedPriority,
+          result.tags || newTags,
+          result.subTasksSuggestion?.length || draftSubTasks.length
+        );
+        setCreateModalSmartSchedule(schedule);
       }
     } catch (err) {
       console.warn('Modal AI analysis error:', err);
     } finally {
       setIsModalAnalyzing(false);
+      setIsModalPredictingSchedule(false);
     }
+  };
+
+  const handleRecalculateSmartReminder = async (taskId: string) => {
+    setIsPredictingReminderId(taskId);
+    try {
+      await applySmartDueDateReminder(taskId);
+    } finally {
+      setIsPredictingReminderId(null);
+    }
+  };
+
+  const handleUpdateReminderOffset = (taskId: string, offsetMinutes: number) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    const dueStamp = task.dueDateTimeStamp || Date.now() + 120 * 60 * 1000;
+    const newReminderStamp = dueStamp - offsetMinutes * 60 * 1000;
+    const formattedReminder = new Date(newReminderStamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' ' + (new Date(newReminderStamp).toDateString() === new Date().toDateString() ? 'Today' : new Date(newReminderStamp).toLocaleDateString());
+
+    const updatedConfig: SmartReminderConfig = {
+      ...(task.smartReminderConfig || {
+        enabled: true,
+        predictedDurationMinutes: 120,
+        suggestedDueDate: new Date(dueStamp).toISOString(),
+        suggestedReminderDate: new Date(newReminderStamp).toISOString(),
+        reminderOffsetMinutes: offsetMinutes,
+        autoScheduled: true,
+        reminderStatus: 'pending',
+      }),
+      reminderOffsetMinutes: offsetMinutes,
+      suggestedReminderDate: new Date(newReminderStamp).toISOString(),
+    };
+
+    updateTaskDueDateAndReminder(taskId, task.dueDate, formattedReminder, updatedConfig);
   };
 
   const handleAddTagToNewTask = () => {
@@ -542,16 +607,68 @@ export const TasksView: React.FC = () => {
               className="group flex flex-col justify-between rounded-2xl neumorph-card p-4 sm:p-5 transition-all border border-white/5 hover:border-[#FF204E]/30 shadow-lg"
             >
               <div>
-                {/* Header: Status & Priority Badges */}
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className={`px-2.5 py-0.5 text-[10px] font-mono rounded-lg ${getStatusBadge(task.status)}`}>
-                    {task.status}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className={`px-2.5 py-0.5 text-[10px] font-mono rounded-lg ${getPriorityBadge(task.priority)}`}>
-                      {task.priority}
+                {/* Header: Status, Priority Badges & Smart Due Date */}
+                <div className="flex flex-col gap-1.5 mb-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className={`px-2.5 py-0.5 text-[10px] font-mono rounded-lg ${getStatusBadge(task.status)}`}>
+                      {task.status}
                     </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`px-2.5 py-0.5 text-[10px] font-mono rounded-lg ${getPriorityBadge(task.priority)}`}>
+                        {task.priority}
+                      </span>
+                    </div>
                   </div>
+
+                  {/* Smart Due Date & Reminder Pill */}
+                  <div className="flex items-center justify-between gap-1 text-[10px] font-mono bg-white/[0.03] border border-white/5 rounded-lg px-2 py-1">
+                    <div className="flex items-center gap-1.5 truncate text-slate-300">
+                      <CalendarClock className="h-3 w-3 text-amber-400 shrink-0" />
+                      <span className="truncate">
+                        {task.dueDate ? `Due: ${task.dueDate}` : 'Smart Schedule Ready'}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      {task.smartReminderConfig?.reminderStatus === 'snoozed' ? (
+                        <span className="inline-flex items-center gap-0.5 text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded text-[9px]">
+                          <Clock className="h-2.5 w-2.5" />
+                          <span>Snoozed</span>
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-0.5 text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded text-[9px]" title={`Reminder set at ${task.reminderTime || '30m before'}`}>
+                          <Bell className="h-2.5 w-2.5" />
+                          <span>{task.reminderTime ? task.reminderTime.split(' ')[0] : 'Auto'}</span>
+                        </span>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRecalculateSmartReminder(task.id);
+                        }}
+                        disabled={isPredictingReminderId === task.id}
+                        className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-amber-300 transition-all cursor-pointer"
+                        title="AI Recalculate Smart Due-Date & Reminder"
+                      >
+                        <RefreshCw className={`h-2.5 w-2.5 ${isPredictingReminderId === task.id ? 'animate-spin text-amber-400' : ''}`} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Historical Trend Velocity Badge */}
+                  {task.smartReminderConfig?.historicalBasis && (
+                    <div className="flex items-center justify-between text-[9px] font-mono text-slate-400 bg-amber-950/20 border border-amber-500/20 rounded px-2 py-0.5">
+                      <span className="flex items-center gap-1 text-amber-300/90 truncate">
+                        <History className="h-2.5 w-2.5 text-amber-400 shrink-0" />
+                        <span>~{task.smartReminderConfig.predictedDurationMinutes}m historical baseline</span>
+                      </span>
+                      <span className="text-[8px] text-slate-400 shrink-0">
+                        ({task.smartReminderConfig.historicalBasis.similarTasksCount} matches)
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* AI Automated Category Badge & Auto-Tag Trigger */}
@@ -1071,6 +1188,143 @@ export const TasksView: React.FC = () => {
                     <span className={`px-2 py-0.5 text-[10px] font-mono rounded-md ${getPriorityBadge(selectedTask.priority)}`}>
                       {selectedTask.priority}
                     </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* SMART DUE-DATE & HISTORICAL TREND REMINDERS SECTION */}
+              <div className="rounded-2xl neumorph-card p-4 space-y-3.5 border border-amber-500/30 bg-gradient-to-br from-amber-950/20 via-black/40 to-amber-950/10">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="h-7 w-7 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-300">
+                      <CalendarClock className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-amber-200">
+                        {isBangla ? 'স্মার্ট ডিউ-ডেট ও ঐতিহাসিক ট্রেন্ড রিমাইন্ডার' : 'Smart Due-Date & Historical Trend Reminders'}
+                      </h4>
+                      <p className="text-[10px] text-amber-300/70">
+                        {isBangla
+                          ? 'অনুরূপ কাজের সমাপ্তির গতির উপর ভিত্তি করে স্বয়ংক্রিয় রিমাইন্ডার শিডিউল'
+                          : 'Auto-scheduled from completion velocity of similar tasks in your workspace'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRecalculateSmartReminder(selectedTask.id)}
+                    disabled={isPredictingReminderId === selectedTask.id}
+                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-200 font-semibold text-[10px] transition-all cursor-pointer disabled:opacity-50"
+                  >
+                    {isPredictingReminderId === selectedTask.id ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin text-amber-300" />
+                        <span>{isBangla ? 'হিসাব হচ্ছে...' : 'Predicting...'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-3 w-3 text-amber-300" />
+                        <span>{isBangla ? 'পুনঃহিসাব করুন' : 'AI Recalculate'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Due Date & Reminder Times Display */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="neumorph-inset p-3 rounded-xl space-y-1">
+                    <span className="text-[10px] uppercase text-slate-400 font-mono flex items-center gap-1">
+                      <Clock className="h-3 w-3 text-amber-400" />
+                      <span>{isBangla ? 'ধার্যকৃত শেষ সময় (Due Date)' : 'Target Due Date'}</span>
+                    </span>
+                    <p className="text-xs font-bold text-[#F8FAFC] font-mono">
+                      {selectedTask.dueDate || 'Auto-Scheduled'}
+                    </p>
+                    {selectedTask.smartReminderConfig?.predictedDurationMinutes && (
+                      <span className="text-[10px] text-slate-400 font-mono block">
+                        Estimated: ~{selectedTask.smartReminderConfig.predictedDurationMinutes} mins
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="neumorph-inset p-3 rounded-xl space-y-1">
+                    <span className="text-[10px] uppercase text-slate-400 font-mono flex items-center gap-1">
+                      <BellRing className="h-3 w-3 text-emerald-400" />
+                      <span>{isBangla ? 'রিমাইন্ডার নোটিফিকেশন' : 'Smart Reminder Alert'}</span>
+                    </span>
+                    <p className="text-xs font-bold text-emerald-400 font-mono">
+                      {selectedTask.reminderTime || '30 mins before deadline'}
+                    </p>
+                    <span className="text-[10px] text-slate-400 font-mono block">
+                      Status: {selectedTask.smartReminderConfig?.reminderStatus || 'pending'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Historical Basis Breakdown */}
+                {selectedTask.smartReminderConfig?.historicalBasis && (
+                  <div className="rounded-xl bg-black/40 border border-amber-500/20 p-2.5 text-[10px] space-y-1.5 font-mono text-slate-300">
+                    <div className="flex items-center justify-between text-amber-300 font-semibold border-b border-white/5 pb-1">
+                      <span className="flex items-center gap-1">
+                        <History className="h-3 w-3 text-amber-400" />
+                        <span>Historical Trend Basis</span>
+                      </span>
+                      <span>
+                        {selectedTask.smartReminderConfig.historicalBasis.similarTasksCount} Similar Completed Tasks
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-[9px] text-slate-400 pt-0.5">
+                      <div>Category Baseline: <span className="text-slate-200">{selectedTask.smartReminderConfig.historicalBasis.categoryBaselineHours * 60}m</span></div>
+                      <div>Avg Historical Velocity: <span className="text-slate-200">{selectedTask.smartReminderConfig.historicalBasis.averageCompletionMinutes}m</span></div>
+                    </div>
+                    <p className="text-[10px] text-slate-300 italic pt-1 border-t border-white/5">
+                      "{selectedTask.smartReminderConfig.reminderNote || 'Calculated based on average velocity and nested sub-task complexity.'}"
+                    </p>
+                  </div>
+                )}
+
+                {/* Reminder Lead-Time Adjuster & Interactive Actions */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-slate-400 font-mono">Alert lead time:</span>
+                    {[15, 30, 45, 60].map((mins) => {
+                      const currentOffset = selectedTask.smartReminderConfig?.reminderOffsetMinutes ?? 30;
+                      const isSelected = currentOffset === mins;
+                      return (
+                        <button
+                          key={mins}
+                          type="button"
+                          onClick={() => handleUpdateReminderOffset(selectedTask.id, mins)}
+                          className={`px-2 py-0.5 rounded text-[10px] font-mono transition-all cursor-pointer ${
+                            isSelected
+                              ? 'bg-amber-500 text-black font-bold shadow-[0_0_8px_rgba(245,158,11,0.5)]'
+                              : 'bg-white/5 text-slate-400 hover:text-white border border-white/10'
+                          }`}
+                        >
+                          {mins}m
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => snoozeTaskReminder(selectedTask.id, 15)}
+                      className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 text-[10px] font-mono transition-all cursor-pointer"
+                      title="Snooze reminder by 15 minutes"
+                    >
+                      💤 Snooze 15m
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => dismissTaskReminder(selectedTask.id)}
+                      className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[10px] font-mono transition-all cursor-pointer"
+                      title="Dismiss reminder"
+                    >
+                      Dismiss
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1621,6 +1875,56 @@ export const TasksView: React.FC = () => {
                     <Plus className="h-3.5 w-3.5" />
                   </button>
                 </div>
+              </div>
+
+              {/* Smart Due-Date & Reminder Predictor Preview */}
+              <div className="rounded-xl bg-amber-950/20 border border-amber-500/30 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <CalendarClock className="h-4 w-4 text-amber-400" />
+                    <div>
+                      <span className="text-xs font-bold text-amber-200 block">
+                        {isBangla ? 'স্মার্ট এআই ডিউ-ডেট ও ট্রেন্ড রিমাইন্ডার শিডিউল' : 'Smart AI Due-Date & Historical Reminder'}
+                      </span>
+                      <p className="text-[10px] text-amber-300/70">
+                        {isBangla
+                          ? 'অনুরূপ কাজের গড় গতি অনুযায়ী স্বয়ংক্রিয়ভাবে ডিউ ডেট ও রিমাইন্ডার সেট হবে'
+                          : 'Auto-schedules completion deadline based on similar tasks & domain velocity'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {isModalPredictingSchedule && (
+                    <div className="flex items-center gap-1 text-[10px] text-amber-300 font-mono">
+                      <Loader2 className="h-3 w-3 animate-spin text-amber-300" />
+                      <span>Predicting...</span>
+                    </div>
+                  )}
+                </div>
+
+                {createModalSmartSchedule ? (
+                  <div className="rounded-lg bg-black/40 border border-amber-500/20 p-2.5 text-[10px] font-mono space-y-1.5 text-slate-300">
+                    <div className="flex items-center justify-between text-amber-300">
+                      <span>Predicted Duration: ~{createModalSmartSchedule.predictedDurationMinutes} mins</span>
+                      <span>Target: {new Date(createModalSmartSchedule.suggestedDueDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div className="flex items-center justify-between text-slate-400 text-[9px]">
+                      <span>Reminder Alert: {new Date(createModalSmartSchedule.suggestedReminderDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} ({createModalSmartSchedule.reminderOffsetMinutes}m prior)</span>
+                      <span>{createModalSmartSchedule.historicalBasis?.similarTasksCount || 0} similar tasks matched</span>
+                    </div>
+                    {createModalSmartSchedule.reminderNote && (
+                      <p className="text-[9px] text-amber-200/80 italic pt-1 border-t border-white/5">
+                        {createModalSmartSchedule.reminderNote}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-[10px] text-slate-400 font-mono italic">
+                    {isBangla
+                      ? 'টাস্ক সেভ করার সময় সিস্টেম স্বয়ংক্রিয়ভাবে ঐতিহাসিক গড় গতি অনুযায়ী রিমাইন্ডার সেট করবে।'
+                      : 'Will automatically calculate target deadline & alert from historical velocity upon creation.'}
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center justify-between pt-3 border-t border-[#E50914]/20">

@@ -163,6 +163,30 @@ class SoundService {
     }
   }
 
+  // High-tech reminder alarm chime for smart due-date alerts
+  public playAlarmSound() {
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+    try {
+      const notes = [659.25, 880, 659.25, 987.77]; // E5, A5, E5, B5
+      notes.forEach((freq, idx) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        const start = ctx.currentTime + idx * 0.11;
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0.08, start);
+        gain.gain.linearRampToValueAtTime(0.001, start + 0.16);
+        osc.start(start);
+        osc.stop(start + 0.16);
+      });
+    } catch (e) {
+      console.warn('Alarm audio chime failed:', e);
+    }
+  }
+
   public playTaskCompleteSound() {
     this.playSuccess();
   }

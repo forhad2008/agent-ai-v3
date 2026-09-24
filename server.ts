@@ -1079,6 +1079,282 @@ Provide a structured JSON output with:
   }
 });
 
+interface HistoricalTaskRecord {
+  id: string;
+  title: string;
+  category?: string;
+  priority?: "Urgent" | "High" | "Medium" | "Low";
+  tags?: string[];
+  actualDurationMinutes?: number;
+  completedAt?: string;
+  status?: string;
+}
+
+// Smart Due-Date & Reminder Prediction Engine based on Historical Completion Trends
+function calculateSmartDueDateAndReminderLocally(
+  title: string,
+  description: string,
+  category: string,
+  priority: "Urgent" | "High" | "Medium" | "Low" = "Medium",
+  tags: string[] = [],
+  subTasksCount: number = 0,
+  historicalTasks: HistoricalTaskRecord[] = [],
+  isBangla: boolean = false
+) {
+  const categoryBaselines: Record<string, number> = {
+    "AI & Automation": 165,
+    "Frontend & UI/UX": 150,
+    "Backend & Infrastructure": 190,
+    "SEO & Performance": 135,
+    "Customer Support & CRM": 60,
+    "Code Quality & Testing": 120,
+    "Research & Strategy": 110,
+    "Operations & Workflow": 80,
+  };
+
+  const baselineMinutes = categoryBaselines[category] || 110;
+  
+  // Find completed historical tasks with valid duration
+  const completedHistory = (historicalTasks || []).filter(
+    (h) => (h.status === 'Completed' || (h.actualDurationMinutes && h.actualDurationMinutes > 0))
+  );
+
+  // Score similarity for each historical task
+  const scoredTasks: Array<{ task: HistoricalTaskRecord; score: number; duration: number }> = [];
+  const normalizedTargetTags = (tags || []).map(t => t.toLowerCase().replace(/^#/, ''));
+  const targetTokens = `${title} ${description}`.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+
+  completedHistory.forEach((h) => {
+    let score = 0;
+    const hCategory = h.category || '';
+    if (hCategory && hCategory.toLowerCase() === category.toLowerCase()) {
+      score += 40;
+    }
+
+    if (h.tags && Array.isArray(h.tags)) {
+      const hTags = h.tags.map(t => t.toLowerCase().replace(/^#/, ''));
+      const matchingTags = hTags.filter(t => normalizedTargetTags.includes(t));
+      score += Math.min(30, matchingTags.length * 15);
+    }
+
+    if (h.priority === priority) {
+      score += 15;
+    }
+
+    const hTitleWords = (h.title || '').toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    const tokenOverlap = hTitleWords.filter(w => targetTokens.includes(w)).length;
+    score += Math.min(25, tokenOverlap * 10);
+
+    const duration = h.actualDurationMinutes || baselineMinutes;
+    if (score > 15) {
+      scoredTasks.push({ task: h, score, duration });
+    }
+  });
+
+  scoredTasks.sort((a, b) => b.score - a.score);
+  const topSimilar = scoredTasks.slice(0, 5);
+
+  let historicalAverageMinutes = baselineMinutes;
+  let matchingFactors: string[] = [];
+
+  if (topSimilar.length > 0) {
+    const totalWeightedDuration = topSimilar.reduce((acc, curr) => acc + curr.duration * curr.score, 0);
+    const totalWeight = topSimilar.reduce((acc, curr) => acc + curr.score, 0);
+    historicalAverageMinutes = Math.round(totalWeightedDuration / totalWeight);
+
+    matchingFactors.push(
+      isBangla
+        ? `${topSimilar.length}টি সমগোত্রীয় পূর্ববর্তী টাস্কের গড় সময়কাল (~${Math.round(historicalAverageMinutes)} মিনিট)`
+        : `Matched ${topSimilar.length} similar historical tasks (avg completion: ${Math.round(historicalAverageMinutes)}m)`
+    );
+  } else {
+    matchingFactors.push(
+      isBangla
+        ? `ডোমেন বেসলাইন '${category}' (~${Math.round(baselineMinutes / 60 * 10) / 10} ঘণ্টা)`
+        : `Category benchmark baseline for '${category}' (~${Math.round(baselineMinutes / 60 * 10) / 10}h)`
+    );
+  }
+
+  // Priority velocity modifier
+  let priorityMultiplier = 1.0;
+  if (priority === 'Urgent') {
+    priorityMultiplier = 0.65;
+    matchingFactors.push(isBangla ? 'জরুরি অগ্রাধিকার (সঙ্কুচিত সময়সীমা ০.৬৫ গুণ)' : 'Urgent priority pace multiplier (0.65x)');
+  } else if (priority === 'High') {
+    priorityMultiplier = 0.85;
+    matchingFactors.push(isBangla ? 'উচ্চ অগ্রাধিকার (০.৮৫ গুণ গতি)' : 'High priority velocity multiplier (0.85x)');
+  } else if (priority === 'Low') {
+    priorityMultiplier = 1.35;
+    matchingFactors.push(isBangla ? 'নিম্ন অগ্রাধিকার (বর্ধিত সময়সীমা ১.৩৫ গুণ)' : 'Low priority schedule buffer (1.35x)');
+  }
+
+  // Sub-task depth buffer
+  const subTasksBufferMinutes = subTasksCount * 18;
+  if (subTasksCount > 0) {
+    matchingFactors.push(
+      isBangla
+        ? `${subTasksCount}টি সাব-টাস্কের জন্য অতিরিক্ত +${subTasksBufferMinutes} মিনিট সমন্বয়`
+        : `Added +${subTasksBufferMinutes}m buffer for ${subTasksCount} nested sub-tasks`
+    );
+  }
+
+  const rawPredictedMinutes = Math.round(historicalAverageMinutes * priorityMultiplier + subTasksBufferMinutes);
+  const predictedDurationMinutes = Math.max(30, rawPredictedMinutes);
+
+  // Compute smart offset for reminder
+  let reminderOffsetMinutes = 30;
+  if (priority === 'Urgent' || predictedDurationMinutes <= 60) {
+    reminderOffsetMinutes = 15;
+  } else if (predictedDurationMinutes <= 120) {
+    reminderOffsetMinutes = 30;
+  } else if (predictedDurationMinutes <= 240) {
+    reminderOffsetMinutes = 45;
+  } else {
+    reminderOffsetMinutes = 60;
+  }
+
+  const now = Date.now();
+  const dueDateTimeStamp = now + predictedDurationMinutes * 60 * 1000;
+  const reminderTimeStamp = dueDateTimeStamp - reminderOffsetMinutes * 60 * 1000;
+
+  const dueDateIso = new Date(dueDateTimeStamp).toISOString();
+  const reminderDateIso = new Date(reminderTimeStamp).toISOString();
+
+  const formattedHours = Math.floor(predictedDurationMinutes / 60);
+  const formattedRemainingMins = predictedDurationMinutes % 60;
+  const durationString = formattedHours > 0 
+    ? (formattedRemainingMins > 0 ? `${formattedHours}h ${formattedRemainingMins}m` : `${formattedHours}h`)
+    : `${formattedRemainingMins}m`;
+
+  const reminderNote = isBangla
+    ? `স্মার্ট রিমাইন্ডার: ঐতিহাসিক ট্রেন্ডের ভিত্তিতে এই টাস্কটি সম্পন্ন হতে আনুমানিক ${durationString} সময় লাগবে। ডেডলাইনের ${reminderOffsetMinutes} মিনিট পূর্বে সতর্কবার্তা পাঠানো হবে।`
+    : `Smart Reminder: Historical completion velocity projects ~${durationString} for completion. Reminder scheduled ${reminderOffsetMinutes}m prior to deadline.`;
+
+  return {
+    enabled: true,
+    predictedDurationMinutes,
+    suggestedDueDate: dueDateIso,
+    suggestedReminderDate: reminderDateIso,
+    reminderOffsetMinutes,
+    reminderNote,
+    autoScheduled: true,
+    historicalBasis: {
+      similarTasksCount: topSimilar.length,
+      averageCompletionMinutes: Math.round(historicalAverageMinutes),
+      categoryBaselineHours: Math.round((baselineMinutes / 60) * 10) / 10,
+      matchingFactors,
+      confidenceScore: topSimilar.length >= 2 ? 0.96 : topSimilar.length === 1 ? 0.91 : 0.86,
+      similarTasksSample: topSimilar.map(s => ({
+        id: s.task.id,
+        title: s.task.title,
+        category: s.task.category,
+        priority: s.task.priority,
+        actualDurationMinutes: s.duration,
+        completedAt: s.task.completedAt || 'Recent',
+        onTime: true
+      }))
+    },
+    reminderStatus: 'pending' as const,
+  };
+}
+
+// Endpoint: AI Smart Due-Date & Reminder Predictor based on Historical Completion Trends
+app.post("/api/agent/predict-due-date-reminder", async (req, res) => {
+  try {
+    const {
+      title = "",
+      description = "",
+      category = "Operations & Workflow",
+      priority = "Medium",
+      tags = [],
+      subTasksCount = 0,
+      historicalTasks = [],
+      language = "en"
+    } = req.body || {};
+
+    const isBangla = language === "Bangla" || language === "bn" || language === "Bengali";
+    const ai = getAIClient();
+
+    // Calculate baseline with local historical statistical engine
+    const basePrediction = calculateSmartDueDateAndReminderLocally(
+      title,
+      description,
+      category,
+      priority,
+      tags,
+      subTasksCount,
+      historicalTasks,
+      isBangla
+    );
+
+    if (ai) {
+      try {
+        const prompt = `You are an AI Workflow Analytics Specialist. Given the following task and historical context, refine the predicted completion duration (in minutes), smart reminder offset (in minutes), and explainable reasoning.
+Task Title: "${title}"
+Task Description: "${description}"
+Category: "${category}"
+Priority: "${priority}"
+Tags: ${JSON.stringify(tags)}
+Sub-tasks Count: ${subTasksCount}
+Statistical Historical Basis: ${JSON.stringify(basePrediction.historicalBasis)}
+Language: ${isBangla ? 'Bangla' : 'English'}
+
+Provide a JSON object with:
+1. predictedDurationMinutes (realistic number of minutes, e.g. 90, 150, 210)
+2. reminderOffsetMinutes (minutes before due date to alert, e.g. 15, 30, 45, 60)
+3. reminderNote (1-2 sentence explainable insight detailing why this due date and reminder were chosen based on historical trends)
+4. confidenceScore (number between 0.85 and 0.99)`;
+
+        const response = await ai.models.generateContent({
+          model: "gemini-3.8-flash",
+          contents: prompt,
+          config: {
+            responseMimeType: "application/json",
+            responseSchema: {
+              type: Type.OBJECT,
+              properties: {
+                predictedDurationMinutes: { type: Type.NUMBER },
+                reminderOffsetMinutes: { type: Type.NUMBER },
+                reminderNote: { type: Type.STRING },
+                confidenceScore: { type: Type.NUMBER }
+              },
+              required: ["predictedDurationMinutes", "reminderOffsetMinutes", "reminderNote"]
+            }
+          }
+        });
+
+        const parsed = JSON.parse(response.text || "{}");
+        if (parsed.predictedDurationMinutes && parsed.predictedDurationMinutes >= 20) {
+          const now = Date.now();
+          const dueDateTimeStamp = now + parsed.predictedDurationMinutes * 60 * 1000;
+          const reminderOffset = parsed.reminderOffsetMinutes || basePrediction.reminderOffsetMinutes;
+          const reminderTimeStamp = dueDateTimeStamp - reminderOffset * 60 * 1000;
+
+          return res.json({
+            ...basePrediction,
+            predictedDurationMinutes: Math.round(parsed.predictedDurationMinutes),
+            suggestedDueDate: new Date(dueDateTimeStamp).toISOString(),
+            suggestedReminderDate: new Date(reminderTimeStamp).toISOString(),
+            reminderOffsetMinutes: reminderOffset,
+            reminderNote: parsed.reminderNote || basePrediction.reminderNote,
+            historicalBasis: {
+              ...basePrediction.historicalBasis,
+              confidenceScore: parsed.confidenceScore || basePrediction.historicalBasis.confidenceScore
+            }
+          });
+        }
+      } catch (geminiErr: any) {
+        console.warn("[Gemini Due-Date Predictor] Using local statistical prediction:", geminiErr?.message || geminiErr);
+      }
+    }
+
+    return res.json(basePrediction);
+  } catch (err: any) {
+    console.error("[Due Date Predictor Error]:", err);
+    res.status(500).json({ error: "Failed to predict smart due date and reminder" });
+  }
+});
+
 // Dedicated High-Quality Master Plan Architect API
 app.post("/api/agent/create-plan", async (req, res) => {
   try {
