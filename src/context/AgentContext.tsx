@@ -144,6 +144,21 @@ interface AgentContextType {
   deleteMessageWhatsAppStyle: (messageId: string, deleteType: 'me' | 'everyone') => void;
   deleteTaskWithSync: (taskId: string) => void;
   
+  // Batch Task Management
+  batchDeleteTasks: (taskIds: string[]) => void;
+  batchUpdatePriority: (taskIds: string[], priority: TaskPriority) => void;
+  batchUpdateStatus: (taskIds: string[], status: TaskStatus) => void;
+  batchUpdateCategory: (taskIds: string[], category: string) => void;
+  batchAddTags: (taskIds: string[], tagsToAdd: string[], mode?: 'append' | 'replace') => void;
+  batchAutoCategorizeTasks: (
+    taskIds: string[],
+    onProgress?: (completed: number, total: number, currentTitle: string) => void
+  ) => Promise<{ successCount: number; failedCount: number }>;
+  batchApplySmartDueDates: (
+    taskIds: string[],
+    onProgress?: (completed: number, total: number, currentTitle: string) => void
+  ) => Promise<{ successCount: number; failedCount: number }>;
+  
   // Real Alarm System & Reminders
   alarms: AlarmItem[];
   triggeredAlarm: AlarmItem | null;
@@ -2138,6 +2153,325 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
     addActivity('Task Permanently Removed', 'Work OS Task Scheduler', `Removed task ID: ${taskId}`, 'warning');
   };
 
+  // Batch Task Management Implementations
+  const batchDeleteTasks = (taskIds: string[]) => {
+    if (!taskIds || taskIds.length === 0) return;
+    const idsSet = new Set(taskIds);
+    setTasks((prev) => {
+      const updated = prev.filter((t) => !idsSet.has(t.id));
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (selectedTask && idsSet.has(selectedTask.id)) {
+      setSelectedTask(null);
+    }
+
+    sound.playClick();
+    addActivity('Batch Tasks Deleted', 'Work OS Task Scheduler', `Bulk deleted ${taskIds.length} tasks`, 'warning');
+    sendNotification({
+      type: 'system',
+      title: settings.language === 'Bangla' ? `🗑️ ${taskIds.length}টি টাস্ক একসাথে ডিলিট করা হয়েছে` : `🗑️ Bulk Deleted ${taskIds.length} Tasks`,
+      message: settings.language === 'Bangla' ? `${taskIds.length}টি টাস্ক সফলভাবে ডিলিট করা হয়েছে।` : `Successfully purged ${taskIds.length} tasks from workspace.`,
+      priority: 'normal',
+    });
+  };
+
+  const batchUpdatePriority = (taskIds: string[], priority: TaskPriority) => {
+    if (!taskIds || taskIds.length === 0) return;
+    const idsSet = new Set(taskIds);
+    const isBangla = settings.language === 'Bangla';
+
+    setTasks((prev) => {
+      const updated = prev.map((t) => {
+        if (idsSet.has(t.id)) {
+          return {
+            ...t,
+            priority,
+            updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+          };
+        }
+        return t;
+      });
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (selectedTask && idsSet.has(selectedTask.id)) {
+      setSelectedTask((prev) => prev ? { ...prev, priority } : null);
+    }
+
+    sound.playReceiveSound();
+    addActivity('Batch Priority Updated', 'Task Manager', `Updated ${taskIds.length} tasks to priority [${priority}]`, 'success');
+    sendNotification({
+      type: 'system',
+      title: isBangla ? `⚡ ${taskIds.length}টি টাস্কের প্রায়োরিটি পরিবর্তন` : `⚡ Batch Priority Updated: [${priority}]`,
+      message: isBangla ? `নির্বাচিত ${taskIds.length}টি টাস্কের প্রায়োরিটি "${priority}" করা হয়েছে।` : `Set priority to ${priority} across ${taskIds.length} selected tasks.`,
+      priority: 'normal',
+    });
+  };
+
+  const batchUpdateStatus = (taskIds: string[], status: TaskStatus) => {
+    if (!taskIds || taskIds.length === 0) return;
+    const idsSet = new Set(taskIds);
+    const isBangla = settings.language === 'Bangla';
+    const now = Date.now();
+
+    setTasks((prev) => {
+      const updated = prev.map((t) => {
+        if (idsSet.has(t.id)) {
+          const progress = 
+            status === 'Completed' ? 100 :
+            status === 'Waiting for Approval' ? 85 :
+            status === 'Running' ? 55 :
+            status === 'Planning' ? 20 : t.progress;
+
+          const createdStamp = t.createdTimeStamp || (now - 3600000);
+          const calculatedDuration = Math.max(5, Math.round((now - createdStamp) / 60000));
+
+          return {
+            ...t,
+            status,
+            progress,
+            actualDurationMinutes: status === 'Completed' ? (t.actualDurationMinutes || calculatedDuration) : t.actualDurationMinutes,
+            completedAt: status === 'Completed' ? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today' : t.completedAt,
+            completedTimeStamp: status === 'Completed' ? now : t.completedTimeStamp,
+            updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+          };
+        }
+        return t;
+      });
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (selectedTask && idsSet.has(selectedTask.id)) {
+      setSelectedTask((prev) => prev ? { ...prev, status } : null);
+    }
+
+    if (status === 'Completed') {
+      sound.playTaskCompleteSound();
+    } else {
+      sound.playReceiveSound();
+    }
+
+    addActivity('Batch Status Updated', 'Task Manager', `Set ${taskIds.length} tasks to status "${status}"`, 'success');
+    sendNotification({
+      type: status === 'Completed' ? 'task_completed' : 'system',
+      title: isBangla ? `🔄 ${taskIds.length}টি টাস্কের স্ট্যাটাস: "${status}"` : `🔄 Batch Status Updated: "${status}"`,
+      message: isBangla ? `নির্বাচিত ${taskIds.length}টি টাস্কের স্ট্যাটাস "${status}" এ পরিবর্তন করা হয়েছে।` : `Updated ${taskIds.length} selected tasks to "${status}".`,
+      priority: status === 'Completed' ? 'high' : 'normal',
+    });
+  };
+
+  const batchUpdateCategory = (taskIds: string[], category: string) => {
+    if (!taskIds || taskIds.length === 0 || !category) return;
+    const idsSet = new Set(taskIds);
+
+    setTasks((prev) => {
+      const updated = prev.map((t) => {
+        if (idsSet.has(t.id)) {
+          return {
+            ...t,
+            category,
+            updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+          };
+        }
+        return t;
+      });
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (selectedTask && idsSet.has(selectedTask.id)) {
+      setSelectedTask((prev) => prev ? { ...prev, category } : null);
+    }
+
+    sound.playReceiveSound();
+    addActivity('Batch Category Updated', 'Task Manager', `Assigned category "${category}" to ${taskIds.length} tasks`, 'success');
+  };
+
+  const batchAddTags = (taskIds: string[], tagsToAdd: string[], mode: 'append' | 'replace' = 'append') => {
+    if (!taskIds || taskIds.length === 0 || !tagsToAdd || tagsToAdd.length === 0) return;
+    const idsSet = new Set(taskIds);
+    const isBangla = settings.language === 'Bangla';
+
+    const cleanTags = tagsToAdd.map((tag) => {
+      const trimmed = tag.trim();
+      return trimmed.startsWith('#') ? trimmed : `#${trimmed.replace(/\s+/g, '')}`;
+    });
+
+    setTasks((prev) => {
+      const updated = prev.map((t) => {
+        if (idsSet.has(t.id)) {
+          let updatedTags: string[];
+          if (mode === 'replace') {
+            updatedTags = Array.from(new Set(cleanTags));
+          } else {
+            updatedTags = Array.from(new Set([...(t.tags || []), ...cleanTags]));
+          }
+          return {
+            ...t,
+            tags: updatedTags,
+            updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+          };
+        }
+        return t;
+      });
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (selectedTask && idsSet.has(selectedTask.id)) {
+      setSelectedTask((prev) => {
+        if (!prev) return null;
+        let updatedTags: string[];
+        if (mode === 'replace') {
+          updatedTags = Array.from(new Set(cleanTags));
+        } else {
+          updatedTags = Array.from(new Set([...(prev.tags || []), ...cleanTags]));
+        }
+        return { ...prev, tags: updatedTags };
+      });
+    }
+
+    sound.playReceiveSound();
+    addActivity('Batch Tags Updated', 'Task Manager', `Applied ${cleanTags.length} tags across ${taskIds.length} tasks (${mode})`, 'success');
+    sendNotification({
+      type: 'system',
+      title: isBangla ? `🏷️ ${taskIds.length}টি টাস্কে ট্যাগ যুক্ত হয়েছে` : `🏷️ Batch Tags Applied (${taskIds.length} Tasks)`,
+      message: isBangla ? `যুক্ত করা ট্যাগ: ${cleanTags.join(' ')}` : `Tags applied: ${cleanTags.join(', ')}`,
+      priority: 'normal',
+    });
+  };
+
+  const batchAutoCategorizeTasks = async (
+    taskIds: string[],
+    onProgress?: (completed: number, total: number, currentTitle: string) => void
+  ): Promise<{ successCount: number; failedCount: number }> => {
+    if (!taskIds || taskIds.length === 0) return { successCount: 0, failedCount: 0 };
+    const isBangla = settings.language === 'Bangla';
+
+    sound.playSendSound();
+    addActivity('AI Batch Tagging Initiated', 'Gemini AI Task Analyzer', `Starting bulk intelligent categorization for ${taskIds.length} tasks`, 'pending');
+
+    let successCount = 0;
+    let failedCount = 0;
+    const total = taskIds.length;
+
+    for (let i = 0; i < total; i++) {
+      const taskId = taskIds[i];
+      const task = tasks.find((t) => t.id === taskId);
+      if (!task) {
+        failedCount++;
+        continue;
+      }
+
+      if (onProgress) {
+        onProgress(i, total, task.title);
+      }
+
+      try {
+        const result = await analyzeTaskWithAi(task.title, task.description, settings.language, userProfile);
+        if (result) {
+          setTasks((prev) =>
+            prev.map((t) => {
+              if (t.id === taskId) {
+                return {
+                  ...t,
+                  category: result.category || t.category,
+                  tags: result.tags && result.tags.length > 0 ? result.tags : t.tags,
+                  priority: result.suggestedPriority || t.priority,
+                  aiAnalysis: result,
+                  updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+                };
+              }
+              return t;
+            })
+          );
+          successCount++;
+        } else {
+          failedCount++;
+        }
+      } catch (e) {
+        console.warn(`Failed AI batch categorization for task ${taskId}:`, e);
+        failedCount++;
+      }
+    }
+
+    if (onProgress) {
+      onProgress(total, total, 'Complete');
+    }
+
+    // Persist
+    try {
+      localStorage.setItem('abdullah_tasks', JSON.stringify(tasks));
+    } catch (e) {}
+
+    sound.playTaskCompleteSound();
+    addActivity('AI Batch Tagging Complete', 'Gemini AI Task Analyzer', `Successfully categorized and tagged ${successCount}/${total} tasks`, 'success');
+    sendNotification({
+      type: 'task_completed',
+      title: isBangla ? `✨ এআই ব্যাচ ট্যাগিং সম্পন্ন (${successCount}/${total})` : `✨ AI Bulk Tagging Complete (${successCount}/${total} Tasks)`,
+      message: isBangla
+        ? `নির্বাচিত ${successCount}টি টাস্কে এআই দ্বারা স্বয়ংক্রিয় ক্যাটাগরি, হ্যাশট্যাগ ও প্রায়োরিটি যুক্ত হয়েছে।`
+        : `Successfully auto-categorized, tagged, and assigned AI scope estimates across ${successCount} tasks.`,
+      priority: 'high',
+    });
+
+    return { successCount, failedCount };
+  };
+
+  const batchApplySmartDueDates = async (
+    taskIds: string[],
+    onProgress?: (completed: number, total: number, currentTitle: string) => void
+  ): Promise<{ successCount: number; failedCount: number }> => {
+    if (!taskIds || taskIds.length === 0) return { successCount: 0, failedCount: 0 };
+
+    sound.playSendSound();
+    let successCount = 0;
+    let failedCount = 0;
+    const total = taskIds.length;
+
+    for (let i = 0; i < total; i++) {
+      const taskId = taskIds[i];
+      const task = tasks.find((t) => t.id === taskId);
+      if (!task) {
+        failedCount++;
+        continue;
+      }
+
+      if (onProgress) {
+        onProgress(i, total, task.title);
+      }
+
+      try {
+        await applySmartDueDateReminder(taskId);
+        successCount++;
+      } catch (e) {
+        failedCount++;
+      }
+    }
+
+    if (onProgress) {
+      onProgress(total, total, 'Complete');
+    }
+
+    sound.playTaskCompleteSound();
+    addActivity('Batch Smart Due Dates Applied', 'Smart Reminder Engine', `Scheduled historical deadlines for ${successCount}/${total} tasks`, 'success');
+    return { successCount, failedCount };
+  };
+
   const approveAction = (approvalId: string) => {
     setApprovals((prev) =>
       prev.map((appr) => {
@@ -2351,6 +2685,15 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
         // WhatsApp-Style Deletion & Task Persistence Actions
         deleteMessageWhatsAppStyle,
         deleteTaskWithSync,
+        
+        // Batch Task Management
+        batchDeleteTasks,
+        batchUpdatePriority,
+        batchUpdateStatus,
+        batchUpdateCategory,
+        batchAddTags,
+        batchAutoCategorizeTasks,
+        batchApplySmartDueDates,
         
         // Alarms System
         alarms,

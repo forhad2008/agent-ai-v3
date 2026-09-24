@@ -33,10 +33,17 @@ import {
   RefreshCw,
   AlertCircle,
   CheckCircle2,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
 import { SubTaskItem, TaskItem, TaskPriority, TaskStatus, TaskAiAnalysisResult, SmartReminderConfig } from '../../types';
 import { TasksPerformanceDashboard } from './TasksPerformanceDashboard';
+import { BatchActionsBar } from './BatchActionsBar';
+import { BatchTagModal } from './BatchTagModal';
+import { BatchPriorityModal } from './BatchPriorityModal';
+import { BatchStatusModal } from './BatchStatusModal';
+import { BatchDeleteModal } from './BatchDeleteModal';
+import { BatchAiProgressModal } from './BatchAiProgressModal';
 
 export const TasksView: React.FC = () => {
   const {
@@ -63,6 +70,13 @@ export const TasksView: React.FC = () => {
     toggleSubTask,
     updateSubTask,
     deleteSubTask,
+    batchDeleteTasks,
+    batchUpdatePriority,
+    batchUpdateStatus,
+    batchUpdateCategory,
+    batchAddTags,
+    batchAutoCategorizeTasks,
+    batchApplySmartDueDates,
   } = useAgent();
 
   const isBangla = settings.language === 'Bangla' || currentLanguage?.id === 'bn';
@@ -72,6 +86,20 @@ export const TasksView: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
   const [selectedTagFilter, setSelectedTagFilter] = useState<string | null>(null);
   const [showPerformanceDashboard, setShowPerformanceDashboard] = useState(true);
+
+  // Batch Process Multi-Selection States
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+  const [isBatchTagOpen, setIsBatchTagOpen] = useState(false);
+  const [isBatchPriorityOpen, setIsBatchPriorityOpen] = useState(false);
+  const [isBatchStatusOpen, setIsBatchStatusOpen] = useState(false);
+  const [isBatchDeleteOpen, setIsBatchDeleteOpen] = useState(false);
+  const [isBatchAiOpen, setIsBatchAiOpen] = useState(false);
+  const [isBatchAiProcessing, setIsBatchAiProcessing] = useState(false);
+  const [batchAiProgress, setBatchAiProgress] = useState<{ current: number; total: number; currentTitle: string }>({
+    current: 0,
+    total: 0,
+    currentTitle: '',
+  });
 
   // Card-level AI auto-categorizing loader state
   const [isAutoCategorizingId, setIsAutoCategorizingId] = useState<string | null>(null);
@@ -340,6 +368,95 @@ export const TasksView: React.FC = () => {
     return matchesSearch && matchesStatus && matchesCategory && matchesTag;
   });
 
+  // Batch Process Computed Items & Helpers
+  const selectedTasks = useMemo(() => {
+    const idSet = new Set(selectedTaskIds);
+    return tasks.filter((t) => idSet.has(t.id));
+  }, [tasks, selectedTaskIds]);
+
+  const toggleSelectTask = (taskId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setSelectedTaskIds((prev) =>
+      prev.includes(taskId) ? prev.filter((id) => id !== taskId) : [...prev, taskId]
+    );
+  };
+
+  const isAllFilteredSelected = useMemo(() => {
+    if (filteredTasks.length === 0) return false;
+    return filteredTasks.every((t) => selectedTaskIds.includes(t.id));
+  }, [filteredTasks, selectedTaskIds]);
+
+  const toggleSelectAllFiltered = () => {
+    if (isAllFilteredSelected) {
+      const filteredSet = new Set(filteredTasks.map((t) => t.id));
+      setSelectedTaskIds((prev) => prev.filter((id) => !filteredSet.has(id)));
+    } else {
+      const currentSet = new Set(selectedTaskIds);
+      filteredTasks.forEach((t) => currentSet.add(t.id));
+      setSelectedTaskIds(Array.from(currentSet));
+    }
+  };
+
+  const selectAllTotal = () => {
+    setSelectedTaskIds(tasks.map((t) => t.id));
+  };
+
+  const clearSelection = () => {
+    setSelectedTaskIds([]);
+  };
+
+  // Batch action handlers
+  const handleBatchAiTag = async () => {
+    if (selectedTaskIds.length === 0) return;
+    setIsBatchAiOpen(true);
+    setIsBatchAiProcessing(true);
+    setBatchAiProgress({ current: 0, total: selectedTaskIds.length, currentTitle: 'Initializing Gemini AI Model...' });
+
+    try {
+      await batchAutoCategorizeTasks(selectedTaskIds, (current, total, currentTitle) => {
+        setBatchAiProgress({ current, total, currentTitle });
+      });
+    } finally {
+      setIsBatchAiProcessing(false);
+    }
+  };
+
+  const handleBatchApplyTags = (tagsToApply: string[], mode: 'append' | 'replace') => {
+    if (selectedTaskIds.length === 0) return;
+    batchAddTags(selectedTaskIds, tagsToApply, mode);
+  };
+
+  const handleBatchApplyPriority = (priority: TaskPriority) => {
+    if (selectedTaskIds.length === 0) return;
+    batchUpdatePriority(selectedTaskIds, priority);
+  };
+
+  const handleBatchApplyStatus = (status: TaskStatus) => {
+    if (selectedTaskIds.length === 0) return;
+    batchUpdateStatus(selectedTaskIds, status);
+  };
+
+  const handleBatchApplySmartSchedule = async () => {
+    if (selectedTaskIds.length === 0) return;
+    setIsBatchAiOpen(true);
+    setIsBatchAiProcessing(true);
+    setBatchAiProgress({ current: 0, total: selectedTaskIds.length, currentTitle: 'Calculating historical velocity & smart due dates...' });
+
+    try {
+      await batchApplySmartDueDates(selectedTaskIds, (current, total, currentTitle) => {
+        setBatchAiProgress({ current, total, currentTitle });
+      });
+    } finally {
+      setIsBatchAiProcessing(false);
+    }
+  };
+
+  const handleBatchConfirmDelete = () => {
+    if (selectedTaskIds.length === 0) return;
+    batchDeleteTasks(selectedTaskIds);
+    setSelectedTaskIds([]);
+  };
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
@@ -468,6 +585,24 @@ export const TasksView: React.FC = () => {
           </button>
 
           <button
+            id="btn_batch_mode_header"
+            onClick={toggleSelectAllFiltered}
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              selectedTaskIds.length > 0
+                ? 'bg-[#FF204E] text-white shadow-[0_0_12px_rgba(255,32,78,0.4)]'
+                : 'neumorph-btn-secondary text-slate-300 hover:text-white'
+            }`}
+            title="Batch Select All Tasks"
+          >
+            <CheckSquare className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">
+              {selectedTaskIds.length > 0
+                ? isBangla ? `ব্যাচ (${selectedTaskIds.length})` : `Batch (${selectedTaskIds.length})`
+                : isBangla ? 'ব্যাচ প্রসেস' : 'Batch Process'}
+            </span>
+          </button>
+
+          <button
             id="btn_create_task_modal"
             onClick={() => {
               setDraftSubTasks([]);
@@ -589,6 +724,78 @@ export const TasksView: React.FC = () => {
             ))}
           </div>
         )}
+
+        {/* Quick Batch Selection Strip */}
+        <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl bg-white/[0.02] border border-white/5 text-xs">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleSelectAllFiltered}
+              className="flex items-center gap-2 text-xs font-semibold text-slate-300 hover:text-white cursor-pointer select-none"
+              title="Select or deselect all tasks matching current filters"
+            >
+              <div
+                className={`h-4 w-4 rounded-md flex items-center justify-center transition-all ${
+                  isAllFilteredSelected
+                    ? 'bg-[#FF204E] text-white shadow-[0_0_8px_rgba(255,32,78,0.5)]'
+                    : selectedTaskIds.length > 0
+                    ? 'bg-[#FF204E]/40 text-white'
+                    : 'border border-slate-600 hover:border-[#FF204E]'
+                }`}
+              >
+                {(isAllFilteredSelected || selectedTaskIds.length > 0) && (
+                  <Check className="h-3 w-3 stroke-[3]" />
+                )}
+              </div>
+              <span>
+                {isBangla ? 'সব সিলেক্ট করুন' : 'Select All Filtered'}
+                <span className="ml-1 text-[11px] font-mono text-slate-500">
+                  ({filteredTasks.length})
+                </span>
+              </span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto text-[11px]">
+            {selectedTaskIds.length > 0 && (
+              <span className="px-2 py-0.5 rounded-md bg-[#FF204E]/20 text-[#FF204E] font-mono font-bold border border-[#FF204E]/40 mr-1">
+                {selectedTaskIds.length} {isBangla ? 'সিলেক্টেড' : 'Selected'}
+              </span>
+            )}
+
+            <button
+              type="button"
+              onClick={() => {
+                const urgentHigh = filteredTasks.filter(t => t.priority === 'Urgent' || t.priority === 'High').map(t => t.id);
+                setSelectedTaskIds(Array.from(new Set([...selectedTaskIds, ...urgentHigh])));
+              }}
+              className="px-2 py-1 rounded-lg bg-white/[0.03] hover:bg-white/10 text-slate-400 hover:text-amber-300 transition-all cursor-pointer font-mono"
+            >
+              + {isBangla ? 'জরুরি/হাই' : 'Urgent/High'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const runningIds = filteredTasks.filter(t => t.status === 'Running' || t.status === 'Waiting for Approval').map(t => t.id);
+                setSelectedTaskIds(Array.from(new Set([...selectedTaskIds, ...runningIds])));
+              }}
+              className="px-2 py-1 rounded-lg bg-white/[0.03] hover:bg-white/10 text-slate-400 hover:text-emerald-300 transition-all cursor-pointer font-mono"
+            >
+              + {isBangla ? 'চলমান' : 'Active'}
+            </button>
+
+            {selectedTaskIds.length > 0 && (
+              <button
+                type="button"
+                onClick={clearSelection}
+                className="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 transition-all cursor-pointer font-mono"
+              >
+                {isBangla ? 'ক্লিয়ার' : 'Clear'}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Task Cards Grid */}
@@ -599,20 +806,39 @@ export const TasksView: React.FC = () => {
           const isExpanded = !!expandedSubTaskCardIds[task.id];
           const quickInput = cardQuickSubInputs[task.id] || { title: '', priority: 'Medium' };
           const isAutoCategorizing = isAutoCategorizingId === task.id;
+          const isSelected = selectedTaskIds.includes(task.id);
 
           return (
             <div
               key={task.id}
               id={`task_card_${task.id}`}
-              className="group flex flex-col justify-between rounded-2xl neumorph-card p-4 sm:p-5 transition-all border border-white/5 hover:border-[#FF204E]/30 shadow-lg"
+              className={`group flex flex-col justify-between rounded-2xl neumorph-card p-4 sm:p-5 transition-all border ${
+                isSelected
+                  ? 'border-[#FF204E] bg-[#FF204E]/[0.04] shadow-[0_0_20px_rgba(255,32,78,0.25)] ring-1 ring-[#FF204E]/50'
+                  : 'border-white/5 hover:border-[#FF204E]/30 shadow-lg'
+              }`}
             >
               <div>
-                {/* Header: Status, Priority Badges & Smart Due Date */}
+                {/* Header: Checkbox, Status, Priority Badges & Smart Due Date */}
                 <div className="flex flex-col gap-1.5 mb-2">
                   <div className="flex items-center justify-between gap-2">
-                    <span className={`px-2.5 py-0.5 text-[10px] font-mono rounded-lg ${getStatusBadge(task.status)}`}>
-                      {task.status}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={(e) => toggleSelectTask(task.id, e)}
+                        className={`h-4 w-4 rounded-md flex items-center justify-center transition-all cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#FF204E] text-white shadow-[0_0_8px_rgba(255,32,78,0.6)]'
+                            : 'border border-slate-600 hover:border-[#FF204E] bg-black/40'
+                        }`}
+                        title={isSelected ? 'Deselect Task' : 'Select for Batch Action'}
+                      >
+                        {isSelected && <Check className="h-3 w-3 stroke-[3]" />}
+                      </button>
+                      <span className={`px-2.5 py-0.5 text-[10px] font-mono rounded-lg ${getStatusBadge(task.status)}`}>
+                        {task.status}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-1.5">
                       <span className={`px-2.5 py-0.5 text-[10px] font-mono rounded-lg ${getPriorityBadge(task.priority)}`}>
                         {task.priority}
@@ -1946,6 +2172,69 @@ export const TasksView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Floating Batch Process HUD Action Bar */}
+      <BatchActionsBar
+        selectedCount={selectedTaskIds.length}
+        totalFilteredCount={filteredTasks.length}
+        totalTasksCount={tasks.length}
+        isAllFilteredSelected={isAllFilteredSelected}
+        onSelectAllFiltered={toggleSelectAllFiltered}
+        onSelectAllTotal={selectAllTotal}
+        onClearSelection={clearSelection}
+        onOpenAiAutoTag={handleBatchAiTag}
+        onOpenTagModal={() => setIsBatchTagOpen(true)}
+        onOpenPriorityModal={() => setIsBatchPriorityOpen(true)}
+        onOpenStatusModal={() => setIsBatchStatusOpen(true)}
+        onApplySmartSchedule={handleBatchApplySmartSchedule}
+        onOpenDeleteModal={() => setIsBatchDeleteOpen(true)}
+        isBangla={isBangla}
+      />
+
+      {/* Bulk Tag Management Modal */}
+      <BatchTagModal
+        isOpen={isBatchTagOpen}
+        onClose={() => setIsBatchTagOpen(false)}
+        selectedTasks={selectedTasks}
+        onApplyTags={handleBatchApplyTags}
+        isBangla={isBangla}
+      />
+
+      {/* Bulk Priority Management Modal */}
+      <BatchPriorityModal
+        isOpen={isBatchPriorityOpen}
+        onClose={() => setIsBatchPriorityOpen(false)}
+        selectedTasks={selectedTasks}
+        onApplyPriority={handleBatchApplyPriority}
+        isBangla={isBangla}
+      />
+
+      {/* Bulk Status Management Modal */}
+      <BatchStatusModal
+        isOpen={isBatchStatusOpen}
+        onClose={() => setIsBatchStatusOpen(false)}
+        selectedTasks={selectedTasks}
+        onApplyStatus={handleBatchApplyStatus}
+        isBangla={isBangla}
+      />
+
+      {/* Bulk Delete Confirmation Modal */}
+      <BatchDeleteModal
+        isOpen={isBatchDeleteOpen}
+        onClose={() => setIsBatchDeleteOpen(false)}
+        selectedTasks={selectedTasks}
+        onConfirmDelete={handleBatchConfirmDelete}
+        isBangla={isBangla}
+      />
+
+      {/* Bulk AI Processing Live Progress Modal */}
+      <BatchAiProgressModal
+        isOpen={isBatchAiOpen}
+        isProcessing={isBatchAiProcessing}
+        progress={batchAiProgress}
+        onClose={() => setIsBatchAiOpen(false)}
+        isBangla={isBangla}
+      />
     </div>
   );
 };
