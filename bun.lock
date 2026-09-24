@@ -16,6 +16,7 @@
         "motion": "^11.11.17",
         "react": "^18.3.1",
         "react-dom": "^18.3.1",
+        "react-is": "^19.3.0",
         "react-markdown": "^9.0.1",
         "recharts": "^3.10.1",
         "vite": "^5.4.11",
@@ -26,6 +27,7 @@
         "@types/node": "^22.10.1",
         "@types/react": "^18.3.12",
         "@types/react-dom": "^18.3.1",
+        "@types/react-is": "^19.3.0",
         "autoprefixer": "^10.4.20",
         "esbuild": "^0.24.0",
         "tailwindcss": "^4.0.0",
@@ -523,6 +525,8 @@
     "@types/react": ["@types/react@18.3.31", "", { "dependencies": { "@types/prop-types": "*", "csstype": "^3.2.2" } }, "sha512-vfEqpXTvwT91yhmwdfouStN2hSKwTvyRs8qpLfADyrq/kxDw0hZM7Wk9Ug1FELj8hIby+S/+kQCSRFF32nv2Qw=="],
 
     "@types/react-dom": ["@types/react-dom@18.3.7", "", { "peerDependencies": { "@types/react": "^18.0.0" } }, "sha512-MEe3UeoENYVFXzoXEWsvcpg6ZvlrFNlOQ7EOsvhI3CfAXwzPfO8Qwuxd40nepsYKqyyVQnTdEfv68q91yLcKrQ=="],
+
+    "@types/react-is": ["@types/react-is@19.3.0", "", { "dependencies": { "@types/react": "*" } }, "sha512-pnL9JaaCgCeERlAwWLHBbv/sQV9jRFnp5ex7docWJ4/zA2UDwY2BrTSjEshBWJ81wyl37w9BSz22NW6i0qJhwA=="],
 
     "@types/resolve": ["@types/resolve@1.20.2", "", {}, "sha512-60BCwRFOZCQhDncwQdxxeOEEkbc5dIMccYLwbxsS4TUNeVECQ/pBJ0j09mrHOl/JJvpRPGwO9SvE4nR2Nb/a4Q=="],
 
