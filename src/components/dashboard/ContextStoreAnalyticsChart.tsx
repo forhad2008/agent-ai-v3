@@ -17,6 +17,7 @@ import { useAgent } from '../../context/AgentContext';
 export const ContextStoreAnalyticsChart: React.FC = () => {
   const { sessionContext, resetSessionContext, reorderUserGoals } = useAgent();
   const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
+  const [activeGoalFilter, setActiveGoalFilter] = useState<'All' | 'Positive' | 'Neutral' | 'Needs Attention'>('All');
 
   // Generate historical trend data points based on session context entities and goals
   const timelineData = [
@@ -41,6 +42,36 @@ export const ContextStoreAnalyticsChart: React.FC = () => {
       default: return 'bg-purple-500/20 text-purple-400 border-purple-500/40';
     }
   };
+
+  const getGoalText = (goal: string | { text: string; sentiment: string }) => typeof goal === 'string' ? goal : goal.text;
+  const getGoalSentiment = (goal: string | { text: string; sentiment: string }): 'Positive' | 'Neutral' | 'Needs Attention' => {
+    if (typeof goal === 'object' && goal.sentiment) return goal.sentiment as any;
+    const t = (typeof goal === 'string' ? goal : goal.text).toLowerCase();
+    if (t.includes('urgent') || t.includes('fix') || t.includes('bug') || t.includes('audit') || t.includes('optimize') || t.includes('issue')) {
+      return 'Needs Attention';
+    }
+    if (t.includes('income') || t.includes('money') || t.includes('build') || t.includes('success') || t.includes('growth') || t.includes('master')) {
+      return 'Positive';
+    }
+    return 'Neutral';
+  };
+
+  const getGoalSentimentColor = (sentiment: string) => {
+    switch (sentiment) {
+      case 'Positive': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40';
+      case 'Needs Attention': return 'bg-rose-500/20 text-rose-400 border-rose-500/40';
+      default: return 'bg-sky-500/20 text-sky-400 border-sky-500/40';
+    }
+  };
+
+  const filteredGoals = sessionContext.userGoals.map((goal, idx) => ({
+    originalIndex: idx,
+    text: getGoalText(goal),
+    sentiment: getGoalSentiment(goal),
+  })).filter(item => {
+    if (activeGoalFilter === 'All') return true;
+    return item.sentiment === activeGoalFilter;
+  });
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIdx(index);
@@ -223,45 +254,71 @@ export const ContextStoreAnalyticsChart: React.FC = () => {
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-white/70">Active User Goals (Drag & Drop or Rank to Prioritize):</span>
-            <span className="text-[10px] text-white/40 font-mono">Manual Priority Ranking</span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <span className="text-xs font-bold text-white/70">Active User Goals & Sentiment Filter:</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {(['All', 'Positive', 'Neutral', 'Needs Attention'] as const).map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setActiveGoalFilter(filter)}
+                  className={`px-3 py-1 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                    activeGoalFilter === filter
+                      ? 'bg-[#FF204E] text-white shadow-[0_0_15px_rgba(255,32,78,0.4)]'
+                      : 'neumorph-btn-secondary text-white/60 hover:text-white'
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
           </div>
+
           <div className="space-y-2">
-            {sessionContext.userGoals.map((goal, idx) => (
-              <div
-                key={idx}
-                draggable
-                onDragStart={(e) => handleDragStart(e, idx)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, idx)}
-                className="neumorph-inset rounded-xl p-3 text-xs text-white/90 flex items-center justify-between cursor-grab active:cursor-grabbing hover:border hover:border-[#FF204E]/40 transition-all"
-              >
-                <div className="flex items-center gap-3 truncate">
-                  <GripVertical className="h-4 w-4 text-white/40 flex-shrink-0" />
-                  <span className="font-mono text-[#FF204E] font-bold">#{idx + 1}</span>
-                  <span className="truncate">🎯 {goal}</span>
-                </div>
-                <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                  <button
-                    onClick={() => idx > 0 && reorderUserGoals(idx, idx - 1)}
-                    disabled={idx === 0}
-                    className="p-1 rounded-lg hover:bg-white/10 disabled:opacity-30 text-white/70 transition-colors"
-                    title="Move Up"
-                  >
-                    <ChevronUp className="h-3.5 w-3.5" />
-                  </button>
-                  <button
-                    onClick={() => idx < sessionContext.userGoals.length - 1 && reorderUserGoals(idx, idx + 1)}
-                    disabled={idx === sessionContext.userGoals.length - 1}
-                    className="p-1 rounded-lg hover:bg-white/10 disabled:opacity-30 text-white/70 transition-colors"
-                    title="Move Down"
-                  >
-                    <ChevronDown className="h-3.5 w-3.5" />
-                  </button>
-                </div>
+            {filteredGoals.length === 0 ? (
+              <div className="neumorph-inset rounded-xl p-4 text-center text-xs text-white/40">
+                No goals match sentiment filter: "{activeGoalFilter}"
               </div>
-            ))}
+            ) : (
+              filteredGoals.map((item) => (
+                <div
+                  key={item.originalIndex}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, item.originalIndex)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, item.originalIndex)}
+                  className="neumorph-inset rounded-xl p-3 text-xs text-white/90 flex items-center justify-between cursor-grab active:cursor-grabbing hover:border hover:border-[#FF204E]/40 transition-all"
+                >
+                  <div className="flex items-center gap-3 truncate">
+                    <GripVertical className="h-4 w-4 text-white/40 flex-shrink-0" />
+                    <span className="font-mono text-[#FF204E] font-bold">#{item.originalIndex + 1}</span>
+                    <span className="truncate">🎯 {item.text}</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${getGoalSentimentColor(item.sentiment)}`}>
+                      {item.sentiment}
+                    </span>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => item.originalIndex > 0 && reorderUserGoals(item.originalIndex, item.originalIndex - 1)}
+                        disabled={item.originalIndex === 0}
+                        className="p-1 rounded-lg hover:bg-white/10 disabled:opacity-30 text-white/70 transition-colors"
+                        title="Move Up"
+                      >
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => item.originalIndex < sessionContext.userGoals.length - 1 && reorderUserGoals(item.originalIndex, item.originalIndex + 1)}
+                        disabled={item.originalIndex === sessionContext.userGoals.length - 1}
+                        className="p-1 rounded-lg hover:bg-white/10 disabled:opacity-30 text-white/70 transition-colors"
+                        title="Move Down"
+                      >
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

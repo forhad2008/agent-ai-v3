@@ -414,9 +414,16 @@ export interface VoiceCheatItem {
   category: 'Navigation' | 'Task Creation' | 'AI & Tools' | 'System & Audio';
 }
 
+export type GoalSentiment = 'Positive' | 'Neutral' | 'Needs Attention';
+
+export interface UserGoalItem {
+  text: string;
+  sentiment: GoalSentiment;
+}
+
 export interface SessionContextMetadata {
   entities: string[];
-  userGoals: string[];
+  userGoals: (string | UserGoalItem)[];
   sentiment: 'positive' | 'neutral' | 'curious' | 'urgent' | 'frustrated' | 'motivated';
   activeTopic: string;
   lastUpdated: string;
