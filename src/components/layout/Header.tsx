@@ -26,6 +26,13 @@ import {
   ShieldAlert,
   Info,
   CheckCheck,
+  Zap,
+  Activity,
+  Tag,
+  Flame,
+  TrendingUp,
+  Bot,
+  History,
 } from 'lucide-react';
 import { useAgent } from '../../context/AgentContext';
 import { TECH_LANGUAGES, TechLanguage } from '../../data/languages';
@@ -35,7 +42,7 @@ type SearchCategory = 'ALL' | 'PAGES' | 'TASKS' | 'FILES' | 'TOOLS' | 'MESSAGES'
 
 interface SearchResultItem {
   id: string;
-  category: 'Pages' | 'Tasks' | 'Files' | 'Tools' | 'Messages' | 'Action';
+  category: 'Pages' | 'Tasks' | 'Files' | 'Tools' | 'Messages' | 'Action' | 'Suggestion';
   title: string;
   subtitle: string;
   badge?: string;
@@ -44,11 +51,23 @@ interface SearchResultItem {
   onSelect: () => void;
 }
 
+interface DynamicKeywordSuggestion {
+  id: string;
+  keyword: string;
+  type: 'active_task' | 'recent_activity' | 'tag' | 'quick_filter';
+  label: string;
+  subtitle: string;
+  badge?: string;
+  badgeColor?: string;
+  icon: React.ElementType;
+}
+
 export const Header: React.FC = () => {
   const {
     tasks,
     files,
     tools,
+    activities,
     messages,
     setActiveView,
     setSelectedTask,
@@ -85,6 +104,145 @@ export const Header: React.FC = () => {
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const languageDropdownRef = useRef<HTMLDivElement>(null);
   const languageButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Dynamic Search Keyword Suggestions based on Active Tasks and Recent Agent Activity
+  const dynamicSuggestions = useMemo<DynamicKeywordSuggestion[]>(() => {
+    const suggestions: DynamicKeywordSuggestion[] = [];
+    const seenKeywords = new Set<string>();
+
+    // Helper to add unique suggestion
+    const addSuggestion = (item: DynamicKeywordSuggestion) => {
+      const normalized = item.keyword.trim().toLowerCase();
+      if (normalized && !seenKeywords.has(normalized)) {
+        seenKeywords.add(normalized);
+        suggestions.push(item);
+      }
+    };
+
+    // 1. Dynamic Keywords from Active & Running Tasks
+    const activeTasks = tasks.filter((t) => t.status === 'Running' || t.status === 'Pending');
+    activeTasks.forEach((task) => {
+      addSuggestion({
+        id: `sug_task_${task.id}`,
+        keyword: task.title,
+        type: 'active_task',
+        label: task.title,
+        subtitle: `Active Task • ${task.priority} Priority • ${task.status}`,
+        badge: task.status,
+        badgeColor:
+          task.status === 'Running'
+            ? 'text-[#FF204E] border-[#FF204E]/40 bg-[#FF204E]/15'
+            : 'text-amber-400 border-amber-500/40 bg-amber-500/15',
+        icon: Zap,
+      });
+
+      // Also extract important sub-keywords or subtasks
+      if (task.subTasks && task.subTasks.length > 0) {
+        task.subTasks.slice(0, 2).forEach((st, idx) => {
+          addSuggestion({
+            id: `sug_subtask_${task.id}_${idx}`,
+            keyword: st.title,
+            type: 'active_task',
+            label: st.title,
+            subtitle: `Sub-task of "${task.title.slice(0, 25)}..."`,
+            badge: 'Sub-Task',
+            badgeColor: 'text-indigo-400 border-indigo-500/30 bg-indigo-500/10',
+            icon: CheckSquare,
+          });
+        });
+      }
+    });
+
+    // 2. Dynamic Keywords from Workspace Tags (#Security, #Database, #AI_Workflow, etc.)
+    const tagCounts: Record<string, number> = {};
+    tasks.forEach((task) => {
+      if (task.tags) {
+        task.tags.forEach((tag) => {
+          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+      }
+    });
+
+    Object.entries(tagCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 6)
+      .forEach(([tag, count], idx) => {
+        addSuggestion({
+          id: `sug_tag_${idx}`,
+          keyword: tag,
+          type: 'tag',
+          label: tag,
+          subtitle: `Workspace Tag • Used in ${count} tasks`,
+          badge: `${count} tasks`,
+          badgeColor: 'text-sky-400 border-sky-500/30 bg-sky-500/10',
+          icon: Tag,
+        });
+      });
+
+    // 3. Dynamic Keywords from Recent Agent Activity & Tool Execution
+    if (activities && activities.length > 0) {
+      activities.slice(0, 8).forEach((act) => {
+        const actionText = act.action || act.tool || 'Agent Operation';
+        addSuggestion({
+          id: `sug_act_${act.id}`,
+          keyword: actionText,
+          type: 'recent_activity',
+          label: actionText,
+          subtitle: `Recent Agent Activity • ${act.status.toUpperCase()} • ${act.timestamp}`,
+          badge: act.tool || 'Activity',
+          badgeColor:
+            act.status === 'success'
+              ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10'
+              : act.status === 'warning'
+              ? 'text-amber-400 border-amber-500/30 bg-amber-500/10'
+              : 'text-purple-400 border-purple-500/30 bg-purple-500/10',
+          icon: Activity,
+        });
+      });
+    }
+
+    // 4. Quick Smart Filters
+    if (activeTasks.length > 0) {
+      addSuggestion({
+        id: 'sug_filter_running',
+        keyword: 'Running',
+        type: 'quick_filter',
+        label: 'Running Tasks',
+        subtitle: `Filter ${tasks.filter((t) => t.status === 'Running').length} active pipeline workflows`,
+        badge: 'Filter',
+        badgeColor: 'text-[#FF204E] border-[#FF204E]/30 bg-[#FF204E]/10',
+        icon: Flame,
+      });
+    }
+
+    const urgentTasks = tasks.filter((t) => t.priority === 'Urgent');
+    if (urgentTasks.length > 0) {
+      addSuggestion({
+        id: 'sug_filter_urgent',
+        keyword: 'Urgent',
+        type: 'quick_filter',
+        label: 'Urgent Priority Queue',
+        subtitle: `Quick-view ${urgentTasks.length} urgent tasks requiring attention`,
+        badge: 'Urgent',
+        badgeColor: 'text-rose-400 border-rose-500/30 bg-rose-500/10',
+        icon: ShieldAlert,
+      });
+    }
+
+    return suggestions;
+  }, [tasks, activities]);
+
+  // Filtered Dynamic Suggestions based on Current Search Query (if any)
+  const matchingDynamicSuggestions = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return dynamicSuggestions.slice(0, 8);
+    return dynamicSuggestions.filter(
+      (s) =>
+        s.keyword.toLowerCase().includes(q) ||
+        s.label.toLowerCase().includes(q) ||
+        s.subtitle.toLowerCase().includes(q)
+    );
+  }, [dynamicSuggestions, searchQuery]);
 
   // Filtered Tech Languages for real-time switcher
   const filteredTechLanguages = useMemo(() => {
@@ -243,6 +401,24 @@ export const Header: React.FC = () => {
 
     // When query is present, prioritize instant Agent Actions
     if (q) {
+      // Add top matching dynamic suggestions
+      matchingDynamicSuggestions.slice(0, 3).forEach((sug) => {
+        results.push({
+          id: `sug_result_${sug.id}`,
+          category: 'Suggestion',
+          title: `Suggestion: ${sug.label}`,
+          subtitle: sug.subtitle,
+          badge: sug.badge || 'Keyword',
+          badgeColor: sug.badgeColor || 'text-amber-400 border-amber-500/30 bg-amber-500/10',
+          icon: sug.icon,
+          onSelect: () => {
+            sound.playClick();
+            setSearchQuery(sug.keyword);
+            inputRef.current?.focus();
+          },
+        });
+      });
+
       results.push({
         id: 'action_prompt_agent',
         category: 'Action',
@@ -540,6 +716,50 @@ export const Header: React.FC = () => {
         {/* Real-Time Search & Command Results Overlay */}
         {isSearchOpen && (
           <div className="fixed inset-x-2 xs:inset-x-3 top-[68px] sm:absolute sm:inset-auto sm:left-0 sm:top-[calc(100%+8px)] w-auto sm:w-[580px] max-w-[calc(100vw-16px)] sm:max-w-[580px] rounded-2xl neumorph-card p-3 shadow-[0_20px_60px_rgba(0,0,0,0.95),0_0_35px_rgba(229,9,20,0.35)] border border-[#FF204E]/35 z-[100] animate-fadeIn">
+            {/* Dynamic Suggestions Ribbon (Active Tasks & Recent Agent Activity) */}
+            <div className="pb-2.5 mb-2.5 border-b border-[#E50914]/20 space-y-1.5">
+              <div className="flex items-center justify-between text-[10px] font-mono">
+                <span className="flex items-center gap-1.5 text-amber-300 font-bold tracking-wide">
+                  <Zap className="h-3 w-3 text-amber-400 animate-pulse" />
+                  <span>Dynamic Keyword Suggestions</span>
+                </span>
+                <span className="text-slate-400">
+                  {tasks.filter((t) => t.status === 'Running').length} running • {activities?.length || 0} logs
+                </span>
+              </div>
+
+              {/* Scrollable Dynamic Suggestion Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {dynamicSuggestions.slice(0, 7).map((sug) => {
+                  const Icon = sug.icon;
+                  const isCurrent = searchQuery.toLowerCase().trim() === sug.keyword.toLowerCase().trim();
+                  return (
+                    <button
+                      key={sug.id}
+                      type="button"
+                      onClick={() => {
+                        sound.playClick();
+                        setSearchQuery(sug.keyword);
+                        inputRef.current?.focus();
+                      }}
+                      className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all shrink-0 cursor-pointer border ${
+                        isCurrent
+                          ? 'bg-[#FF204E] text-white border-[#FF204E] shadow-[0_0_10px_rgba(255,32,78,0.5)] font-bold'
+                          : 'bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border-white/10 hover:border-amber-500/40'
+                      }`}
+                      title={`${sug.subtitle} (Click to search)`}
+                    >
+                      <Icon className={`h-2.5 w-2.5 ${isCurrent ? 'text-white' : 'text-amber-400'}`} />
+                      <span className="truncate max-w-[140px]">{sug.label}</span>
+                      {sug.badge && (
+                        <span className="text-[8px] opacity-75 font-mono">({sug.badge})</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* Category Filter Pills */}
             <div className="flex items-center gap-1.5 overflow-x-auto pb-2 mb-2 border-b border-[#E50914]/20 scrollbar-none">
               {(
