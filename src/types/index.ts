@@ -27,6 +27,16 @@ export interface PlanStep {
   durationMs?: number;
 }
 
+export interface SubTaskItem {
+  id: string;
+  title: string;
+  description?: string;
+  status: 'Pending' | 'In Progress' | 'Completed' | 'Cancelled';
+  priority: TaskPriority;
+  createdTime?: string;
+  completed?: boolean;
+}
+
 export interface ThoughtProcessRecord {
   id: string;
   timestamp: string;
@@ -101,6 +111,7 @@ export interface TaskItem {
   approvalStatus: 'None' | 'Pending' | 'Approved' | 'Rejected';
   result?: string;
   planSteps?: PlanStep[];
+  subTasks?: SubTaskItem[];
   error?: string;
   groundingMetadata?: {
     searchQueries?: string[];
@@ -108,7 +119,7 @@ export interface TaskItem {
   };
   webInformationGathered?: {
     searchQueries: string[];
-    sources: { title: string; url: string; domain?: string }[];
+    sources?: { title: string; url: string; domain?: string }[];
     summaryPoints?: string[];
   };
 }
@@ -224,4 +235,3 @@ export interface AlarmItem {
   enabled: boolean;
   timestamp: number; // Scheduled timestamp in millisecond
 }
-

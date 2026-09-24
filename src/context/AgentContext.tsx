@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import {
   TaskItem,
+  SubTaskItem,
+  TaskPriority,
   ToolItem,
   FileItem,
   ApprovalRequest,
@@ -83,9 +85,16 @@ interface AgentContextType {
   stopGeneration: () => void;
   regenerateLastResponse: () => Promise<void>;
   startNewConversation: () => void;
-  createTask: (title: string, description: string, priority?: TaskItem['priority'], gatherWebInfo?: boolean) => TaskItem;
+  createTask: (title: string, description: string, priority?: TaskItem['priority'], gatherWebInfo?: boolean, initialSubTasks?: { title: string; priority?: TaskPriority; description?: string }[]) => TaskItem;
   gatherWebInfoForTask: (taskId: string) => Promise<void>;
   updateTaskStatus: (taskId: string, status: TaskStatus) => void;
+  
+  // Nested Sub-Tasks Management
+  addSubTask: (taskId: string, title: string, priority?: TaskPriority, description?: string) => SubTaskItem;
+  toggleSubTask: (taskId: string, subTaskId: string) => void;
+  updateSubTask: (taskId: string, subTaskId: string, updates: Partial<SubTaskItem>) => void;
+  deleteSubTask: (taskId: string, subTaskId: string) => void;
+
   approveAction: (approvalId: string) => void;
   rejectAction: (approvalId: string) => void;
   uploadFile: (file: { name: string; size: string; type: string; content?: string }) => void;
@@ -990,9 +999,23 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
     title: string,
     description: string,
     priority: TaskItem['priority'] = 'Medium',
-    gatherWebInfo: boolean = true
+    gatherWebInfo: boolean = true,
+    initialSubTasks?: { title: string; priority?: TaskPriority; description?: string }[]
   ): TaskItem => {
     const isBangla = settings.language === 'Bangla';
+    
+    const preparedSubTasks: SubTaskItem[] | undefined = initialSubTasks && initialSubTasks.length > 0
+      ? initialSubTasks.map((st, idx) => ({
+          id: `subtask_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 4)}`,
+          title: st.title.trim(),
+          description: st.description?.trim() || undefined,
+          status: 'Pending' as const,
+          priority: st.priority || 'Medium',
+          completed: false,
+          createdTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }))
+      : undefined;
+
     const newTask: TaskItem = {
       id: `task_${Date.now()}`,
       title,
@@ -1004,6 +1027,7 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
       progress: 25,
       requiredTools: gatherWebInfo ? ['Google Search Grounding', 'Read File', 'Analyze Code'] : ['Read File', 'Analyze Code'],
       approvalStatus: 'None',
+      subTasks: preparedSubTasks,
       planSteps: gatherWebInfo ? [
         { title: isBangla ? '🌐 লাইভ ওয়েব তথ্য ও রিসার্চ সংগ্রহ' : '🌐 Gather live web information & benchmarks', status: 'completed' },
         { title: isBangla ? 'রিকোয়ারমেন্ট ও টেক আর্কিটেকচার বিশ্লেষণ' : 'Parsing requirements & architecture', status: 'completed' },
@@ -1161,6 +1185,213 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
         }
         return t;
       })
+    );
+  };
+
+  const addSubTask = (
+    taskId: string,
+    title: string,
+    priority: TaskPriority = 'Medium',
+    description: string = ''
+  ): SubTaskItem => {
+    const newSubTask: SubTaskItem = {
+      id: `subtask_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+      title: title.trim(),
+      description: description.trim() || undefined,
+      status: 'Pending',
+      priority,
+      completed: false,
+      createdTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setTasks((prev) => {
+      const updated = prev.map((t) => {
+        if (t.id === taskId) {
+          const currentSubTasks = t.subTasks || [];
+          const updatedSubTasks = [...currentSubTasks, newSubTask];
+          return {
+            ...t,
+            subTasks: updatedSubTasks,
+            updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+          };
+        }
+        return t;
+      });
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (selectedTask?.id === taskId) {
+      setSelectedTask((prev) => prev ? {
+        ...prev,
+        subTasks: [...(prev.subTasks || []), newSubTask],
+      } : null);
+    }
+
+    sound.playSendSound();
+    addActivity(
+      'Sub-Task Added',
+      'Task Manager',
+      `Added sub-task "${title}" with priority [${priority}]`,
+      'success'
+    );
+
+    return newSubTask;
+  };
+
+  const toggleSubTask = (taskId: string, subTaskId: string) => {
+    let nowCompleted = false;
+    let subTaskTitle = '';
+    
+    setTasks((prev) => {
+      const updated = prev.map((t) => {
+        if (t.id === taskId) {
+          const currentSubTasks = t.subTasks || [];
+          const updatedSubTasks = currentSubTasks.map((st) => {
+            if (st.id === subTaskId) {
+              nowCompleted = !st.completed;
+              subTaskTitle = st.title;
+              return {
+                ...st,
+                completed: nowCompleted,
+                status: nowCompleted ? ('Completed' as const) : ('Pending' as const),
+              };
+            }
+            return st;
+          });
+
+          // Compute sub-tasks completion percentage
+          const completedCount = updatedSubTasks.filter((st) => st.completed).length;
+          const totalCount = updatedSubTasks.length;
+          const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : t.progress;
+
+          const updatedTask = {
+            ...t,
+            subTasks: updatedSubTasks,
+            progress: totalCount > 0 ? progress : t.progress,
+            status: (totalCount > 0 && completedCount === totalCount
+              ? 'Completed'
+              : t.status === 'Completed' && completedCount < totalCount
+              ? 'Running'
+              : t.status) as TaskStatus,
+            updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+          };
+
+          return updatedTask;
+        }
+        return t;
+      });
+
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (selectedTask?.id === taskId) {
+      setSelectedTask((prev) => {
+        if (!prev) return null;
+        const currentSubTasks = prev.subTasks || [];
+        const updatedSubTasks = currentSubTasks.map((st) => {
+          if (st.id === subTaskId) {
+            const nextDone = !st.completed;
+            return {
+              ...st,
+              completed: nextDone,
+              status: nextDone ? ('Completed' as const) : ('Pending' as const),
+            };
+          }
+          return st;
+        });
+        const completedCount = updatedSubTasks.filter((st) => st.completed).length;
+        const totalCount = updatedSubTasks.length;
+        const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : prev.progress;
+        return {
+          ...prev,
+          subTasks: updatedSubTasks,
+          progress: totalCount > 0 ? progress : prev.progress,
+        };
+      });
+    }
+
+    sound.playReceiveSound();
+    if (nowCompleted) {
+      addActivity(
+        'Sub-Task Completed',
+        'Task Manager',
+        `Completed sub-task "${subTaskTitle}"`,
+        'success'
+      );
+    }
+  };
+
+  const updateSubTask = (taskId: string, subTaskId: string, updates: Partial<SubTaskItem>) => {
+    setTasks((prev) => {
+      const updated = prev.map((t) => {
+        if (t.id === taskId) {
+          const currentSubTasks = t.subTasks || [];
+          const updatedSubTasks = currentSubTasks.map((st) => {
+            if (st.id === subTaskId) {
+              return { ...st, ...updates };
+            }
+            return st;
+          });
+          return {
+            ...t,
+            subTasks: updatedSubTasks,
+            updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+          };
+        }
+        return t;
+      });
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (selectedTask?.id === taskId) {
+      setSelectedTask((prev) => prev ? {
+        ...prev,
+        subTasks: (prev.subTasks || []).map((st) => st.id === subTaskId ? { ...st, ...updates } : st),
+      } : null);
+    }
+  };
+
+  const deleteSubTask = (taskId: string, subTaskId: string) => {
+    setTasks((prev) => {
+      const updated = prev.map((t) => {
+        if (t.id === taskId) {
+          const currentSubTasks = t.subTasks || [];
+          const updatedSubTasks = currentSubTasks.filter((st) => st.id !== subTaskId);
+          return {
+            ...t,
+            subTasks: updatedSubTasks,
+            updatedTime: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' Today',
+          };
+        }
+        return t;
+      });
+      try {
+        localStorage.setItem('abdullah_tasks', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+
+    if (selectedTask?.id === taskId) {
+      setSelectedTask((prev) => prev ? {
+        ...prev,
+        subTasks: (prev.subTasks || []).filter((st) => st.id !== subTaskId),
+      } : null);
+    }
+
+    addActivity(
+      'Sub-Task Removed',
+      'Task Manager',
+      `Deleted sub-task ID: ${subTaskId}`,
+      'warning'
     );
   };
 
@@ -1395,6 +1626,10 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
         createTask,
         gatherWebInfoForTask,
         updateTaskStatus,
+        addSubTask,
+        toggleSubTask,
+        updateSubTask,
+        deleteSubTask,
         approveAction,
         rejectAction,
         uploadFile,
