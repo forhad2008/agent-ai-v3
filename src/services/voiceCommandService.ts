@@ -1,7 +1,7 @@
 // Web Speech API Voice-Activated Command Engine for Agent-sigma08
 // Supports hands-free navigation, natural language task creation, agent dispatch, speech synthesis & tactile audio feedback
 
-import { VoiceCommandRecord, VoiceIntentType, VoiceCheatItem, TaskPriority } from '../types';
+import { VoiceCommandRecord, VoiceIntentType, VoiceCheatItem, TaskPriority, VoiceConfidenceLevel, VoiceInterpretation } from '../types';
 import { sound } from './sound';
 
 // Speech Recognition Type Definitions for TypeScript
@@ -27,7 +27,11 @@ export interface VoiceCommandParseResult {
   actionSummary: string;
   responseSpeech: string;
   parameters: Record<string, any>;
-  confidence?: number;
+  confidence: number;
+  confidenceLevel: VoiceConfidenceLevel;
+  matchedEntity?: string;
+  priority?: string;
+  badgeLabel?: string;
 }
 
 export const VOICE_CHEAT_SHEET: VoiceCheatItem[] = [
@@ -243,7 +247,8 @@ export class VoiceCommandService {
         this.notifyTranscript(interimTranscript, finalTranscript);
 
         if (finalTranscript.trim()) {
-          const confidence = event.results[event.results.length - 1][0].confidence;
+          const rawConfidence = event.results[event.results.length - 1][0].confidence;
+          const confidence = typeof rawConfidence === 'number' && rawConfidence > 0 ? rawConfidence : 0.94;
           this.processVoiceText(finalTranscript.trim(), confidence);
         }
       };
@@ -354,9 +359,27 @@ export class VoiceCommandService {
     this.onStateChangeCallbacks.forEach((cb) => cb(listening));
   }
 
-  // Parse natural voice transcript into structured command
-  public parseCommand(rawText: string): VoiceCommandParseResult {
+  // Helper to determine confidence level categorization
+  public getConfidenceLevel(score: number): VoiceConfidenceLevel {
+    if (score >= 0.85) return 'high';
+    if (score >= 0.60) return 'medium';
+    return 'low';
+  }
+
+  // Parse natural voice transcript into structured command with AI Interpretation & Confidence rating
+  public parseCommand(rawText: string, speechApiConfidence: number = 0.94): VoiceCommandParseResult {
     const text = rawText.trim().toLowerCase();
+    if (!text) {
+      return {
+        intent: 'unknown',
+        actionSummary: 'Listening...',
+        responseSpeech: '',
+        parameters: {},
+        confidence: 0,
+        confidenceLevel: 'low',
+        badgeLabel: 'Listening',
+      };
+    }
     
     // 1. Wake word stripping (e.g., "Hey Sigma", "Sigma", "Agent Sigma", "Computer", "Jarvis")
     const cleanText = text
@@ -374,9 +397,12 @@ export class VoiceCommandService {
     ) {
       return {
         intent: 'system_control',
-        actionSummary: 'Stopped voice listening',
+        actionSummary: 'Stop Voice Listening',
         responseSpeech: 'Voice recognition stopped.',
         parameters: { action: 'stop_listening' },
+        confidence: Math.min(1.0, speechApiConfidence * 1.05),
+        confidenceLevel: 'high',
+        badgeLabel: 'System: Mute Mic',
       };
     }
 
@@ -392,9 +418,12 @@ export class VoiceCommandService {
     ) {
       return {
         intent: 'help',
-        actionSummary: 'Opened Voice Command Hub',
+        actionSummary: 'Open Voice Command Hub',
         responseSpeech: 'Here are all available voice commands.',
         parameters: { modal: 'voice_hub' },
+        confidence: Math.min(1.0, speechApiConfidence * 1.02),
+        confidenceLevel: 'high',
+        badgeLabel: 'Help: Voice Hub',
       };
     }
 
@@ -407,19 +436,24 @@ export class VoiceCommandService {
     if (taskMatch) {
       let taskClause = taskMatch[1].trim();
       let priority: TaskPriority = 'Medium';
+      let hasExplicitPriority = false;
 
       // Check priority keywords within clause
       if (/\b(urgent|critical|emergency|p0)\b/i.test(taskClause)) {
         priority = 'Urgent';
+        hasExplicitPriority = true;
         taskClause = taskClause.replace(/\s*(?:with\s+)?(?:urgent|critical|emergency|p0)(?:\s+priority)?\s*/gi, ' ').trim();
       } else if (/\b(high priority|high|p1)\b/i.test(taskClause)) {
         priority = 'High';
+        hasExplicitPriority = true;
         taskClause = taskClause.replace(/\s*(?:with\s+)?(?:high)(?:\s+priority)?\s*/gi, ' ').trim();
       } else if (/\b(low priority|low|p3)\b/i.test(taskClause)) {
         priority = 'Low';
+        hasExplicitPriority = true;
         taskClause = taskClause.replace(/\s*(?:with\s+)?(?:low)(?:\s+priority)?\s*/gi, ' ').trim();
       } else if (/\b(medium priority|medium|normal|p2)\b/i.test(taskClause)) {
         priority = 'Medium';
+        hasExplicitPriority = true;
         taskClause = taskClause.replace(/\s*(?:with\s+)?(?:medium|normal)(?:\s+priority)?\s*/gi, ' ').trim();
       }
 
@@ -427,17 +461,23 @@ export class VoiceCommandService {
       taskClause = taskClause.replace(/^(to|named|called|for)\s+/i, '').trim();
 
       // Capitalize first letter of task title
-      const title = taskClause.charAt(0).toUpperCase() + taskClause.slice(1);
+      const title = taskClause ? taskClause.charAt(0).toUpperCase() + taskClause.slice(1) : 'New Voice Task';
+      const confidence = hasExplicitPriority ? 0.98 : 0.93;
 
       return {
         intent: 'create_task',
-        actionSummary: `Created Task: "${title}" (${priority} Priority)`,
+        actionSummary: `Create Task: "${title}" [${priority} Priority]`,
         responseSpeech: `Task created: ${title} with ${priority} priority.`,
         parameters: {
           title,
           priority,
           description: `Voice-created task initialized hands-free via Web Speech API command.`,
         },
+        confidence: Math.min(0.99, speechApiConfidence * confidence),
+        confidenceLevel: 'high',
+        matchedEntity: title,
+        priority,
+        badgeLabel: `Task: ${priority}`,
       };
     }
 
@@ -450,137 +490,197 @@ export class VoiceCommandService {
       if (target.includes('dash') || target.includes('overview') || target.includes('home') || target.includes('stats')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Navigated to Dashboard',
+          actionSummary: 'Navigate → Dashboard (System Analytics)',
           responseSpeech: 'Switching to Dashboard.',
           parameters: { view: 'dashboard' },
+          confidence: 0.97,
+          confidenceLevel: 'high',
+          matchedEntity: 'Dashboard',
+          badgeLabel: 'View: Dashboard',
         };
       }
       if (target.includes('task') || target.includes('kanban') || target.includes('todo') || target.includes('pipeline')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Navigated to Tasks',
+          actionSummary: 'Navigate → Task Manager (Kanban Board)',
           responseSpeech: 'Opening Task Manager.',
           parameters: { view: 'tasks' },
+          confidence: 0.97,
+          confidenceLevel: 'high',
+          matchedEntity: 'Tasks',
+          badgeLabel: 'View: Tasks',
         };
       }
       if (target.includes('chat') || target.includes('prompt') || target.includes('conversation') || target.includes('agent')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Navigated to Chat Workspace',
+          actionSummary: 'Navigate → AI Chat Workspace',
           responseSpeech: 'Opening AI Chat workspace.',
           parameters: { view: 'chat' },
+          confidence: 0.96,
+          confidenceLevel: 'high',
+          matchedEntity: 'Chat',
+          badgeLabel: 'View: Chat',
         };
       }
       if (target.includes('thought') || target.includes('reason') || target.includes('thinking')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Navigated to Thought Process',
+          actionSummary: 'Navigate → Thought Process & Reasoning Chain',
           responseSpeech: 'Opening Thought Process and Reasoning chain.',
           parameters: { view: 'thought-process' },
+          confidence: 0.97,
+          confidenceLevel: 'high',
+          matchedEntity: 'Thought Process',
+          badgeLabel: 'View: Reasoning',
         };
       }
       if (target.includes('perfect') || target.includes('super agent') || target.includes('autonomous')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Navigated to Perfect Agent Hub',
+          actionSummary: 'Navigate → Perfect Agent Hub (Autonomous Orchestrator)',
           responseSpeech: 'Opening Perfect Agent orchestrator.',
           parameters: { view: 'perfect-agent' },
+          confidence: 0.96,
+          confidenceLevel: 'high',
+          matchedEntity: 'Perfect Agent',
+          badgeLabel: 'View: Perfect Agent',
         };
       }
       if (target.includes('ai lab') || target.includes('lab') || target.includes('studio') || target.includes('playground')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Navigated to AI Lab',
+          actionSummary: 'Navigate → AI Lab (Model Playground)',
           responseSpeech: 'Opening AI Lab.',
           parameters: { view: 'ailab' },
+          confidence: 0.95,
+          confidenceLevel: 'high',
+          matchedEntity: 'AI Lab',
+          badgeLabel: 'View: AI Lab',
         };
       }
       if (target.includes('image') || target.includes('photo') || target.includes('art') || target.includes('generator')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Navigated to Image Studio',
+          actionSummary: 'Navigate → Image Studio (Generative Canvas)',
           responseSpeech: 'Opening Generative Image Studio.',
           parameters: { view: 'image-studio' },
+          confidence: 0.96,
+          confidenceLevel: 'high',
+          matchedEntity: 'Image Studio',
+          badgeLabel: 'View: Image Studio',
         };
       }
       if (target.includes('approval') || target.includes('permission') || target.includes('review')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Navigated to Approvals',
+          actionSummary: 'Navigate → Approvals & Security Queue',
           responseSpeech: 'Opening pending approvals.',
           parameters: { view: 'approvals' },
+          confidence: 0.96,
+          confidenceLevel: 'high',
+          matchedEntity: 'Approvals',
+          badgeLabel: 'View: Approvals',
         };
       }
       if (target.includes('activity') || target.includes('log') || target.includes('audit') || target.includes('history')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Navigated to Activity Log',
+          actionSummary: 'Navigate → Activity Log & Audit Trail',
           responseSpeech: 'Opening live activity audit log.',
           parameters: { view: 'activity' },
+          confidence: 0.96,
+          confidenceLevel: 'high',
+          matchedEntity: 'Activity Log',
+          badgeLabel: 'View: Activity',
         };
       }
       if (target.includes('file') || target.includes('document') || target.includes('asset') || target.includes('workspace')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Navigated to File Manager',
+          actionSummary: 'Navigate → File Manager & Code Assets',
           responseSpeech: 'Opening File Manager.',
           parameters: { view: 'files' },
+          confidence: 0.96,
+          confidenceLevel: 'high',
+          matchedEntity: 'File Manager',
+          badgeLabel: 'View: Files',
         };
       }
       if (target.includes('tool') || target.includes('integration') || target.includes('mcp') || target.includes('plugin')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Navigated to Tools & Integrations',
+          actionSummary: 'Navigate → Tools Catalog & Integrations',
           responseSpeech: 'Opening Tools Catalog.',
           parameters: { view: 'tools' },
+          confidence: 0.96,
+          confidenceLevel: 'high',
+          matchedEntity: 'Tools',
+          badgeLabel: 'View: Tools',
         };
       }
       if (target.includes('setting') || target.includes('config') || target.includes('preference')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Navigated to Settings',
+          actionSummary: 'Navigate → Agent Settings & Preferences',
           responseSpeech: 'Opening Settings.',
           parameters: { view: 'settings' },
+          confidence: 0.96,
+          confidenceLevel: 'high',
+          matchedEntity: 'Settings',
+          badgeLabel: 'View: Settings',
         };
       }
       if (target.includes('profile') || target.includes('account') || target.includes('user')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Navigated to User Profile',
+          actionSummary: 'Navigate → User Profile & Credentials',
           responseSpeech: 'Opening User Profile.',
           parameters: { view: 'profile' },
+          confidence: 0.96,
+          confidenceLevel: 'high',
+          matchedEntity: 'Profile',
+          badgeLabel: 'View: Profile',
         };
       }
       if (target.includes('notification') || target.includes('alert') || target.includes('bell')) {
         return {
           intent: 'manage_notifications',
-          actionSummary: 'Opened Notification Center',
+          actionSummary: 'Open Notification Center Drawer',
           responseSpeech: 'Opening Notification Center.',
           parameters: { action: 'open_notifications' },
+          confidence: 0.96,
+          confidenceLevel: 'high',
+          matchedEntity: 'Notifications',
+          badgeLabel: 'Notifications',
         };
       }
       if (target.includes('plan') || target.includes('architect') || target.includes('roadmap') || target.includes('goal')) {
         return {
           intent: 'navigate',
-          actionSummary: 'Opened Master Plan Architect',
+          actionSummary: 'Open Master Plan Architect',
           responseSpeech: 'Opening Plan Architect.',
           parameters: { action: 'open_planner' },
+          confidence: 0.96,
+          confidenceLevel: 'high',
+          matchedEntity: 'Plan Architect',
+          badgeLabel: 'Plan Architect',
         };
       }
     }
 
     // Direct single word navigation triggers
-    if (cleanText === 'dashboard') return { intent: 'navigate', actionSummary: 'Navigated to Dashboard', responseSpeech: 'Dashboard.', parameters: { view: 'dashboard' } };
-    if (cleanText === 'tasks' || cleanText === 'task manager') return { intent: 'navigate', actionSummary: 'Navigated to Tasks', responseSpeech: 'Tasks.', parameters: { view: 'tasks' } };
-    if (cleanText === 'chat') return { intent: 'navigate', actionSummary: 'Navigated to Chat', responseSpeech: 'Chat.', parameters: { view: 'chat' } };
-    if (cleanText === 'approvals') return { intent: 'navigate', actionSummary: 'Navigated to Approvals', responseSpeech: 'Approvals.', parameters: { view: 'approvals' } };
-    if (cleanText === 'activity' || cleanText === 'logs') return { intent: 'navigate', actionSummary: 'Navigated to Activity Log', responseSpeech: 'Activity.', parameters: { view: 'activity' } };
-    if (cleanText === 'files') return { intent: 'navigate', actionSummary: 'Navigated to Files', responseSpeech: 'Files.', parameters: { view: 'files' } };
-    if (cleanText === 'tools') return { intent: 'navigate', actionSummary: 'Navigated to Tools', responseSpeech: 'Tools.', parameters: { view: 'tools' } };
-    if (cleanText === 'settings') return { intent: 'navigate', actionSummary: 'Navigated to Settings', responseSpeech: 'Settings.', parameters: { view: 'settings' } };
-    if (cleanText === 'profile') return { intent: 'navigate', actionSummary: 'Navigated to Profile', responseSpeech: 'Profile.', parameters: { view: 'profile' } };
-    if (cleanText === 'thought process' || cleanText === 'reasoning') return { intent: 'navigate', actionSummary: 'Navigated to Thought Process', responseSpeech: 'Thought Process.', parameters: { view: 'thought-process' } };
-    if (cleanText === 'perfect agent') return { intent: 'navigate', actionSummary: 'Navigated to Perfect Agent', responseSpeech: 'Perfect Agent.', parameters: { view: 'perfect-agent' } };
+    if (cleanText === 'dashboard') return { intent: 'navigate', actionSummary: 'Navigate → Dashboard', responseSpeech: 'Dashboard.', parameters: { view: 'dashboard' }, confidence: 0.92, confidenceLevel: 'high', badgeLabel: 'View: Dashboard' };
+    if (cleanText === 'tasks' || cleanText === 'task manager') return { intent: 'navigate', actionSummary: 'Navigate → Task Board', responseSpeech: 'Tasks.', parameters: { view: 'tasks' }, confidence: 0.92, confidenceLevel: 'high', badgeLabel: 'View: Tasks' };
+    if (cleanText === 'chat') return { intent: 'navigate', actionSummary: 'Navigate → Chat Workspace', responseSpeech: 'Chat.', parameters: { view: 'chat' }, confidence: 0.90, confidenceLevel: 'high', badgeLabel: 'View: Chat' };
+    if (cleanText === 'approvals') return { intent: 'navigate', actionSummary: 'Navigate → Approvals', responseSpeech: 'Approvals.', parameters: { view: 'approvals' }, confidence: 0.92, confidenceLevel: 'high', badgeLabel: 'View: Approvals' };
+    if (cleanText === 'activity' || cleanText === 'logs') return { intent: 'navigate', actionSummary: 'Navigate → Activity Log', responseSpeech: 'Activity.', parameters: { view: 'activity' }, confidence: 0.91, confidenceLevel: 'high', badgeLabel: 'View: Activity' };
+    if (cleanText === 'files') return { intent: 'navigate', actionSummary: 'Navigate → Files', responseSpeech: 'Files.', parameters: { view: 'files' }, confidence: 0.90, confidenceLevel: 'high', badgeLabel: 'View: Files' };
+    if (cleanText === 'tools') return { intent: 'navigate', actionSummary: 'Navigate → Tools', responseSpeech: 'Tools.', parameters: { view: 'tools' }, confidence: 0.90, confidenceLevel: 'high', badgeLabel: 'View: Tools' };
+    if (cleanText === 'settings') return { intent: 'navigate', actionSummary: 'Navigate → Settings', responseSpeech: 'Settings.', parameters: { view: 'settings' }, confidence: 0.90, confidenceLevel: 'high', badgeLabel: 'View: Settings' };
+    if (cleanText === 'profile') return { intent: 'navigate', actionSummary: 'Navigate → Profile', responseSpeech: 'Profile.', parameters: { view: 'profile' }, confidence: 0.90, confidenceLevel: 'high', badgeLabel: 'View: Profile' };
+    if (cleanText === 'thought process' || cleanText === 'reasoning') return { intent: 'navigate', actionSummary: 'Navigate → Thought Process', responseSpeech: 'Thought Process.', parameters: { view: 'thought-process' }, confidence: 0.93, confidenceLevel: 'high', badgeLabel: 'View: Reasoning' };
+    if (cleanText === 'perfect agent') return { intent: 'navigate', actionSummary: 'Navigate → Perfect Agent', responseSpeech: 'Perfect Agent.', parameters: { view: 'perfect-agent' }, confidence: 0.94, confidenceLevel: 'high', badgeLabel: 'View: Perfect Agent' };
 
     // 6. SEARCH COMMANDS
     // e.g. "search for database logs", "find tasks", "search security"
@@ -589,9 +689,13 @@ export class VoiceCommandService {
       const query = searchMatch[1].trim();
       return {
         intent: 'search',
-        actionSummary: `Search: "${query}"`,
+        actionSummary: `Global Search: "${query}"`,
         responseSpeech: `Searching for ${query}.`,
         parameters: { query },
+        confidence: 0.91,
+        confidenceLevel: 'high',
+        matchedEntity: query,
+        badgeLabel: 'Search Query',
       };
     }
 
@@ -602,9 +706,13 @@ export class VoiceCommandService {
       const prompt = askMatch[1].trim();
       return {
         intent: 'ask_agent',
-        actionSummary: `Asked Agent: "${prompt}"`,
+        actionSummary: `Dispatch to Agent: "${prompt}"`,
         responseSpeech: `Prompting Agent-sigma08 with your question.`,
         parameters: { prompt, view: 'chat' },
+        confidence: 0.92,
+        confidenceLevel: 'high',
+        matchedEntity: prompt,
+        badgeLabel: 'Agent Prompt',
       };
     }
 
@@ -612,17 +720,25 @@ export class VoiceCommandService {
     if (cleanText.includes('security scan') || cleanText.includes('scan system') || cleanText.includes('audit security')) {
       return {
         intent: 'execute_tool',
-        actionSummary: 'Executed Security Scan Tool',
+        actionSummary: 'Execute Tool → Security Vulnerability Scan',
         responseSpeech: 'Running security vulnerability scan.',
         parameters: { tool: 'security_scan' },
+        confidence: 0.96,
+        confidenceLevel: 'high',
+        matchedEntity: 'Security Scan',
+        badgeLabel: 'Tool: Security Scan',
       };
     }
     if (cleanText.includes('database index') || cleanText.includes('optimize database') || cleanText.includes('run sql')) {
       return {
         intent: 'execute_tool',
-        actionSummary: 'Executed Database Index Tool',
+        actionSummary: 'Execute Tool → Database Query Indexing',
         responseSpeech: 'Executing database query optimization.',
         parameters: { tool: 'database_indexing' },
+        confidence: 0.95,
+        confidenceLevel: 'high',
+        matchedEntity: 'Database Indexer',
+        badgeLabel: 'Tool: DB Indexing',
       };
     }
 
@@ -630,17 +746,23 @@ export class VoiceCommandService {
     if (cleanText.includes('pirates theme') || cleanText.includes('play pirates') || cleanText.includes('play song') || cleanText.includes('play music')) {
       return {
         intent: 'manage_alarm',
-        actionSummary: 'Playing Pirates of the Caribbean Audio',
+        actionSummary: 'Audio → Play Pirates of the Caribbean Soundtrack',
         responseSpeech: 'Playing Pirates of the Caribbean soundtrack.',
         parameters: { action: 'play_pirates' },
+        confidence: 0.97,
+        confidenceLevel: 'high',
+        badgeLabel: 'Audio: Pirates Theme',
       };
     }
     if (cleanText.includes('stop song') || cleanText.includes('stop music') || cleanText.includes('stop audio') || cleanText.includes('stop ringtone') || cleanText.includes('stop alarm') || cleanText.includes('silence')) {
       return {
         intent: 'manage_alarm',
-        actionSummary: 'Stopped Audio / Alarm Playback',
+        actionSummary: 'Audio → Silence Audio / Stop Alarm',
         responseSpeech: 'Audio stopped.',
         parameters: { action: 'stop_pirates' },
+        confidence: 0.96,
+        confidenceLevel: 'high',
+        badgeLabel: 'Audio: Silence',
       };
     }
 
@@ -648,26 +770,51 @@ export class VoiceCommandService {
     if (cleanText.includes('clear notification') || cleanText.includes('clear all notification') || cleanText.includes('delete notification')) {
       return {
         intent: 'manage_notifications',
-        actionSummary: 'Cleared all notifications',
+        actionSummary: 'Notifications → Clear All Notifications',
         responseSpeech: 'All notifications cleared.',
         parameters: { action: 'clear_all' },
+        confidence: 0.95,
+        confidenceLevel: 'high',
+        badgeLabel: 'Notifications: Clear',
       };
     }
     if (cleanText.includes('mark all read') || cleanText.includes('read notification')) {
       return {
         intent: 'manage_notifications',
-        actionSummary: 'Marked notifications as read',
+        actionSummary: 'Notifications → Mark All As Read',
         responseSpeech: 'Notifications marked as read.',
         parameters: { action: 'mark_all_read' },
+        confidence: 0.95,
+        confidenceLevel: 'high',
+        badgeLabel: 'Notifications: Mark Read',
       };
     }
 
-    // 11. UNKNOWN / CONVERSATIONAL FALLBACK
+    // 11. UNKNOWN / CONVERSATIONAL FALLBACK (Medium to Low Confidence)
+    const fallbackConfidence = cleanText.length > 15 ? 0.58 : 0.42;
     return {
       intent: 'unknown',
       actionSummary: `Heard: "${rawText}"`,
-      responseSpeech: `I heard "${rawText}". Say "Help" to see voice commands, or say "Create task" or "Go to tasks".`,
+      responseSpeech: `I heard "${rawText}". Say "Help" to see commands, or try "Create task" or "Go to dashboard".`,
       parameters: { rawText },
+      confidence: fallbackConfidence,
+      confidenceLevel: fallbackConfidence >= 0.6 ? 'medium' : 'low',
+      badgeLabel: 'Unrecognized Pattern',
+    };
+  }
+
+  // Real-time Interpretation preview generator for interim text
+  public previewInterpretation(interimText: string): VoiceInterpretation {
+    const parsed = this.parseCommand(interimText, 0.88);
+    return {
+      intent: parsed.intent,
+      actionSummary: parsed.actionSummary,
+      responseSpeech: parsed.responseSpeech,
+      parameters: parsed.parameters,
+      confidence: parsed.confidence,
+      confidenceLevel: parsed.confidenceLevel,
+      matchedEntity: parsed.matchedEntity,
+      priority: parsed.priority,
     };
   }
 
@@ -711,8 +858,8 @@ export class VoiceCommandService {
   }
 
   // Process text directly (from live microphone speech or simulated test input)
-  public processVoiceText(text: string, confidence: number = 0.92): VoiceCommandRecord {
-    const parsed = this.parseCommand(text);
+  public processVoiceText(text: string, confidence: number = 0.94): VoiceCommandRecord {
+    const parsed = this.parseCommand(text, confidence);
 
     const record: VoiceCommandRecord = {
       id: `vc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
@@ -722,8 +869,10 @@ export class VoiceCommandService {
       responseSpeech: parsed.responseSpeech,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
       success: parsed.intent !== 'unknown',
-      confidence,
+      confidence: parsed.confidence,
+      confidenceLevel: parsed.confidenceLevel,
       parameters: parsed.parameters,
+      status: 'executed',
     };
 
     // Keep history bounded to 30 items

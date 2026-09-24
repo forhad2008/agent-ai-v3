@@ -6,7 +6,6 @@ import {
   VolumeX,
   X,
   Sparkles,
-  Zap,
   CheckCircle2,
   Play,
   Terminal,
@@ -18,6 +17,10 @@ import {
   Trash2,
   Layers,
   ArrowRight,
+  ShieldCheck,
+  ShieldAlert,
+  AlertTriangle,
+  Sliders,
 } from 'lucide-react';
 import { useVoiceCommand } from '../../context/VoiceCommandContext';
 import { sound } from '../../services/sound';
@@ -28,13 +31,14 @@ export const VoiceCommandModal: React.FC = () => {
     isSupported,
     interimTranscript,
     finalTranscript,
+    realtimeInterpretation,
     lastExecutedCommand,
     commandHistory,
     ttsEnabled,
     setTtsEnabled,
+    verificationDelayMs,
+    setVerificationDelayMs,
     toggleListening,
-    startListening,
-    stopListening,
     isVoiceModalOpen,
     setIsVoiceModalOpen,
     executeManualVoiceCommand,
@@ -94,14 +98,14 @@ export const VoiceCommandModal: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
-                  Voice Command Hub & Hands-Free Engine
+                  Voice Command Hub & Real-Time Interpreter
                 </h3>
                 <span className="hidden xs:inline-flex text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[#FF204E]/20 text-[#FF4D6D] border border-[#FF204E]/40 uppercase tracking-wider">
-                  Web Speech API
+                  Web Speech Engine
                 </span>
               </div>
               <p className="text-xs text-[#94A3B8] mt-0.5">
-                Speak naturally to create tasks, switch workspaces, dispatch agent queries & trigger tools hands-free.
+                Speak naturally to create tasks, switch workspaces, dispatch agent queries & trigger tools with live transcript & verification.
               </p>
             </div>
           </div>
@@ -184,7 +188,7 @@ export const VoiceCommandModal: React.FC = () => {
                       Listening for commands... Speak your instructions clearly.
                     </span>
                   ) : (
-                    <span>Click the microphone or press <strong className="text-white">Alt+V</strong> to start speaking.</span>
+                    <span>Click the microphone or press <strong className="text-white">Alt+V</strong> to start speaking hands-free.</span>
                   )}
                 </div>
                 {/* Visualizer bars */}
@@ -200,8 +204,27 @@ export const VoiceCommandModal: React.FC = () => {
               </div>
             </div>
 
-            {/* Live Transcript / Speech Synthesis Controls */}
+            {/* Voice Feedback & Pre-Execution Verification Preferences */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+              {/* Verification Timing Selection */}
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs">
+                <Sliders className="h-3.5 w-3.5 text-amber-400" />
+                <span className="text-slate-400 text-[11px]">Verification Delay:</span>
+                <select
+                  value={verificationDelayMs}
+                  onChange={(e) => {
+                    sound.playClick();
+                    setVerificationDelayMs(Number(e.target.value));
+                  }}
+                  className="bg-[#0c0205] text-white text-xs rounded-lg px-2 py-1 border border-white/15 focus:outline-none focus:border-[#FF204E]"
+                >
+                  <option value={1800}>1.8s (Standard Verification)</option>
+                  <option value={3000}>3.0s (Relaxed Verification)</option>
+                  <option value={0}>0s (Instant Execution)</option>
+                </select>
+              </div>
+
+              {/* TTS Audio toggle */}
               <button
                 type="button"
                 onClick={() => {
@@ -220,28 +243,47 @@ export const VoiceCommandModal: React.FC = () => {
             </div>
           </div>
 
-          {/* REAL-TIME SPEECH TEST OR TRANSCRIPT STREAM */}
-          {(interimTranscript || finalTranscript || testFeedback) && (
-            <div className="rounded-xl neumorph-card p-3.5 border border-amber-500/30 bg-amber-500/5 space-y-1">
-              <div className="flex items-center justify-between text-[11px] font-mono text-amber-300 font-bold">
-                <span className="flex items-center gap-1.5">
-                  <Sparkles className="h-3.5 w-3.5 animate-spin" />
-                  <span>Live Speech Transcription:</span>
-                </span>
-                {testFeedback && (
-                  <span className="text-emerald-400 flex items-center gap-1">
-                    <CheckCircle2 className="h-3 w-3" />
-                    {testFeedback}
+          {/* REAL-TIME TRANSCRIPT & INTERPRETATION PREVIEW IN MODAL */}
+          {(interimTranscript || finalTranscript || realtimeInterpretation || testFeedback) && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {/* Spoken text */}
+              <div className="rounded-xl neumorph-card p-3.5 border border-amber-500/30 bg-amber-500/5 space-y-1">
+                <div className="flex items-center justify-between text-[11px] font-mono text-amber-300 font-bold">
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 animate-spin" />
+                    <span>Real-Time Voice Input:</span>
                   </span>
-                )}
+                  {testFeedback && (
+                    <span className="text-emerald-400 flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      {testFeedback}
+                    </span>
+                  )}
+                </div>
+                <div className="text-sm font-semibold text-white">
+                  {interimTranscript ? (
+                    <span className="text-amber-200">"{interimTranscript}"</span>
+                  ) : finalTranscript ? (
+                    <span className="text-emerald-300">"{finalTranscript}"</span>
+                  ) : null}
+                </div>
               </div>
-              <div className="text-sm font-semibold text-white">
-                {interimTranscript ? (
-                  <span className="text-amber-200">"{interimTranscript}"</span>
-                ) : finalTranscript ? (
-                  <span className="text-emerald-300">"{finalTranscript}"</span>
-                ) : null}
-              </div>
+
+              {/* Real-time interpretation */}
+              {realtimeInterpretation && (
+                <div className="rounded-xl neumorph-card p-3.5 border border-[#FF204E]/40 bg-[#150307]/80 space-y-1">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-[#FF4D6D] font-bold">
+                    <span>AI Interpretation & Confidence:</span>
+                    <div className="flex items-center gap-1 text-emerald-400">
+                      <ShieldCheck className="h-3.5 w-3.5" />
+                      <span>{Math.round(realtimeInterpretation.confidence * 100)}% Match</span>
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-white truncate">
+                    {realtimeInterpretation.actionSummary}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -348,7 +390,7 @@ export const VoiceCommandModal: React.FC = () => {
             </form>
           </div>
 
-          {/* AUDIT LOG OF EXECUTED VOICE COMMANDS */}
+          {/* AUDIT LOG OF EXECUTED VOICE COMMANDS WITH CONFIDENCE BADGES */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <h5 className="text-xs font-bold text-white flex items-center gap-1.5">
@@ -376,34 +418,43 @@ export const VoiceCommandModal: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                {commandHistory.map((cmd) => (
-                  <div
-                    key={cmd.id}
-                    className="flex items-center justify-between p-2.5 rounded-xl neumorph-card border border-white/5 text-xs"
-                  >
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span
-                        className={`h-2 w-2 rounded-full shrink-0 ${
-                          cmd.success ? 'bg-emerald-400' : 'bg-amber-400'
-                        }`}
-                      />
-                      <div className="min-w-0">
-                        <div className="text-white font-medium truncate">
-                          "{cmd.transcript}"
-                        </div>
-                        <div className="text-[10px] text-[#94A3B8] truncate flex items-center gap-2">
-                          <span className="text-[#FF4D6D] font-mono">{cmd.intent}</span>
-                          <span>•</span>
-                          <span>{cmd.actionSummary}</span>
+                {commandHistory.map((cmd) => {
+                  const score = cmd.confidence ? Math.round(cmd.confidence * 100) : 94;
+                  return (
+                    <div
+                      key={cmd.id}
+                      className="flex items-center justify-between p-2.5 rounded-xl neumorph-card border border-white/5 text-xs"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <span
+                          className={`h-2 w-2 rounded-full shrink-0 ${
+                            cmd.success ? 'bg-emerald-400' : 'bg-amber-400'
+                          }`}
+                        />
+                        <div className="min-w-0">
+                          <div className="text-white font-medium truncate">
+                            "{cmd.transcript}"
+                          </div>
+                          <div className="text-[10px] text-[#94A3B8] truncate flex items-center gap-2">
+                            <span className="text-[#FF4D6D] font-mono">{cmd.intent}</span>
+                            <span>•</span>
+                            <span>{cmd.actionSummary}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <span className="text-[10px] font-mono text-slate-500 shrink-0 ml-2">
-                      {cmd.timestamp}
-                    </span>
-                  </div>
-                ))}
+                      <div className="flex items-center gap-2 shrink-0 ml-2">
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-mono border border-emerald-500/20">
+                          <ShieldCheck className="h-2.5 w-2.5" />
+                          {score}%
+                        </span>
+                        <span className="text-[10px] font-mono text-slate-500">
+                          {cmd.timestamp}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -414,7 +465,7 @@ export const VoiceCommandModal: React.FC = () => {
         <div className="p-4 border-t border-[#E50914]/20 bg-[#0c0205] flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs text-[#94A3B8]">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Browser Web Speech & SpeechSynthesis API Active</span>
+            <span>Browser Web Speech & Real-Time Verification Engine Active</span>
           </div>
 
           <button

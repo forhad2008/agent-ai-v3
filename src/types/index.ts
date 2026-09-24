@@ -363,6 +363,19 @@ export type VoiceIntentType =
   | 'help'
   | 'unknown';
 
+export type VoiceConfidenceLevel = 'high' | 'medium' | 'low';
+
+export interface VoiceInterpretation {
+  intent: VoiceIntentType;
+  actionSummary: string;
+  responseSpeech: string;
+  parameters: Record<string, any>;
+  confidence: number;
+  confidenceLevel: VoiceConfidenceLevel;
+  matchedEntity?: string;
+  priority?: string;
+}
+
 export interface VoiceCommandRecord {
   id: string;
   transcript: string;
@@ -372,7 +385,9 @@ export interface VoiceCommandRecord {
   timestamp: string;
   success: boolean;
   confidence?: number;
+  confidenceLevel?: VoiceConfidenceLevel;
   parameters?: Record<string, any>;
+  status?: 'pending_verification' | 'executed' | 'cancelled';
 }
 
 export interface VoiceCheatItem {
