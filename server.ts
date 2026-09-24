@@ -756,28 +756,6 @@ app.post("/api/agent/chat", async (req, res) => {
       return res.status(400).json({ error: "Prompt is required" });
     }
 
-    const p = prompt.toLowerCase();
-    const isIdentityQuery = 
-      (p.includes('who') && (p.includes('made') || p.includes('create') || p.includes('creator') || p.includes('develop') || p.includes('built'))) ||
-      p.includes('who are you') || p.includes('your creator') || p.includes('তৈরি করেছে') || p.includes('বানিয়েছে') || p.includes('who made him');
-    
-    if (isIdentityQuery) {
-      return res.json({
-        content: "I am Agent-sigma08, an autonomous full-stack task execution and operations agent. I was created in 2026 as an independent workspace assistant to automate operations and workflows.",
-        thinking: "Identity query intercepted. Responding with official agent name: I am Agent-sigma08.",
-        planSteps: [
-          { title: "Analyze identity request", status: "completed" },
-          { title: "Recall official profile", status: "completed" }
-        ],
-        toolExecutions: [
-          { toolName: "identity_resolver", category: "SYSTEM_TOOLS", status: "success", description: "Resolved Agent-sigma08 official identity details" }
-        ],
-        requiresApproval: false,
-        approvalDetails: null,
-        mode: "IDENTITY_AGENT",
-      });
-    }
-
     const ai = getAIClient();
 
     // Check if delegation settings allow auto-approvals
@@ -797,7 +775,7 @@ app.post("/api/agent/chat", async (req, res) => {
 
     if (!ai) {
       // In case GEMINI_API_KEY is not configured, provide a realistic structured work agent response
-      const fallbackResponse = generateAgentFallbackResponse(prompt, language, isSensitiveAction);
+      const fallbackResponse = generateAgentFallbackResponse(prompt, language, isSensitiveAction, conversationHistory);
       return res.json({
         content: fallbackResponse.text,
         thinking: generateThinkingTrace(prompt, language, userProfile),
@@ -812,8 +790,8 @@ app.post("/api/agent/chat", async (req, res) => {
     // Build messages for Gemini
     const contents: any[] = [];
     
-    // Append conversation history
-    for (const msg of conversationHistory.slice(-8)) {
+    // Append conversation history (preserving session topic continuity and memory)
+    for (const msg of conversationHistory.slice(-12)) {
       contents.push({
         role: msg.sender === "user" ? "user" : "model",
         parts: [{ text: msg.text }],

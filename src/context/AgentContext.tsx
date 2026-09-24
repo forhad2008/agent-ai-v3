@@ -22,6 +22,7 @@ import {
   TaskCollaborator,
   CollaboratorRole,
   CollaboratorPresence,
+  SessionContextMetadata,
 } from '../types';
 import {
   INITIAL_TASKS,
@@ -217,6 +218,11 @@ interface AgentContextType {
   generateMasterPlan: (input: PlanGoalInput) => Promise<GeneratedMasterPlan | null>;
   convertPlanToTasks: (plan: GeneratedMasterPlan) => void;
   savePlanAsDocument: (plan: GeneratedMasterPlan) => void;
+
+  // Session Context Store (Tracking entities, user goals, and sentiment across mode switches)
+  sessionContext: SessionContextMetadata;
+  updateSessionContext: (updates: Partial<SessionContextMetadata>) => void;
+  resetSessionContext: () => void;
 }
 
 const AgentContext = createContext<AgentContextType | undefined>(undefined);
@@ -698,6 +704,85 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
     });
   };
 
+  // Context Store: Tracking conversation history metadata (entities, user goals, and sentiment) across mode switches
+  const [sessionContext, setSessionContext] = useState<SessionContextMetadata>(() => {
+    try {
+      const saved = localStorage.getItem('abdullah_session_context');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      entities: ['Agent-sigma08', 'React', 'TypeScript'],
+      userGoals: ['Automate workflows', 'Build modern apps'],
+      sentiment: 'motivated',
+      activeTopic: 'General Work & Development',
+      lastUpdated: new Date().toLocaleTimeString(),
+    };
+  });
+
+  const updateSessionContext = (updates: Partial<SessionContextMetadata>) => {
+    setSessionContext(prev => {
+      const updated = {
+        ...prev,
+        ...updates,
+        lastUpdated: new Date().toLocaleTimeString(),
+      };
+      try {
+        localStorage.setItem('abdullah_session_context', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  const resetSessionContext = () => {
+    const defaultCtx: SessionContextMetadata = {
+      entities: ['Agent-sigma08'],
+      userGoals: ['Workflow optimization'],
+      sentiment: 'neutral',
+      activeTopic: 'New Session',
+      lastUpdated: new Date().toLocaleTimeString(),
+    };
+    setSessionContext(defaultCtx);
+    try {
+      localStorage.setItem('abdullah_session_context', JSON.stringify(defaultCtx));
+    } catch (e) {}
+  };
+
+  const extractAndUpdateContextFromPrompt = (prompt: string) => {
+    const p = prompt.toLowerCase();
+    const newEntities = new Set(sessionContext.entities);
+    const newGoals = new Set(sessionContext.userGoals);
+
+    if (p.includes('react')) newEntities.add('React');
+    if (p.includes('typescript') || p.includes('ts')) newEntities.add('TypeScript');
+    if (p.includes('tailwind')) newEntities.add('Tailwind CSS');
+    if (p.includes('python')) newEntities.add('Python');
+    if (p.includes('game of thrones') || p.includes('got')) newEntities.add('Game of Thrones');
+    if (p.includes('fitness') || p.includes('weight') || p.includes('bodybuilding')) newEntities.add('Fitness & Bodybuilding');
+    if (p.includes('money') || p.includes('income') || p.includes('taka') || p.includes('saas')) newEntities.add('Wealth & SaaS');
+
+    let sentiment: SessionContextMetadata['sentiment'] = sessionContext.sentiment;
+    if (p.includes('urgent') || p.includes('asap') || p.includes('error') || p.includes('bug')) {
+      sentiment = 'urgent';
+    } else if (p.includes('how') || p.includes('what') || p.includes('why') || p.includes('explain')) {
+      sentiment = 'curious';
+    } else if (p.includes('goal') || p.includes('plan') || p.includes('build') || p.includes('make')) {
+      sentiment = 'motivated';
+    } else if (p.includes('thanks') || p.includes('good') || p.includes('great') || p.includes('valo')) {
+      sentiment = 'positive';
+    }
+
+    if (p.includes('plan') || p.includes('roadmap') || p.includes('build') || p.includes('goal')) {
+      newGoals.add(prompt.slice(0, 50));
+    }
+
+    updateSessionContext({
+      entities: Array.from(newEntities).slice(-10),
+      userGoals: Array.from(newGoals).slice(-8),
+      sentiment,
+      activeTopic: prompt.slice(0, 60),
+    });
+  };
+
   // Initial language: defaults to English ('en') when not set up, or loads saved preference
   const initialLang = useMemo(() => getInitialLanguage(), []);
 
@@ -792,6 +877,7 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
     };
 
     setMessages((prev) => [...prev, userMsg]);
+    extractAndUpdateContextFromPrompt(text.trim());
     setIsGenerating(true);
 
     // Real-time local interceptor for Alarm and Timer Actions
@@ -3020,6 +3106,11 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
         generateMasterPlan,
         convertPlanToTasks,
         savePlanAsDocument,
+
+        // Session Context Store (Tracking entities, user goals, and sentiment across mode switches)
+        sessionContext,
+        updateSessionContext,
+        resetSessionContext,
       }}
     >
       {children}

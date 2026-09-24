@@ -413,3 +413,12 @@ export interface VoiceCheatItem {
   description: string;
   category: 'Navigation' | 'Task Creation' | 'AI & Tools' | 'System & Audio';
 }
+
+export interface SessionContextMetadata {
+  entities: string[];
+  userGoals: string[];
+  sentiment: 'positive' | 'neutral' | 'curious' | 'urgent' | 'frustrated' | 'motivated';
+  activeTopic: string;
+  lastUpdated: string;
+}
+
