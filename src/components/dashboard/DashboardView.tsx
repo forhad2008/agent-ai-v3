@@ -33,6 +33,7 @@ import {
 import { useAgent } from '../../context/AgentContext';
 import { sound } from '../../services/sound';
 import { SystemHealthWidget } from './SystemHealthWidget';
+import { ContextStoreAnalyticsChart } from './ContextStoreAnalyticsChart';
 
 export const DashboardView: React.FC = () => {
   const {
@@ -390,6 +391,11 @@ export const DashboardView: React.FC = () => {
       {/* 2.5 SYSTEM HEALTH & GEMINI METRICS WIDGET                */}
       {/* ======================================================== */}
       <SystemHealthWidget />
+
+      {/* ======================================================== */}
+      {/* 2.6 CONTEXT STORE RECHARTS ANALYTICS                     */}
+      {/* ======================================================== */}
+      <ContextStoreAnalyticsChart />
 
       {/* ======================================================== */}
       {/* 3. METRICS GRID (4 Neumorphic Cards)                     */}

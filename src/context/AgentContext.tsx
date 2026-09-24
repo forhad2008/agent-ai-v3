@@ -223,6 +223,7 @@ interface AgentContextType {
   sessionContext: SessionContextMetadata;
   updateSessionContext: (updates: Partial<SessionContextMetadata>) => void;
   resetSessionContext: () => void;
+  reorderUserGoals: (startIndex: number, endIndex: number) => void;
 }
 
 const AgentContext = createContext<AgentContextType | undefined>(undefined);
@@ -745,6 +746,13 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
     try {
       localStorage.setItem('abdullah_session_context', JSON.stringify(defaultCtx));
     } catch (e) {}
+  };
+
+  const reorderUserGoals = (startIndex: number, endIndex: number) => {
+    const goals = [...sessionContext.userGoals];
+    const [removed] = goals.splice(startIndex, 1);
+    goals.splice(endIndex, 0, removed);
+    updateSessionContext({ userGoals: goals });
   };
 
   const extractAndUpdateContextFromPrompt = (prompt: string) => {
@@ -3111,6 +3119,7 @@ Evaluating safety and execution gates. Zero risk operations detected. Formatting
         sessionContext,
         updateSessionContext,
         resetSessionContext,
+        reorderUserGoals,
       }}
     >
       {children}
